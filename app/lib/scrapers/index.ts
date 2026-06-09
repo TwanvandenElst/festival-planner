@@ -1,8 +1,12 @@
 import { supabase } from '../supabase'
-import { fakeScraper } from './fake'
+// import { fakeScraper } from './fake'  // keep for local testing; disabled in prod
+import { raScraper } from './ra'
 import type { Scraper, ScrapedShow } from './types'
 
-const scrapers: Scraper[] = [fakeScraper]
+const scrapers: Scraper[] = [
+  raScraper,
+  // fakeScraper,
+]
 
 export type OrchestratorResult = {
   totalScraped: number
