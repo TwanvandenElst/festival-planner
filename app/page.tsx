@@ -54,6 +54,10 @@ export default function HomePage() {
 
   return (
     <main className="max-w-lg mx-auto py-12 px-4">
+      <nav className="flex gap-4 mb-10 text-sm">
+        <span className="font-semibold">Artists</span>
+        <a href="/shows" className="text-gray-400 hover:text-black transition-colors">Found shows</a>
+      </nav>
       <h1 className="text-2xl font-bold mb-8">Followed artists</h1>
 
       <div className="flex gap-2 mb-8">
@@ -82,7 +86,7 @@ export default function HomePage() {
         <ul>
           {artists.map(artist => (
             <li key={artist.id} className="flex items-center justify-between py-3 border-b border-gray-100 text-sm">
-              <span>{artist.name}</span>
+              <a href={`/artists/${artist.id}`} className="hover:underline">{artist.name}</a>
               <button
                 className="text-gray-400 hover:text-red-500 disabled:opacity-40 transition-colors text-xs ml-4"
                 onClick={() => handleRemove(artist.id)}

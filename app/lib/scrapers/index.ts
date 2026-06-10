@@ -1,10 +1,12 @@
 import { supabase } from '../supabase'
 // import { fakeScraper } from './fake'  // keep for local testing; disabled in prod
 import { raScraper } from './ra'
+import { festivalinfoScraper } from './festivalinfo'
 import type { Scraper, ScrapedShow } from './types'
 
 const scrapers: Scraper[] = [
   raScraper,
+  festivalinfoScraper,
   // fakeScraper,
 ]
 

@@ -63,3 +63,9 @@ The orchestrator matches artistName against followed artists.
 - Go step by step. Make one focused change at a time.
 - Explain what you are about to do before doing it.
 - Do not skip ahead in the roadmap without checking in.
+
+## Future ideas (do NOT build yet)
+- Festival/shows page should later support filtering between shows I'm
+  already attending vs shows where a followed artist plays but I'm not
+  attending yet. Requires tracking an 'attending' status per show. Build
+  only after the core tracker is solid.
