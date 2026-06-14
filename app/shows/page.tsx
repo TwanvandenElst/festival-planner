@@ -1,4 +1,4 @@
-import { supabase } from '../lib/supabase'
+import { supabase } from '@/lib/supabase'
 import ShowsClient from './ShowsClient'
 
 type Show = {
@@ -21,13 +21,14 @@ export default async function ShowsPage() {
   ])
 
   return (
-    <main className="max-w-2xl mx-auto py-12 px-4">
-      <nav className="flex gap-4 mb-10 text-sm">
-        <a href="/" className="text-gray-400 hover:text-black transition-colors">Artists</a>
-        <span className="font-semibold">Found shows</span>
-      </nav>
-      <h1 className="text-2xl font-bold mb-8">Found shows</h1>
+    <div className="mx-auto w-full max-w-4xl px-4 py-10">
+      <header className="mb-8">
+        <h1 className="text-2xl font-semibold tracking-tight">Found shows</h1>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Every show matched for your followed artists.
+        </p>
+      </header>
       <ShowsClient shows={(shows ?? []) as Show[]} artists={artists ?? []} />
-    </main>
+    </div>
   )
 }

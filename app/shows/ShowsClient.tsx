@@ -1,6 +1,24 @@
 'use client'
 
 import { useState } from 'react'
+import { CalendarX2 } from 'lucide-react'
+
+import { SourceBadges } from '@/components/source-badges'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
 
 type Artist = {
   id: string
@@ -25,83 +43,98 @@ type Props = {
   artists: Artist[]
 }
 
+function formatDate(date: string) {
+  return new Date(date).toLocaleDateString('en-GB', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+  })
+}
+
 export default function ShowsClient({ shows, artists }: Props) {
   const [selectedArtistId, setSelectedArtistId] = useState<string>('all')
+
+  const sortedArtists = [...artists].sort((a, b) => a.name.localeCompare(b.name))
 
   const filtered =
     selectedArtistId === 'all'
       ? shows
       : shows.filter(s => s.artist_id === selectedArtistId)
 
-  const sortedArtists = [...artists].sort((a, b) => a.name.localeCompare(b.name))
+  // Maps each value to its label so <SelectValue /> shows the artist name.
+  const selectItems: Record<string, string> = {
+    all: 'All artists',
+    ...Object.fromEntries(sortedArtists.map(a => [a.id, a.name])),
+  }
 
   return (
-    <>
+    <div className="space-y-6">
       {artists.length > 0 && (
-        <div className="mb-6">
-          <select
-            className="border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-black"
-            value={selectedArtistId}
-            onChange={e => setSelectedArtistId(e.target.value)}
-          >
-            <option value="all">All artists</option>
+        <Select
+          items={selectItems}
+          value={selectedArtistId}
+          onValueChange={value => setSelectedArtistId(value as string)}
+        >
+          <SelectTrigger className="w-[220px]">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All artists</SelectItem>
             {sortedArtists.map(a => (
-              <option key={a.id} value={a.id}>
+              <SelectItem key={a.id} value={a.id}>
                 {a.name}
-              </option>
+              </SelectItem>
             ))}
-          </select>
-        </div>
+          </SelectContent>
+        </Select>
       )}
 
       {filtered.length === 0 ? (
-        <p className="text-sm text-gray-400">No shows found yet.</p>
+        <div className="rounded-xl border border-dashed border-border py-16 text-center">
+          <CalendarX2 className="mx-auto mb-3 size-8 text-muted-foreground/60" />
+          <p className="text-sm font-medium">No shows found</p>
+          <p className="mt-1 text-sm text-muted-foreground">
+            {selectedArtistId === 'all'
+              ? 'Shows will appear here once the scrapers find a match.'
+              : 'No shows yet for this artist.'}
+          </p>
+        </div>
       ) : (
-        <table className="w-full text-sm border-collapse">
-          <thead>
-            <tr className="text-left text-gray-400 border-b border-gray-200">
-              <th className="pb-2 pr-4 font-medium">Artist</th>
-              <th className="pb-2 pr-4 font-medium">Date</th>
-              <th className="pb-2 pr-4 font-medium">Event</th>
-              <th className="pb-2 pr-4 font-medium">City</th>
-              <th className="pb-2 font-medium">Source</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filtered.map(show => (
-              <tr key={show.id} className="border-b border-gray-100">
-                <td className="py-3 pr-4">{show.artists?.name ?? '—'}</td>
-                <td className="py-3 pr-4 whitespace-nowrap">
-                  {new Date(show.date).toLocaleDateString('en-GB', {
-                    day: 'numeric',
-                    month: 'short',
-                    year: 'numeric',
-                  })}
-                </td>
-                <td className="py-3 pr-4">{show.venue}</td>
-                <td className="py-3 pr-4">{show.city}</td>
-                <td className="py-3">
-                  <div className="flex flex-wrap gap-x-2 gap-y-1">
-                    {(show.sources?.length ? show.sources : [show.source_site])
-                      .filter(Boolean)
-                      .map(src => (
-                        <a
-                          key={src}
-                          href={show.source_url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-blue-600 hover:underline"
-                        >
-                          {src}
-                        </a>
-                      ))}
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        <div className="overflow-hidden rounded-xl border border-border">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Artist</TableHead>
+                <TableHead>Date</TableHead>
+                <TableHead>Event</TableHead>
+                <TableHead>City</TableHead>
+                <TableHead>Sources</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filtered.map(show => (
+                <TableRow key={show.id}>
+                  <TableCell className="font-medium">
+                    {show.artists?.name ?? '—'}
+                  </TableCell>
+                  <TableCell className="whitespace-nowrap text-muted-foreground">
+                    {formatDate(show.date)}
+                  </TableCell>
+                  <TableCell>{show.venue}</TableCell>
+                  <TableCell className="text-muted-foreground">{show.city}</TableCell>
+                  <TableCell>
+                    <SourceBadges
+                      sources={show.sources}
+                      sourceSite={show.source_site}
+                      sourceUrl={show.source_url}
+                    />
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
       )}
-    </>
+    </div>
   )
 }

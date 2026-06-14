@@ -3,12 +3,14 @@ import { supabase } from '../supabase'
 import { raScraper } from './ra'
 import { festivalinfoScraper } from './festivalinfo'
 import { festileaksScraper } from './festileaks'
+import { ticketmasterScraper } from './ticketmaster'
 import type { Scraper, ScrapedShow } from './types'
 
 const scrapers: Scraper[] = [
   raScraper,
   festivalinfoScraper,
   festileaksScraper,
+  ticketmasterScraper,
   // fakeScraper,
 ]
 

@@ -1,7 +1,12 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { supabase } from './lib/supabase'
+import Link from 'next/link'
+import { ChevronRight, Loader2, Music2, X } from 'lucide-react'
+
+import { supabase } from '@/lib/supabase'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 
 type Artist = {
   id: string
@@ -53,51 +58,72 @@ export default function HomePage() {
   }
 
   return (
-    <main className="max-w-lg mx-auto py-12 px-4">
-      <nav className="flex gap-4 mb-10 text-sm">
-        <span className="font-semibold">Artists</span>
-        <a href="/shows" className="text-gray-400 hover:text-black transition-colors">Found shows</a>
-      </nav>
-      <h1 className="text-2xl font-bold mb-8">Followed artists</h1>
+    <div className="mx-auto w-full max-w-2xl px-4 py-10">
+      <header className="mb-8">
+        <h1 className="text-2xl font-semibold tracking-tight">Followed artists</h1>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Add artists to track when they perform in the Netherlands.
+        </p>
+      </header>
 
-      <div className="flex gap-2 mb-8">
-        <input
-          className="flex-1 border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-black"
-          placeholder="Artist name"
+      <div className="mb-8 flex gap-2">
+        <Input
+          placeholder="Add an artist…"
           value={input}
           onChange={e => setInput(e.target.value)}
           onKeyDown={e => e.key === 'Enter' && handleAdd()}
           disabled={adding}
         />
-        <button
-          className="bg-black text-white px-4 py-2 rounded text-sm hover:bg-gray-800 disabled:opacity-40 transition-colors"
-          onClick={handleAdd}
-          disabled={adding || !input.trim()}
-        >
-          {adding ? 'Adding…' : 'Add artist'}
-        </button>
+        <Button onClick={handleAdd} disabled={adding || !input.trim()}>
+          {adding ? <Loader2 className="animate-spin" /> : null}
+          {adding ? 'Adding…' : 'Add'}
+        </Button>
       </div>
 
       {loading ? (
-        <p className="text-sm text-gray-400">Loading…</p>
+        <div className="flex items-center gap-2 py-12 text-sm text-muted-foreground">
+          <Loader2 className="size-4 animate-spin" />
+          Loading artists…
+        </div>
       ) : artists.length === 0 ? (
-        <p className="text-sm text-gray-400">No artists yet.</p>
+        <div className="rounded-xl border border-dashed border-border py-16 text-center">
+          <Music2 className="mx-auto mb-3 size-8 text-muted-foreground/60" />
+          <p className="text-sm font-medium">No artists yet</p>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Add your first artist above to start tracking shows.
+          </p>
+        </div>
       ) : (
-        <ul>
+        <ul className="space-y-2">
           {artists.map(artist => (
-            <li key={artist.id} className="flex items-center justify-between py-3 border-b border-gray-100 text-sm">
-              <a href={`/artists/${artist.id}`} className="hover:underline">{artist.name}</a>
-              <button
-                className="text-gray-400 hover:text-red-500 disabled:opacity-40 transition-colors text-xs ml-4"
-                onClick={() => handleRemove(artist.id)}
-                disabled={removingId === artist.id}
-              >
-                {removingId === artist.id ? 'Removing…' : 'Remove'}
-              </button>
+            <li key={artist.id}>
+              <div className="group flex items-center justify-between rounded-lg border border-border bg-card px-4 py-3 transition-colors hover:bg-muted/50">
+                <Link
+                  href={`/artists/${artist.id}`}
+                  className="flex flex-1 items-center justify-between text-sm font-medium"
+                >
+                  <span>{artist.name}</span>
+                  <ChevronRight className="size-4 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100" />
+                </Link>
+                <Button
+                  variant="ghost"
+                  size="icon-sm"
+                  className="ml-2 text-muted-foreground hover:text-destructive"
+                  onClick={() => handleRemove(artist.id)}
+                  disabled={removingId === artist.id}
+                  aria-label={`Remove ${artist.name}`}
+                >
+                  {removingId === artist.id ? (
+                    <Loader2 className="animate-spin" />
+                  ) : (
+                    <X />
+                  )}
+                </Button>
+              </div>
             </li>
           ))}
         </ul>
       )}
-    </main>
+    </div>
   )
 }

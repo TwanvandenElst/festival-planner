@@ -24,7 +24,7 @@ export default function ScrapeTestPage() {
   }
 
   return (
-    <main className="max-w-lg mx-auto py-12 px-4">
+    <div className="max-w-lg mx-auto py-12 px-4">
       <h1 className="text-2xl font-bold mb-2">Scraper test</h1>
       <p className="text-sm text-gray-500 mb-8">
         Runs all registered scrapers, matches against followed artists, and inserts new shows.
@@ -72,6 +72,6 @@ export default function ScrapeTestPage() {
           )}
         </div>
       )}
-    </main>
+    </div>
   )
 }
