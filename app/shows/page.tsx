@@ -9,6 +9,7 @@ type Show = {
   city: string
   source_url: string
   source_site: string
+  sources: string[]
   found_at: string
   artists: { name: string } | null
 }

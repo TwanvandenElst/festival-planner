@@ -15,6 +15,7 @@ type Show = {
   city: string
   source_url: string
   source_site: string
+  sources: string[]
   found_at: string
   artists: { name: string } | null
 }
@@ -61,7 +62,7 @@ export default function ShowsClient({ shows, artists }: Props) {
             <tr className="text-left text-gray-400 border-b border-gray-200">
               <th className="pb-2 pr-4 font-medium">Artist</th>
               <th className="pb-2 pr-4 font-medium">Date</th>
-              <th className="pb-2 pr-4 font-medium">Venue</th>
+              <th className="pb-2 pr-4 font-medium">Event</th>
               <th className="pb-2 pr-4 font-medium">City</th>
               <th className="pb-2 font-medium">Source</th>
             </tr>
@@ -80,14 +81,21 @@ export default function ShowsClient({ shows, artists }: Props) {
                 <td className="py-3 pr-4">{show.venue}</td>
                 <td className="py-3 pr-4">{show.city}</td>
                 <td className="py-3">
-                  <a
-                    href={show.source_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-blue-600 hover:underline"
-                  >
-                    {show.source_site}
-                  </a>
+                  <div className="flex flex-wrap gap-x-2 gap-y-1">
+                    {(show.sources?.length ? show.sources : [show.source_site])
+                      .filter(Boolean)
+                      .map(src => (
+                        <a
+                          key={src}
+                          href={show.source_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-blue-600 hover:underline"
+                        >
+                          {src}
+                        </a>
+                      ))}
+                  </div>
                 </td>
               </tr>
             ))}

@@ -51,6 +51,8 @@ export default function ScrapeTestPage() {
             <dd className="font-medium">{result.matched}</dd>
             <dt className="text-gray-500">Inserted</dt>
             <dd className="font-medium">{result.inserted}</dd>
+            <dt className="text-gray-500">Merged (new source)</dt>
+            <dd className="font-medium">{result.merged}</dd>
             <dt className="text-gray-500">Skipped (duplicates)</dt>
             <dd className="font-medium">{result.skipped}</dd>
           </dl>

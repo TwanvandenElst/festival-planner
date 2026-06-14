@@ -16,8 +16,40 @@ export type OrchestratorResult = {
   totalScraped: number
   matched: number
   inserted: number
+  merged: number
   skipped: number
   shows: ScrapedShow[]
+}
+
+// Noise words dropped when deriving a fuzzy event key.
+// Mirrors the list in supabase/migrations/0003_sources.sql.
+const NOISE_WORDS = new Set([
+  'the', 'a', 'an', 'festival', 'fest', 'event', 'events', 'presents',
+])
+
+/**
+ * Fuzzy event key: the first significant word of a normalized title.
+ * Mirrors pg_temp.fuzzy_event_key() in migration 0003_sources.sql so the
+ * orchestrator dedups exactly the way the migration did:
+ *   lowercase -> strip punctuation -> drop pure-number tokens (years/editions)
+ *   & noise words -> first remaining word ('' if none).
+ *
+ *   "Awakenings Summer Festival 2026" -> "awakenings"
+ *   "Awakenings Festival 2026"        -> "awakenings"  (same event)
+ */
+export function normalize(raw: string | null | undefined): string {
+  const words = (raw ?? '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, ' ')
+    .split(/\s+/)
+    .filter(Boolean)
+
+  for (const w of words) {
+    if (/^[0-9]+$/.test(w)) continue   // pure numbers: years, editions
+    if (NOISE_WORDS.has(w)) continue
+    return w
+  }
+  return ''
 }
 
 export async function runScrapers(): Promise<OrchestratorResult> {
@@ -36,7 +68,7 @@ export async function runScrapers(): Promise<OrchestratorResult> {
   if (artistsError) throw new Error(`Failed to fetch artists: ${artistsError.message}`)
 
   if (!artists || artists.length === 0) {
-    return { totalScraped: allShows.length, matched: 0, inserted: 0, skipped: 0, shows: [] }
+    return { totalScraped: allShows.length, matched: 0, inserted: 0, merged: 0, skipped: 0, shows: [] }
   }
 
   // 3. Match scraped shows against followed artists (case-insensitive)
@@ -44,49 +76,86 @@ export async function runScrapers(): Promise<OrchestratorResult> {
   const matched = allShows.filter(s => artistMap.has(s.artistName.toLowerCase().trim()))
 
   if (matched.length === 0) {
-    return { totalScraped: allShows.length, matched: 0, inserted: 0, skipped: 0, shows: [] }
+    return { totalScraped: allShows.length, matched: 0, inserted: 0, merged: 0, skipped: 0, shows: [] }
   }
 
-  // 4. Fetch existing shows for matched artists to deduplicate
+  // 4. Fetch existing shows for matched artists, keyed by fuzzy event identity
+  //    (artist_id + date + first significant word of the venue/title).
   const matchedArtistIds = [
     ...new Set(matched.map(s => artistMap.get(s.artistName.toLowerCase().trim())!)),
   ]
   const { data: existingShows } = await supabase
     .from('shows')
-    .select('artist_id, date, source_url')
+    .select('id, artist_id, date, venue, sources')
     .in('artist_id', matchedArtistIds)
 
-  const existingKeys = new Set(
-    (existingShows ?? []).map(s => `${s.artist_id}|${s.date}|${s.source_url}`)
-  )
+  type Survivor = { id: string; sources: string[] }
+  const existing = new Map<string, Survivor>()
+  for (const s of existingShows ?? []) {
+    const key = `${s.artist_id}|${s.date}|${normalize(s.venue)}`
+    const sources = (s.sources as string[] | null) ?? []
+    const current = existing.get(key)
+    if (!current) {
+      existing.set(key, { id: s.id, sources: [...sources] })
+    } else {
+      // Defensive: pre-existing rows sharing a fuzzy key fold into one survivor.
+      for (const src of sources) {
+        if (!current.sources.includes(src)) current.sources.push(src)
+      }
+    }
+  }
 
-  // 5. Insert new (non-duplicate) matched shows
+  // 5. For each matched show: merge its source into the existing event, or
+  //    insert a new event with sources = [source_site].
   let inserted = 0
+  let merged = 0
   let skipped = 0
   const insertedShows: ScrapedShow[] = []
 
   for (const show of matched) {
     const artistId = artistMap.get(show.artistName.toLowerCase().trim())!
-    const key = `${artistId}|${show.date}|${show.sourceUrl}`
+    const key = `${artistId}|${show.date}|${normalize(show.venue)}`
+    const found = existing.get(key)
 
-    if (existingKeys.has(key)) {
-      skipped++
+    if (found) {
+      // Same event already tracked. Record this source if new; never insert.
+      if (show.sourceSite && !found.sources.includes(show.sourceSite)) {
+        const newSources = [...found.sources, show.sourceSite]
+        const { error } = await supabase
+          .from('shows')
+          .update({ sources: newSources })
+          .eq('id', found.id)
+        if (!error) {
+          found.sources = newSources
+          merged++
+        }
+      } else {
+        skipped++
+      }
       continue
     }
 
-    const { error } = await supabase.from('shows').insert({
-      artist_id: artistId,
-      date: show.date,
-      venue: show.venue,
-      city: show.city,
-      source_url: show.sourceUrl,
-      source_site: show.sourceSite,
-    })
+    // New event → insert with sources seeded from this scrape's source.
+    const sources = show.sourceSite ? [show.sourceSite] : []
+    const { data: row, error } = await supabase
+      .from('shows')
+      .insert({
+        artist_id: artistId,
+        date: show.date,
+        venue: show.venue,
+        city: show.city,
+        source_url: show.sourceUrl,
+        source_site: show.sourceSite,
+        sources,
+      })
+      .select('id')
+      .single()
 
-    if (!error) {
+    if (!error && row) {
       inserted++
-      existingKeys.add(key) // prevent duplicates within this same run
       insertedShows.push(show)
+      // Track in-memory so later shows in this same run merge instead of dup.
+      existing.set(key, { id: row.id, sources })
     }
   }
 
@@ -94,6 +163,7 @@ export async function runScrapers(): Promise<OrchestratorResult> {
     totalScraped: allShows.length,
     matched: matched.length,
     inserted,
+    merged,
     skipped,
     shows: insertedShows,
   }
