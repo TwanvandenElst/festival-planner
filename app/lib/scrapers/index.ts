@@ -1,4 +1,5 @@
 import { supabase } from '../supabase'
+import { sendTelegramMessage, escapeHtml } from '../telegram'
 // import { fakeScraper } from './fake'  // keep for local testing; disabled in prod
 import { raScraper } from './ra'
 import { festivalinfoScraper } from './festivalinfo'
@@ -54,7 +55,51 @@ export function normalize(raw: string | null | undefined): string {
   return ''
 }
 
-export async function runScrapers(): Promise<OrchestratorResult> {
+/** Formats one newly inserted show as a Telegram HTML message block. */
+function formatShowNotification(show: ScrapedShow): string {
+  const datum = new Date(show.date).toLocaleDateString('nl-NL', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+    timeZone: 'UTC', // date is "YYYY-MM-DD"; avoid a local-tz day shift
+  })
+  return (
+    `🎵 <b>${escapeHtml(show.artistName)}</b>\n` +
+    `📅 ${escapeHtml(datum)}\n` +
+    `🎪 ${escapeHtml(show.venue)}\n` +
+    `📍 ${escapeHtml(show.city)}\n` +
+    `🔗 <a href="${escapeHtml(show.sourceUrl)}">Bekijk event</a>`
+  )
+}
+
+/**
+ * Notifies about newly inserted shows. 1–3 shows → one message each; more than
+ * 3 → a single batched message to avoid spam. 0 shows → nothing sent.
+ */
+async function notifyNewShows(shows: ScrapedShow[]): Promise<void> {
+  if (shows.length === 0) return
+
+  if (shows.length > 3) {
+    const header = `🎵 <b>${shows.length} nieuwe shows gevonden</b>`
+    const body = shows.map(formatShowNotification).join('\n\n')
+    await sendTelegramMessage(`${header}\n\n${body}`)
+    return
+  }
+
+  for (const show of shows) {
+    await sendTelegramMessage(formatShowNotification(show))
+  }
+}
+
+/**
+ * Runs every scraper and stores matched shows.
+ * Pass `{ artistName }` to narrow matching/insertion to a single followed
+ * artist (used by the auto-scrape-on-add flow). The scrapers themselves still
+ * run in full; only this artist's shows are matched and stored.
+ */
+export async function runScrapers(
+  options?: { artistName?: string },
+): Promise<OrchestratorResult> {
   // 1. Collect all scraped shows
   const allShows: ScrapedShow[] = []
   for (const scraper of scrapers) {
@@ -62,19 +107,24 @@ export async function runScrapers(): Promise<OrchestratorResult> {
     allShows.push(...shows)
   }
 
-  // 2. Fetch followed artists
+  // 2. Fetch followed artists (optionally narrowed to a single one)
   const { data: artists, error: artistsError } = await supabase
     .from('artists')
     .select('id, name')
 
   if (artistsError) throw new Error(`Failed to fetch artists: ${artistsError.message}`)
 
-  if (!artists || artists.length === 0) {
+  const filterName = options?.artistName?.toLowerCase().trim()
+  const followed = filterName
+    ? (artists ?? []).filter(a => a.name.toLowerCase().trim() === filterName)
+    : (artists ?? [])
+
+  if (followed.length === 0) {
     return { totalScraped: allShows.length, matched: 0, inserted: 0, merged: 0, skipped: 0, shows: [] }
   }
 
   // 3. Match scraped shows against followed artists (case-insensitive)
-  const artistMap = new Map(artists.map(a => [a.name.toLowerCase().trim(), a.id as string]))
+  const artistMap = new Map(followed.map(a => [a.name.toLowerCase().trim(), a.id as string]))
   const matched = allShows.filter(s => artistMap.has(s.artistName.toLowerCase().trim()))
 
   if (matched.length === 0) {
@@ -160,6 +210,9 @@ export async function runScrapers(): Promise<OrchestratorResult> {
       existing.set(key, { id: row.id, sources })
     }
   }
+
+  // 6. Notify (best-effort) about newly inserted shows.
+  await notifyNewShows(insertedShows)
 
   return {
     totalScraped: allShows.length,

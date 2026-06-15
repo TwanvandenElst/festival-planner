@@ -1,8 +1,11 @@
 'use client'
 
 import { useState } from 'react'
-import { CalendarX2 } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import { CalendarX2, Loader2, RefreshCw } from 'lucide-react'
 
+import { triggerScrape } from '@/scrape-test/actions'
+import { Button } from '@/components/ui/button'
 import { SourceBadges } from '@/components/source-badges'
 import {
   Select,
@@ -52,7 +55,25 @@ function formatDate(date: string) {
 }
 
 export default function ShowsClient({ shows, artists }: Props) {
+  const router = useRouter()
   const [selectedArtistId, setSelectedArtistId] = useState<string>('all')
+  const [refreshing, setRefreshing] = useState(false)
+  const [refreshMsg, setRefreshMsg] = useState<string | null>(null)
+
+  // Triggers a full scrape via the server action, then re-fetches the table.
+  async function handleRefresh() {
+    setRefreshMsg(null)
+    setRefreshing(true)
+    try {
+      const result = await triggerScrape()
+      setRefreshMsg(`Refreshed — ${result.inserted} new, ${result.merged} merged.`)
+      router.refresh()
+    } catch {
+      setRefreshMsg('Refresh failed.')
+    } finally {
+      setRefreshing(false)
+    }
+  }
 
   const sortedArtists = [...artists].sort((a, b) => a.name.localeCompare(b.name))
 
@@ -69,24 +90,41 @@ export default function ShowsClient({ shows, artists }: Props) {
 
   return (
     <div className="space-y-6">
-      {artists.length > 0 && (
-        <Select
-          items={selectItems}
-          value={selectedArtistId}
-          onValueChange={value => setSelectedArtistId(value as string)}
-        >
-          <SelectTrigger className="w-[220px]">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All artists</SelectItem>
-            {sortedArtists.map(a => (
-              <SelectItem key={a.id} value={a.id}>
-                {a.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        {artists.length > 0 ? (
+          <Select
+            items={selectItems}
+            value={selectedArtistId}
+            onValueChange={value => setSelectedArtistId(value as string)}
+          >
+            <SelectTrigger className="w-[220px]">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All artists</SelectItem>
+              {sortedArtists.map(a => (
+                <SelectItem key={a.id} value={a.id}>
+                  {a.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        ) : (
+          <span />
+        )}
+
+        <Button variant="outline" onClick={handleRefresh} disabled={refreshing}>
+          {refreshing ? (
+            <Loader2 className="animate-spin" />
+          ) : (
+            <RefreshCw />
+          )}
+          {refreshing ? 'Refreshing…' : 'Refresh shows'}
+        </Button>
+      </div>
+
+      {refreshMsg && (
+        <p className="text-sm text-muted-foreground">{refreshMsg}</p>
       )}
 
       {filtered.length === 0 ? (

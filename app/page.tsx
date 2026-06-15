@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { ChevronRight, Loader2, Music2, X } from 'lucide-react'
 
 import { supabase } from '@/lib/supabase'
+import { triggerScrape } from '@/scrape-test/actions'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 
@@ -20,6 +21,8 @@ export default function HomePage() {
   const [loading, setLoading] = useState(true)
   const [adding, setAdding] = useState(false)
   const [removingId, setRemovingId] = useState<string | null>(null)
+  const [scrapingArtist, setScrapingArtist] = useState<string | null>(null)
+  const [scrapeMsg, setScrapeMsg] = useState<string | null>(null)
 
   useEffect(() => {
     supabase
@@ -41,6 +44,24 @@ export default function HomePage() {
     setRemovingId(null)
   }
 
+  // After adding an artist, scrape immediately for just that artist so their
+  // shows appear without waiting for the weekly cron.
+  async function scrapeArtist(name: string) {
+    setScrapeMsg(null)
+    setScrapingArtist(name)
+    try {
+      const result = await triggerScrape(name)
+      setScrapeMsg(
+        `${name}: ${result.inserted} new show${result.inserted === 1 ? '' : 's'} found` +
+        (result.merged > 0 ? `, ${result.merged} merged` : '') + '.',
+      )
+    } catch {
+      setScrapeMsg(`Scrape failed for ${name}.`)
+    } finally {
+      setScrapingArtist(null)
+    }
+  }
+
   async function handleAdd() {
     const name = input.trim()
     if (!name) return
@@ -50,11 +71,12 @@ export default function HomePage() {
       .insert({ name })
       .select()
       .single()
+    setAdding(false)
     if (!error && data) {
       setArtists(prev => [data, ...prev])
       setInput('')
+      await scrapeArtist(name)
     }
-    setAdding(false)
   }
 
   return (
@@ -79,6 +101,15 @@ export default function HomePage() {
           {adding ? 'Adding…' : 'Add'}
         </Button>
       </div>
+
+      {scrapingArtist ? (
+        <div className="mb-6 flex items-center gap-2 text-sm text-muted-foreground">
+          <Loader2 className="size-4 animate-spin" />
+          Scraping shows for {scrapingArtist}…
+        </div>
+      ) : scrapeMsg ? (
+        <div className="mb-6 text-sm text-muted-foreground">{scrapeMsg}</div>
+      ) : null}
 
       {loading ? (
         <div className="flex items-center gap-2 py-12 text-sm text-muted-foreground">
