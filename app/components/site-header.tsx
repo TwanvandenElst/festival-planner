@@ -14,6 +14,9 @@ const NAV = [
 export function SiteHeader() {
   const pathname = usePathname()
 
+  // The public share page is standalone — no nav/header chrome.
+  if (pathname.startsWith('/festivals/share')) return null
+
   return (
     <header className="sticky top-0 z-40 w-full border-b border-border bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="mx-auto flex h-14 max-w-5xl items-center justify-between gap-4 px-4">
