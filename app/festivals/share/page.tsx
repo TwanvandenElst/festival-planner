@@ -1,6 +1,8 @@
 import type { Metadata } from 'next'
 import { getMyFestivals } from '@/lib/festivals'
+import { getJoinsByFestival } from '@/lib/festival-joins'
 import type { Festival, FestivalStatus } from '@/lib/festivals-types'
+import { JoinFestival } from './JoinFestival'
 
 // Public, read-only, no auth needed (RLS allows anon read).
 export const dynamic = 'force-dynamic'
@@ -13,8 +15,8 @@ export const metadata: Metadata = {
 const TODAY = new Date().toISOString().slice(0, 10)
 
 const STATUS_LABEL: Record<FestivalStatus, string> = {
-  tickets_gekocht: 'Tickets gekocht',
-  in_optie: 'In optie',
+  tickets_gekocht: 'Tickets Bought',
+  in_optie: 'Optioned',
   wishlist: 'Wishlist',
 }
 const STATUS_CLASS: Record<FestivalStatus, string> = {
@@ -37,38 +39,42 @@ function formatRange(start: string, end: string | null): string {
   return `${sd} ${MONTHS[sm - 1]} ${sy} – ${ed} ${MONTHS[em - 1]} ${ey}`
 }
 
-function FestivalRow({ f }: { f: Festival }) {
+function FestivalRow({ f, joinNames }: { f: Festival; joinNames: string[] }) {
   return (
-    <li className="flex items-start justify-between gap-4 py-4">
-      <div className="min-w-0">
-        <p className="font-medium">
-          {f.url ? (
-            <a href={f.url} target="_blank" rel="noopener noreferrer" className="hover:underline">
-              {f.name}
-            </a>
-          ) : (
-            f.name
-          )}
-        </p>
-        <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-muted-foreground">
-          <span
-            className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${STATUS_CLASS[f.status]}`}
-          >
-            {STATUS_LABEL[f.status]}
-          </span>
-          {f.location && <span className="truncate">{f.location}</span>}
-          {f.rating != null && <span>{f.rating}/10</span>}
+    <li className="py-4">
+      <div className="flex items-start justify-between gap-4">
+        <div className="min-w-0">
+          <p className="font-medium">
+            {f.url ? (
+              <a href={f.url} target="_blank" rel="noopener noreferrer" className="hover:underline">
+                {f.name}
+              </a>
+            ) : (
+              f.name
+            )}
+          </p>
+          <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-muted-foreground">
+            <span
+              className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${STATUS_CLASS[f.status]}`}
+            >
+              {STATUS_LABEL[f.status]}
+            </span>
+            {f.location && <span className="truncate">{f.location}</span>}
+            {f.rating != null && <span>{f.rating}/10</span>}
+          </div>
         </div>
+        <p className="shrink-0 whitespace-nowrap text-right text-sm text-muted-foreground">
+          {formatRange(f.start_date, f.end_date)}
+        </p>
       </div>
-      <p className="shrink-0 whitespace-nowrap text-right text-sm text-muted-foreground">
-        {formatRange(f.start_date, f.end_date)}
-      </p>
+      <JoinFestival festivalId={f.id} initialNames={joinNames} />
     </li>
   )
 }
 
 export default async function FestivalsSharePage() {
-  const festivals = await getMyFestivals() // already sorted by start_date asc
+  const [festivals, joins] = await Promise.all([getMyFestivals(), getJoinsByFestival()])
+  // festivals already sorted by start_date asc
 
   const upcoming = festivals.filter(f => (f.end_date ?? f.start_date) >= TODAY)
   const past = festivals.filter(f => (f.end_date ?? f.start_date) < TODAY).reverse() // most recent first
@@ -87,7 +93,7 @@ export default async function FestivalsSharePage() {
           {upcoming.length > 0 && (
             <ul className="mt-8 divide-y divide-border">
               {upcoming.map(f => (
-                <FestivalRow key={f.id} f={f} />
+                <FestivalRow key={f.id} f={f} joinNames={(joins[f.id] ?? []).map(j => j.name)} />
               ))}
             </ul>
           )}
@@ -99,7 +105,7 @@ export default async function FestivalsSharePage() {
               </h2>
               <ul className="mt-2 divide-y divide-border opacity-70">
                 {past.map(f => (
-                  <FestivalRow key={f.id} f={f} />
+                  <FestivalRow key={f.id} f={f} joinNames={(joins[f.id] ?? []).map(j => j.name)} />
                 ))}
               </ul>
             </section>

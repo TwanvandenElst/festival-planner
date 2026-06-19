@@ -1,5 +1,6 @@
 import { supabase } from '@/lib/supabase'
 import { getMyFestivals } from '@/lib/festivals'
+import { getJoinsByFestival } from '@/lib/festival-joins'
 import ShowsClient from './ShowsClient'
 import FestivalsSection from './FestivalsSection'
 
@@ -20,15 +21,23 @@ type Show = {
 }
 
 export default async function ShowsPage() {
-  const [{ data: shows }, { data: artists }, festivals] = await Promise.all([
+  const [{ data: shows }, { data: artists }, festivals, joins] = await Promise.all([
     supabase.from('shows').select('*, artists(name)').order('date', { ascending: true }),
     supabase.from('artists').select('id, name').order('name', { ascending: true }),
     getMyFestivals(),
+    getJoinsByFestival(),
   ])
 
   // Computed once on the server (request time) so the festivals section renders
   // identically on SSR and client hydration (avoids a date-rollover mismatch).
   const today = new Date().toISOString().slice(0, 10)
+
+  // Lightweight shows for festival↔artist matching in the festivals section.
+  const showMatches = ((shows ?? []) as Show[]).map(s => ({
+    artistName: s.artists?.name ?? '',
+    venue: s.venue,
+    date: s.date,
+  }))
 
   return (
     <div className="mx-auto w-full max-w-5xl space-y-14 px-4 py-10">
@@ -39,7 +48,7 @@ export default async function ShowsPage() {
             Festivals you&apos;re attending. Search below to add one.
           </p>
         </header>
-        <FestivalsSection initialFestivals={festivals} today={today} />
+        <FestivalsSection initialFestivals={festivals} today={today} shows={showMatches} joins={joins} />
       </section>
 
       <section>

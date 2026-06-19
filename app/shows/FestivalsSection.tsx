@@ -1,7 +1,16 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import { CalendarX2, ExternalLink, Loader2, Plus, Search, X } from 'lucide-react'
+import { Fragment, useEffect, useMemo, useState } from 'react'
+import {
+  CalendarX2,
+  ChevronDown,
+  ChevronRight,
+  ExternalLink,
+  Loader2,
+  Plus,
+  Search,
+  X,
+} from 'lucide-react'
 
 import {
   searchFestivals,
@@ -10,8 +19,11 @@ import {
   updateFestivalStatus,
   updateFestivalRating,
 } from '@/lib/festivals'
+import { removeFestivalJoin } from '@/lib/festival-joins'
 import type { Festival, FestivalSearchResult, FestivalStatus } from '@/lib/festivals-types'
+import { normalize } from '@/lib/normalize'
 import { cn } from '@/lib/utils'
+import { ShareFestivals } from './ShareFestivals'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -32,9 +44,10 @@ import {
 } from '@/components/ui/table'
 
 const STATUS_ORDER: FestivalStatus[] = ['tickets_gekocht', 'in_optie', 'wishlist']
+// Display labels are English; the stored DB values stay as-is.
 const STATUS_LABEL: Record<FestivalStatus, string> = {
-  tickets_gekocht: 'Tickets gekocht',
-  in_optie: 'In optie',
+  tickets_gekocht: 'Tickets Bought',
+  in_optie: 'Optioned',
   wishlist: 'Wishlist',
 }
 const STATUS_ITEMS: Record<string, string> = STATUS_LABEL
@@ -47,6 +60,26 @@ const STATUS_TRIGGER: Record<FestivalStatus, string> = {
 const RATING_ITEMS: Record<string, string> = {
   none: '—',
   ...Object.fromEntries(Array.from({ length: 10 }, (_, i) => [String(i + 1), String(i + 1)])),
+}
+
+// A followed artist's show, used to match against saved festivals.
+type ShowMatch = { artistName: string; venue: string; date: string }
+
+const MATCH_BUFFER_MS = 24 * 60 * 60 * 1000 // ±1 day date-proximity window
+
+/** Same fuzzy logic as the dedup orchestrator: normalized name + date proximity. */
+function showMatchesFestival(
+  s: ShowMatch,
+  festivalKey: string,
+  start: string,
+  end: string | null,
+): boolean {
+  if (!s.artistName || normalize(s.venue) !== festivalKey) return false
+  const d = Date.parse(s.date)
+  if (Number.isNaN(d)) return false
+  const lo = Date.parse(start) - MATCH_BUFFER_MS
+  const hi = Date.parse(end ?? start) + MATCH_BUFFER_MS
+  return d >= lo && d <= hi
 }
 
 function formatDate(date: string) {
@@ -68,9 +101,13 @@ type Pending = {
 export default function FestivalsSection({
   initialFestivals,
   today,
+  shows,
+  joins,
 }: {
   initialFestivals: Festival[]
   today: string // computed on the server so SSR and hydration agree
+  shows: ShowMatch[]
+  joins: Record<string, { id: string; name: string }[]> // festival id → joins
 }) {
   const [myFestivals, setMyFestivals] = useState<Festival[]>(initialFestivals)
   const [search, setSearch] = useState('')
@@ -81,6 +118,9 @@ export default function FestivalsSection({
   const [adding, setAdding] = useState(false)
   const [removingId, setRemovingId] = useState<string | null>(null)
   const [actionError, setActionError] = useState<string | null>(null)
+  const [expanded, setExpanded] = useState<Set<string>>(new Set())
+  const [joinsState, setJoinsState] = useState(joins)
+  const [removingJoinId, setRemovingJoinId] = useState<string | null>(null)
 
   // Debounced search on each keystroke (~300ms, min 2 chars) via the action.
   useEffect(() => {
@@ -193,10 +233,54 @@ export default function FestivalsSection({
     }
   }
 
+  // Followed-artist names whose shows match each saved festival.
+  const matchesByFestival = useMemo(() => {
+    const map = new Map<string, string[]>()
+    for (const f of myFestivals) {
+      const key = normalize(f.name)
+      if (!key) {
+        map.set(f.id, [])
+        continue
+      }
+      const names = new Set<string>()
+      for (const s of shows) {
+        if (showMatchesFestival(s, key, f.start_date, f.end_date)) names.add(s.artistName)
+      }
+      map.set(f.id, [...names].sort((a, b) => a.localeCompare(b)))
+    }
+    return map
+  }, [myFestivals, shows])
+
+  function toggleExpanded(id: string) {
+    setExpanded(prev => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }
+
+  async function handleRemoveJoin(festivalId: string, joinId: string) {
+    setActionError(null)
+    const prev = joinsState
+    setRemovingJoinId(joinId)
+    setJoinsState(s => ({ ...s, [festivalId]: (s[festivalId] ?? []).filter(j => j.id !== joinId) }))
+    const res = await removeFestivalJoin(joinId)
+    if (!res.ok) {
+      setJoinsState(prev)
+      setActionError(res.error ?? 'Could not remove join.')
+    }
+    setRemovingJoinId(null)
+  }
+
   const query = search.trim()
 
   return (
     <div className="space-y-6">
+      <div className="flex justify-end">
+        <ShareFestivals />
+      </div>
+
       {/* ── Add festival (search first) ───────────────────────────────── */}
       <div>
         <h3 className="mb-3 text-sm font-semibold tracking-tight">Add festival</h3>
@@ -346,9 +430,44 @@ export default function FestivalsSection({
             <TableBody>
               {myFestivals.map(f => {
                 const isPast = (f.end_date ?? f.start_date) < today
+                const artists = matchesByFestival.get(f.id) ?? []
+                const festivalJoins = joinsState[f.id] ?? []
+                const hasMatches = artists.length > 0
+                const hasJoins = festivalJoins.length > 0
+                const hasExpandable = hasMatches || hasJoins
+                const isExpanded = expanded.has(f.id)
                 return (
-                  <TableRow key={f.id}>
-                    <TableCell className="font-medium">{f.name}</TableCell>
+                  <Fragment key={f.id}>
+                  <TableRow>
+                    <TableCell className="font-medium">
+                      {hasExpandable ? (
+                        <button
+                          type="button"
+                          onClick={() => toggleExpanded(f.id)}
+                          className="inline-flex items-center gap-2 text-left hover:underline"
+                          aria-expanded={isExpanded}
+                        >
+                          {isExpanded ? (
+                            <ChevronDown className="size-4 shrink-0 text-muted-foreground" />
+                          ) : (
+                            <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
+                          )}
+                          <span>{f.name}</span>
+                          {hasMatches && (
+                            <Badge variant="secondary" className="shrink-0 font-normal">
+                              🎵 {artists.length} {artists.length === 1 ? 'artist' : 'artists'}
+                            </Badge>
+                          )}
+                          {hasJoins && (
+                            <Badge variant="secondary" className="shrink-0 font-normal">
+                              👥 {festivalJoins.length} joined
+                            </Badge>
+                          )}
+                        </button>
+                      ) : (
+                        f.name
+                      )}
+                    </TableCell>
                     <TableCell className="whitespace-nowrap text-muted-foreground">
                       <span className="inline-flex items-center gap-2">
                         {formatDate(f.start_date)}
@@ -422,6 +541,46 @@ export default function FestivalsSection({
                       </Button>
                     </TableCell>
                   </TableRow>
+                  {hasExpandable && isExpanded && (
+                    <TableRow>
+                      <TableCell colSpan={6} className="space-y-1 bg-muted/30 text-sm text-muted-foreground">
+                        {hasMatches && (
+                          <p>
+                            <span className="font-medium text-foreground">Followed artists playing: </span>
+                            {artists.join(', ')}
+                          </p>
+                        )}
+                        {hasJoins && (
+                          <p className="flex flex-wrap items-center gap-1.5">
+                            <span className="font-medium text-foreground">Joined:</span>
+                            {festivalJoins.map(j => (
+                              <span
+                                key={j.id}
+                                className="inline-flex items-center gap-0.5 rounded bg-background py-0.5 pr-0.5 pl-2"
+                              >
+                                {j.name}
+                                <Button
+                                  variant="ghost"
+                                  size="icon-xs"
+                                  className="text-muted-foreground hover:text-destructive"
+                                  onClick={() => handleRemoveJoin(f.id, j.id)}
+                                  disabled={removingJoinId === j.id}
+                                  aria-label={`Remove ${j.name}`}
+                                >
+                                  {removingJoinId === j.id ? (
+                                    <Loader2 className="animate-spin" />
+                                  ) : (
+                                    <X />
+                                  )}
+                                </Button>
+                              </span>
+                            ))}
+                          </p>
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  )}
+                  </Fragment>
                 )
               })}
             </TableBody>

@@ -3,27 +3,8 @@
 import { revalidatePath } from 'next/cache'
 
 import { supabase } from './supabase'
+import { normalize } from './normalize'
 import type { Festival, FestivalSearchResult, FestivalStatus } from './festivals-types'
-
-// Noise words dropped when normalizing an event name — mirrors the orchestrator
-// (app/lib/scrapers/index.ts) and migration 0003.
-const NOISE_WORDS = new Set([
-  'the', 'a', 'an', 'festival', 'fest', 'event', 'events', 'presents',
-])
-
-/**
- * Fuzzy event key: first significant word of a normalized title. Same logic as
- * the orchestrator's normalize() — used here to dedup search results.
- */
-function normalize(raw: string): string {
-  const words = raw.toLowerCase().replace(/[^a-z0-9]+/g, ' ').split(/\s+/).filter(Boolean)
-  for (const w of words) {
-    if (/^[0-9]+$/.test(w)) continue
-    if (NOISE_WORDS.has(w)) continue
-    return w
-  }
-  return ''
-}
 
 // ── (a) Library: stored shows ─────────────────────────────────────────────────
 
