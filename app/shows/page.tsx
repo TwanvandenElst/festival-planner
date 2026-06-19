@@ -26,6 +26,10 @@ export default async function ShowsPage() {
     getMyFestivals(),
   ])
 
+  // Computed once on the server (request time) so the festivals section renders
+  // identically on SSR and client hydration (avoids a date-rollover mismatch).
+  const today = new Date().toISOString().slice(0, 10)
+
   return (
     <div className="mx-auto w-full max-w-5xl space-y-14 px-4 py-10">
       <section>
@@ -35,7 +39,7 @@ export default async function ShowsPage() {
             Festivals you&apos;re attending. Search below to add one.
           </p>
         </header>
-        <FestivalsSection initialFestivals={festivals} />
+        <FestivalsSection initialFestivals={festivals} today={today} />
       </section>
 
       <section>

@@ -31,8 +31,6 @@ import {
   TableRow,
 } from '@/components/ui/table'
 
-const TODAY = new Date().toISOString().slice(0, 10)
-
 const STATUS_ORDER: FestivalStatus[] = ['tickets_gekocht', 'in_optie', 'wishlist']
 const STATUS_LABEL: Record<FestivalStatus, string> = {
   tickets_gekocht: 'Tickets gekocht',
@@ -67,7 +65,13 @@ type Pending = {
   endDate: string
 }
 
-export default function FestivalsSection({ initialFestivals }: { initialFestivals: Festival[] }) {
+export default function FestivalsSection({
+  initialFestivals,
+  today,
+}: {
+  initialFestivals: Festival[]
+  today: string // computed on the server so SSR and hydration agree
+}) {
   const [myFestivals, setMyFestivals] = useState<Festival[]>(initialFestivals)
   const [search, setSearch] = useState('')
   const [results, setResults] = useState<FestivalSearchResult[]>([])
@@ -341,7 +345,7 @@ export default function FestivalsSection({ initialFestivals }: { initialFestival
             </TableHeader>
             <TableBody>
               {myFestivals.map(f => {
-                const isPast = (f.end_date ?? f.start_date) < TODAY
+                const isPast = (f.end_date ?? f.start_date) < today
                 return (
                   <TableRow key={f.id}>
                     <TableCell className="font-medium">{f.name}</TableCell>

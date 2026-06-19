@@ -51,6 +51,7 @@ function formatDate(date: string) {
     day: 'numeric',
     month: 'short',
     year: 'numeric',
+    timeZone: 'UTC', // keep SSR and client formatting identical
   })
 }
 
