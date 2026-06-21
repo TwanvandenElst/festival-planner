@@ -128,7 +128,7 @@ export default function HomePage() {
         <ul className="space-y-2">
           {artists.map(artist => (
             <li key={artist.id}>
-              <div className="group flex items-center justify-between rounded-lg border border-border bg-card px-4 py-3 transition-colors hover:bg-muted/50">
+              <div className="group glass-panel flex items-center justify-between rounded-lg px-4 py-3 transition-colors hover:bg-muted/50">
                 <Link
                   href={`/artists/${artist.id}`}
                   className="flex flex-1 items-center justify-between text-sm font-medium"

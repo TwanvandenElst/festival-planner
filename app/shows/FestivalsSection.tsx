@@ -288,7 +288,7 @@ export default function FestivalsSection({
         <div className="relative">
           <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
           <Input
-            className="pl-9"
+            className="glass-panel pl-9"
             placeholder="Search festivals…"
             value={search}
             onChange={e => setSearch(e.target.value)}
@@ -297,7 +297,7 @@ export default function FestivalsSection({
 
         {pending ? (
           /* Confirm step: edit the date(s) before saving. */
-          <div className="mt-3 space-y-3 rounded-xl border border-border p-4">
+          <div className="glass-panel mt-3 space-y-3 rounded-xl p-4">
             <div className="flex items-center gap-2">
               <span className="text-sm font-medium">{pending.base.name}</span>
               {pending.base.source !== 'manual' && (
@@ -353,7 +353,7 @@ export default function FestivalsSection({
           </div>
         ) : query.length >= 2 ? (
           <>
-            <ul className="mt-3 divide-y divide-border overflow-hidden rounded-xl border border-border">
+            <ul className="glass-panel mt-3 divide-y divide-border overflow-hidden rounded-xl">
               {searching && (
                 <li className="flex items-center gap-2 px-4 py-3 text-sm text-muted-foreground">
                   <Loader2 className="size-4 animate-spin" />
@@ -415,7 +415,7 @@ export default function FestivalsSection({
           </p>
         </div>
       ) : (
-        <div className="overflow-hidden rounded-xl border border-border">
+        <div className="glass-panel overflow-hidden rounded-xl">
           <Table>
             <TableHeader>
               <TableRow>

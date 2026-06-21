@@ -35,12 +35,12 @@ export function BottomNav() {
   return (
     <>
       {/* Floating theme toggle (top-right) */}
-      <div className="fixed top-4 right-4 z-50 rounded-full border border-white/10 bg-background/40 backdrop-blur">
+      <div className="glass-panel fixed top-4 right-4 z-50 rounded-full">
         <ThemeToggle />
       </div>
 
-      {/* Bottom tab bar */}
-      <nav className="fixed inset-x-0 bottom-0 z-50 border-t border-white/10 bg-background/60 backdrop-blur-xl">
+      {/* Bottom tab bar — glass surface with a top-only border */}
+      <nav className="fixed inset-x-0 bottom-0 z-50 border-t border-white/10 bg-white/[0.06] shadow-[0_-10px_30px_-12px_rgba(0,0,0,0.5)] backdrop-blur-[18px] [-webkit-backdrop-filter:blur(18px)]">
         <div className="mx-auto flex max-w-md justify-around gap-2 px-6 pt-2 pb-[max(0.5rem,env(safe-area-inset-bottom))]">
           {NAV.map(item => {
             const active = item.match(pathname)

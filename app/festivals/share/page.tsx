@@ -41,9 +41,22 @@ function formatRange(start: string, end: string | null): string {
 
 function FestivalRow({ f, joinNames }: { f: Festival; joinNames: string[] }) {
   return (
-    <li className="py-4">
-      <div className="flex items-start justify-between gap-4">
-        <div className="min-w-0">
+    <li className="glass-panel relative overflow-hidden rounded-2xl p-4">
+      {/* Left column: oversized faded rating, vertically centered, bleeding off the left edge */}
+      {f.rating != null && (
+        <span
+          aria-hidden
+          className="pointer-events-none absolute -left-[22px] top-1/2 z-0 -translate-y-1/2 select-none text-[7rem] font-black leading-none tracking-[-6px] text-foreground/10"
+        >
+          {f.rating}
+        </span>
+      )}
+
+      <div
+        className={`relative z-10 flex items-center gap-4 ${f.rating != null ? 'pl-[2.5rem]' : ''}`}
+      >
+        {/* Middle column: title, date, status badge stacked */}
+        <div className="min-w-0 flex-1">
           <p className="font-medium">
             {f.url ? (
               <a href={f.url} target="_blank" rel="noopener noreferrer" className="hover:underline">
@@ -54,20 +67,23 @@ function FestivalRow({ f, joinNames }: { f: Festival; joinNames: string[] }) {
             )}
           </p>
           <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-muted-foreground">
+            <span className="whitespace-nowrap">{formatRange(f.start_date, f.end_date)}</span>
+            {f.location && <span className="truncate">{f.location}</span>}
+          </div>
+          <div className="mt-2.5">
             <span
-              className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${STATUS_CLASS[f.status]}`}
+              className={`inline-flex shrink-0 rounded-full px-2 py-0.5 text-xs font-medium ${STATUS_CLASS[f.status]}`}
             >
               {STATUS_LABEL[f.status]}
             </span>
-            {f.location && <span className="truncate">{f.location}</span>}
-            {f.rating != null && <span>{f.rating}/10</span>}
           </div>
         </div>
-        <p className="shrink-0 whitespace-nowrap text-right text-sm text-muted-foreground">
-          {formatRange(f.start_date, f.end_date)}
-        </p>
+
+        {/* Right column: the "I'm in" button, vertically centered */}
+        <div className="max-w-[45%] shrink-0">
+          <JoinFestival festivalId={f.id} initialNames={joinNames} />
+        </div>
       </div>
-      <JoinFestival festivalId={f.id} initialNames={joinNames} />
     </li>
   )
 }
@@ -80,7 +96,7 @@ export default async function FestivalsSharePage() {
   const past = festivals.filter(f => (f.end_date ?? f.start_date) < TODAY).reverse() // most recent first
 
   return (
-    <main className="mx-auto w-full max-w-xl px-4 py-12 sm:py-16">
+    <div className="mx-auto w-full max-w-xl px-4 py-12 sm:py-16">
       <header>
         <h1 className="text-2xl font-semibold tracking-tight">Twan&apos;s festivals</h1>
         <p className="mt-1 text-sm text-muted-foreground">Festivals I&apos;m attending this year.</p>
@@ -91,7 +107,7 @@ export default async function FestivalsSharePage() {
       ) : (
         <>
           {upcoming.length > 0 && (
-            <ul className="mt-8 divide-y divide-border">
+            <ul className="mt-8 space-y-3">
               {upcoming.map(f => (
                 <FestivalRow key={f.id} f={f} joinNames={(joins[f.id] ?? []).map(j => j.name)} />
               ))}
@@ -103,7 +119,7 @@ export default async function FestivalsSharePage() {
               <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
                 Geweest
               </h2>
-              <ul className="mt-2 divide-y divide-border opacity-70">
+              <ul className="mt-3 space-y-3 opacity-70">
                 {past.map(f => (
                   <FestivalRow key={f.id} f={f} joinNames={(joins[f.id] ?? []).map(j => j.name)} />
                 ))}
@@ -112,6 +128,6 @@ export default async function FestivalsSharePage() {
           )}
         </>
       )}
-    </main>
+    </div>
   )
 }

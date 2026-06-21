@@ -74,7 +74,7 @@ export default async function ArtistPage({ params }: { params: Promise<{ id: str
           </p>
         </div>
       ) : (
-        <div className="overflow-hidden rounded-xl border border-border">
+        <div className="glass-panel overflow-hidden rounded-xl">
           <Table>
             <TableHeader>
               <TableRow>

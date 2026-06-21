@@ -139,7 +139,7 @@ export default function ShowsClient({ shows, artists }: Props) {
           </p>
         </div>
       ) : (
-        <div className="overflow-hidden rounded-xl border border-border">
+        <div className="glass-panel overflow-hidden rounded-xl">
           <Table>
             <TableHeader>
               <TableRow>
