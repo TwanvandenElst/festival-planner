@@ -25,8 +25,8 @@ const STATUS_CLASS: Record<FestivalStatus, string> = {
   wishlist: 'bg-muted text-muted-foreground',
 }
 
-// Dutch month abbreviations, e.g. "10-12 jul 2026".
-const MONTHS = ['jan', 'feb', 'mrt', 'apr', 'mei', 'jun', 'jul', 'aug', 'sep', 'okt', 'nov', 'dec']
+// Month abbreviations, e.g. "10-12 jul 2026".
+const MONTHS = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec']
 
 /** Formats a single date or a start–end range from "YYYY-MM-DD" strings. */
 function formatRange(start: string, end: string | null): string {
@@ -117,7 +117,7 @@ export default async function FestivalsSharePage() {
           {past.length > 0 && (
             <section className="mt-10">
               <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-                Geweest
+                Past
               </h2>
               <ul className="mt-3 space-y-3 opacity-70">
                 {past.map(f => (

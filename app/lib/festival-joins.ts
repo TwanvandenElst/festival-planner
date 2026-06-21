@@ -5,8 +5,8 @@ import { revalidatePath } from 'next/cache'
 import { supabase } from './supabase'
 import { sendTelegramMessage, escapeHtml } from './telegram'
 
-// Dutch month abbreviations for the notification date, e.g. "10-12 jul 2026".
-const MONTHS = ['jan', 'feb', 'mrt', 'apr', 'mei', 'jun', 'jul', 'aug', 'sep', 'okt', 'nov', 'dec']
+// Month abbreviations for the notification date, e.g. "10-12 jul 2026".
+const MONTHS = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec']
 
 function formatRange(start: string, end: string | null): string {
   const [sy, sm, sd] = start.split('-').map(Number)

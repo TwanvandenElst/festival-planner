@@ -57,7 +57,7 @@ export function normalize(raw: string | null | undefined): string {
 
 /** Formats one newly inserted show as a Telegram HTML message block. */
 function formatShowNotification(show: ScrapedShow): string {
-  const datum = new Date(show.date).toLocaleDateString('nl-NL', {
+  const date = new Date(show.date).toLocaleDateString('en-GB', {
     day: 'numeric',
     month: 'long',
     year: 'numeric',
@@ -65,10 +65,10 @@ function formatShowNotification(show: ScrapedShow): string {
   })
   return (
     `🎵 <b>${escapeHtml(show.artistName)}</b>\n` +
-    `📅 ${escapeHtml(datum)}\n` +
+    `📅 ${escapeHtml(date)}\n` +
     `🎪 ${escapeHtml(show.venue)}\n` +
     `📍 ${escapeHtml(show.city)}\n` +
-    `🔗 <a href="${escapeHtml(show.sourceUrl)}">Bekijk event</a>`
+    `🔗 <a href="${escapeHtml(show.sourceUrl)}">View event</a>`
   )
 }
 
