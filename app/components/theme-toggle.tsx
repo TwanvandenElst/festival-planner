@@ -8,10 +8,11 @@ import { Button } from '@/components/ui/button'
 /**
  * Toggles the `dark` class on <html>, entirely client-side.
  * Intentionally does not persist to localStorage (per project decision) to
- * avoid Next.js hydration mismatches — the server always renders light.
+ * avoid Next.js hydration mismatches — the server always renders dark (the
+ * default), so the initial state below matches it.
  */
 export function ThemeToggle() {
-  const [isDark, setIsDark] = useState(false)
+  const [isDark, setIsDark] = useState(true)
 
   useEffect(() => {
     setIsDark(document.documentElement.classList.contains('dark'))
