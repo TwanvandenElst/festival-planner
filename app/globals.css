@@ -244,6 +244,11 @@
     radial-gradient(46% 56% at 88% 2%, rgba(217, 70, 239, 0.42), transparent 70%),
     radial-gradient(58% 62% at 56% 26%, rgba(139, 92, 246, 0.40), transparent 72%),
     radial-gradient(40% 46% at 32% 38%, rgba(192, 38, 211, 0.28), transparent 70%);
+  --gradient-friends:
+    radial-gradient(42% 52% at 12% 6%, rgba(236, 72, 153, 0.55), transparent 72%),
+    radial-gradient(46% 56% at 88% 2%, rgba(244, 63, 94, 0.42), transparent 70%),
+    radial-gradient(58% 62% at 56% 26%, rgba(219, 39, 119, 0.42), transparent 72%),
+    radial-gradient(40% 46% at 32% 38%, rgba(157, 23, 77, 0.30), transparent 70%);
 }
 
 /* Reusable glassmorphism surface — tuned for the dark default, with a
@@ -260,6 +265,47 @@
   background-color: rgba(0, 0, 0, 0.035);
   border-color: rgba(0, 0, 0, 0.08);
   box-shadow: 0 8px 30px -14px rgba(0, 0, 0, 0.2);
+}
+
+/* Vriendenboekje fistbump: a quick scale pop when the stick figures meet. */
+@keyframes vb-pop {
+  0% { transform: scale(1); }
+  40% { transform: scale(1.18); }
+  100% { transform: scale(1); }
+}
+
+/* Vriendenboekje stick-figure dance: bobbing body + swinging arms/legs while
+   the two figures groove toward each other. */
+@keyframes vb-bob {
+  0%, 100% { transform: translateY(0) rotate(-2deg); }
+  50%      { transform: translateY(-3px) rotate(2deg); }
+}
+@keyframes vb-leg-swing {
+  0%, 100% { transform: rotate(16deg); }
+  50%      { transform: rotate(-16deg); }
+}
+@keyframes vb-arm-swing {
+  0%, 100% { transform: rotate(24deg); }
+  50%      { transform: rotate(-24deg); }
+}
+
+.vb-bob { animation: vb-bob 560ms ease-in-out infinite; }
+/* Limbs pivot around the hip / shoulder joints (viewBox coordinates). */
+.vb-dancing .vb-leg-l,
+.vb-dancing .vb-leg-r { transform-box: view-box; transform-origin: 11px 28px; }
+.vb-dancing .vb-arm-front,
+.vb-dancing .vb-arm-back { transform-box: view-box; transform-origin: 11px 16px; }
+.vb-dancing .vb-leg-l { animation: vb-leg-swing 560ms ease-in-out infinite; }
+.vb-dancing .vb-leg-r { animation: vb-leg-swing 560ms ease-in-out infinite reverse; }
+.vb-dancing .vb-arm-front { animation: vb-arm-swing 620ms ease-in-out infinite; }
+.vb-dancing .vb-arm-back { animation: vb-arm-swing 620ms ease-in-out infinite reverse; }
+
+@media (prefers-reduced-motion: reduce) {
+  .vb-bob,
+  .vb-dancing .vb-leg-l,
+  .vb-dancing .vb-leg-r,
+  .vb-dancing .vb-arm-front,
+  .vb-dancing .vb-arm-back { animation: none; }
 }
 
 /* Confetti burst (portaled, fixed-positioned point of origin). */

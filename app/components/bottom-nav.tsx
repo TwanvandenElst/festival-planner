@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { CalendarDays, Users } from 'lucide-react'
+import { BookHeart, CalendarDays, Users } from 'lucide-react'
 
 import { cn } from '@/lib/utils'
 import { ThemeToggle } from './theme-toggle'
@@ -23,6 +23,14 @@ const NAV = [
     match: (p: string) => p.startsWith('/shows'),
     activeText: 'text-cyan-300',
     activeBg: 'bg-cyan-500/15',
+  },
+  {
+    href: '/vriendenboekje',
+    label: 'Vrienden',
+    icon: BookHeart,
+    match: (p: string) => p.startsWith('/vriendenboekje'),
+    activeText: 'text-pink-300',
+    activeBg: 'bg-pink-500/15',
   },
 ]
 

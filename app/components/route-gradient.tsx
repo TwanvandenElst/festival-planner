@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation'
 const ROUTE_GRADIENTS: { test: (p: string) => boolean; variable: string }[] = [
   { test: p => p.startsWith('/festivals/share'), variable: '--gradient-share' },
   { test: p => p.startsWith('/shows'), variable: '--gradient-shows' },
+  { test: p => p.startsWith('/vriendenboekje'), variable: '--gradient-friends' },
   { test: p => p === '/' || p.startsWith('/artists'), variable: '--gradient-artists' },
 ]
 
