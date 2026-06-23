@@ -130,7 +130,6 @@ export function Form({ onDone }: { onDone: () => void }) {
     setForm(f => ({ ...f, [key]: val }))
 
   const progress = useMemo(() => (fused ? 1 : step / TOTAL), [step, fused])
-  const halfway = step >= Math.floor(TOTAL / 2) && step < LAST
 
   function fireConfetti() {
     const pieces: Piece[] = Array.from({ length: 28 }, (_, i) => {
@@ -269,7 +268,7 @@ export function Form({ onDone }: { onDone: () => void }) {
   if (submitted) {
     return (
       <div className="flex flex-col items-center gap-6 py-10 text-center">
-        <StickFigures progress={1} fused halfway={false} />
+        <StickFigures progress={1} step={LAST} fused />
         <p className="text-2xl font-semibold tracking-tight">
           Jeeej we zijn nu officieel vriendjes! ❤️
         </p>
@@ -289,7 +288,7 @@ export function Form({ onDone }: { onDone: () => void }) {
 
   return (
     <div className="flex flex-col gap-8">
-      <StickFigures progress={progress} fused={fused} halfway={halfway} />
+      <StickFigures progress={progress} step={step} fused={fused} />
 
       {/* Sliding question area */}
       <div className="relative min-h-[18rem]">

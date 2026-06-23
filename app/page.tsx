@@ -1,11 +1,12 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { ChevronRight, Loader2, Music2, X } from 'lucide-react'
 
 import { supabase } from '@/lib/supabase'
 import { triggerScrape } from '@/scrape-test/actions'
+import { useGsapReveal } from '@/lib/use-gsap-reveal'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 
@@ -23,6 +24,10 @@ export default function HomePage() {
   const [removingId, setRemovingId] = useState<string | null>(null)
   const [scrapingArtist, setScrapingArtist] = useState<string | null>(null)
   const [scrapeMsg, setScrapeMsg] = useState<string | null>(null)
+  const listRef = useRef<HTMLUListElement>(null)
+
+  // The list is fetched client-side, so reveal its cards once they arrive.
+  useGsapReveal(listRef, [artists, loading])
 
   useEffect(() => {
     supabase
@@ -82,7 +87,9 @@ export default function HomePage() {
   return (
     <div className="mx-auto w-full max-w-2xl px-4 py-10">
       <header className="mb-8">
-        <h1 className="text-2xl font-semibold tracking-tight">Followed artists</h1>
+        <h1 data-reveal-title className="text-2xl font-semibold tracking-tight">
+          Followed artists
+        </h1>
         <p className="mt-1 text-sm text-muted-foreground">
           Add artists to track when they perform in the Netherlands.
         </p>
@@ -125,9 +132,9 @@ export default function HomePage() {
           </p>
         </div>
       ) : (
-        <ul className="space-y-2">
+        <ul ref={listRef} className="space-y-2">
           {artists.map(artist => (
-            <li key={artist.id}>
+            <li key={artist.id} data-reveal-card>
               <div className="group glass-panel flex items-center justify-between rounded-lg px-4 py-3 transition-colors hover:bg-muted/50">
                 <Link
                   href={`/artists/${artist.id}`}

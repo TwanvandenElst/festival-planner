@@ -152,7 +152,7 @@ export default function ShowsClient({ shows, artists }: Props) {
             </TableHeader>
             <TableBody>
               {filtered.map(show => (
-                <TableRow key={show.id}>
+                <TableRow key={show.id} data-reveal-card>
                   <TableCell className="font-medium">
                     {show.artists?.name ?? '—'}
                   </TableCell>

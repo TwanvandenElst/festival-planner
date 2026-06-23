@@ -1,12 +1,18 @@
 import type { Metadata } from "next";
-import { Geist_Mono } from "next/font/google";
+import { Caveat, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { satoshi } from "./fonts/satoshi-font";
 import { BottomNav } from "./components/bottom-nav";
-import { RouteGradient } from "./components/route-gradient";
+import { AnimatedGradient } from "./components/animated-gradient";
 
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
+  subsets: ["latin"],
+});
+
+// Handwritten font for the Polaroid name captions on /vriendenboekje.
+const caveat = Caveat({
+  variable: "--font-caveat",
   subsets: ["latin"],
 });
 
@@ -34,10 +40,10 @@ export default function RootLayout({
     <html
       lang="en"
       suppressHydrationWarning
-      className={`${satoshi.variable} ${geistMono.variable} h-full antialiased dark`}
+      className={`${satoshi.variable} ${geistMono.variable} ${caveat.variable} h-full antialiased dark`}
     >
       <body className="relative flex min-h-full flex-col bg-background text-foreground">
-        <RouteGradient />
+        <AnimatedGradient />
         <main className="flex-1 pb-28">{children}</main>
         <BottomNav />
       </body>

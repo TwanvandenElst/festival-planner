@@ -438,7 +438,7 @@ export default function FestivalsSection({
                 const isExpanded = expanded.has(f.id)
                 return (
                   <Fragment key={f.id}>
-                  <TableRow>
+                  <TableRow data-reveal-card>
                     <TableCell className="font-medium">
                       {hasExpandable ? (
                         <button

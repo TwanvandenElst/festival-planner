@@ -1,8 +1,9 @@
 'use client'
 
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import { BookHeart, CalendarDays, Users } from 'lucide-react'
+import gsap from 'gsap'
 
 import { cn } from '@/lib/utils'
 import { ThemeToggle } from './theme-toggle'
@@ -36,6 +37,27 @@ const NAV = [
 
 export function BottomNav() {
   const pathname = usePathname()
+  const router = useRouter()
+
+  // Play the outgoing page animation, then navigate. The nav bar itself never
+  // animates — only the page content (#page-root) does.
+  function handleNav(e: React.MouseEvent, href: string) {
+    e.preventDefault()
+    if (href === pathname) return
+    const el = document.getElementById('page-root')
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    if (!el || reduce) {
+      router.push(href)
+      return
+    }
+    gsap.to(el, {
+      opacity: 0,
+      y: -20,
+      duration: 0.25,
+      ease: 'power2.in',
+      onComplete: () => router.push(href),
+    })
+  }
 
   // The public share page is standalone — no app chrome.
   if (pathname.startsWith('/festivals/share')) return null
@@ -57,6 +79,7 @@ export function BottomNav() {
               <Link
                 key={item.href}
                 href={item.href}
+                onClick={e => handleNav(e, item.href)}
                 aria-current={active ? 'page' : undefined}
                 className={cn(
                   'flex flex-1 flex-col items-center gap-1 py-1 text-[0.7rem] font-medium transition-colors',

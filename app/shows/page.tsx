@@ -43,7 +43,9 @@ export default async function ShowsPage() {
     <div className="mx-auto w-full max-w-5xl space-y-14 px-4 py-10">
       <section>
         <header className="mb-6">
-          <h1 className="text-2xl font-semibold tracking-tight">My Festivals</h1>
+          <h1 data-reveal-title className="text-2xl font-semibold tracking-tight">
+            My Festivals
+          </h1>
           <p className="mt-1 text-sm text-muted-foreground">
             Festivals you&apos;re attending. Search below to add one.
           </p>
@@ -53,7 +55,9 @@ export default async function ShowsPage() {
 
       <section>
         <header className="mb-6">
-          <h2 className="text-xl font-semibold tracking-tight">Found shows</h2>
+          <h2 data-reveal-title className="text-xl font-semibold tracking-tight">
+            Found shows
+          </h2>
           <p className="mt-1 text-sm text-muted-foreground">
             Every show matched for your followed artists.
           </p>

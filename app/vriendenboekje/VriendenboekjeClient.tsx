@@ -2,7 +2,8 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { BookHeart, ChevronDown, ChevronRight, PenLine } from 'lucide-react'
+import { createPortal } from 'react-dom'
+import { ArrowLeft, BookHeart, PenLine } from 'lucide-react'
 
 import { cn } from '@/lib/utils'
 import {
@@ -12,23 +13,54 @@ import {
 } from '@/lib/vriendenboekje-types'
 import { Form } from './Form'
 
+// Warm gradients for photo-less placeholders.
+const PLACEHOLDER_GRADIENTS = [
+  'from-pink-400 to-rose-500',
+  'from-fuchsia-400 to-pink-600',
+  'from-rose-400 to-orange-400',
+  'from-violet-400 to-fuchsia-500',
+  'from-amber-400 to-rose-500',
+]
+
+// Stable pseudo-random per entry id so SSR and client agree (no hydration jump).
+function hashStr(s: string) {
+  let h = 0
+  for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0
+  return h
+}
+
+function initialOf(name: string) {
+  return name.trim().charAt(0).toUpperCase() || '?'
+}
+
+function formatDate(iso: string) {
+  return new Date(iso).toLocaleDateString('nl-NL', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  })
+}
+
+const CAVEAT = { fontFamily: 'var(--font-caveat)' } as const
+
 export function VriendenboekjeClient({ entries }: { entries: Vriendenboekje[] }) {
   const router = useRouter()
   const [writing, setWriting] = useState(false)
+  const [selected, setSelected] = useState<Vriendenboekje | null>(null)
 
   if (writing) {
     return (
       <Form
         onDone={() => {
           setWriting(false)
-          router.refresh() // pull in the freshly inserted entry
+          router.refresh()
         }}
       />
     )
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-7">
       <button
         type="button"
         onClick={() => setWriting(true)}
@@ -45,55 +77,106 @@ export function VriendenboekjeClient({ entries }: { entries: Vriendenboekje[] })
           <p className="mt-1 text-sm text-muted-foreground">Wees de eerste die er één invult.</p>
         </div>
       ) : (
-        <ul className="space-y-3">
+        /* Loose scattered pile — two masonry columns of rotated Polaroids. */
+        <div className="columns-2 gap-2 [&>*]:mb-1">
           {entries.map(e => (
-            <EntryCard key={e.id} entry={e} />
+            <Polaroid key={e.id} entry={e} onOpen={() => setSelected(e)} />
           ))}
-        </ul>
+        </div>
       )}
+
+      {selected && <Detail entry={selected} onClose={() => setSelected(null)} />}
     </div>
   )
 }
 
-function EntryCard({ entry }: { entry: Vriendenboekje }) {
-  const [open, setOpen] = useState(false)
+function Polaroid({ entry, onOpen }: { entry: Vriendenboekje; onOpen: () => void }) {
+  const h = hashStr(entry.id)
+  const rot = (h % 17) - 8 // -8..8 deg
+  const tx = ((h >> 4) % 13) - 6 // -6..6 px
+  const overlap = -((h >> 8) % 12) - 2 // -2..-13 px (cards stack into each other)
+  const aspects = ['aspect-[4/5]', 'aspect-square', 'aspect-[5/4]']
+  const aspect = aspects[(h >> 6) % aspects.length]
+  const gradient = PLACEHOLDER_GRADIENTS[h % PLACEHOLDER_GRADIENTS.length]
 
   return (
-    <li className="glass-panel overflow-hidden rounded-2xl">
-      <div className="flex items-center gap-4 p-4">
-        {entry.foto_url ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={entry.foto_url}
-            alt={entry.naam}
-            className="size-14 shrink-0 rounded-full object-cover ring-2 ring-pink-400/40"
-          />
-        ) : (
-          <span className="grid size-14 shrink-0 place-items-center rounded-full bg-gradient-to-br from-pink-400 to-rose-500 text-xl font-bold text-white">
-            {entry.naam.trim().charAt(0).toUpperCase() || '?'}
-          </span>
-        )}
-
-        <div className="min-w-0 flex-1">
-          <p className="truncate text-base font-semibold">{entry.naam}</p>
-          {entry.dj_naam && (
-            <p className="truncate text-sm text-pink-200/90">🎧 {entry.dj_naam}</p>
+    <div data-reveal-card className="break-inside-avoid" style={{ marginBottom: overlap }}>
+      <button
+        type="button"
+        onClick={onOpen}
+        style={{ rotate: `${rot}deg`, translate: `${tx}px` }}
+        className="relative z-0 block w-full rounded-md bg-[#fbfaf4] p-2 pb-7 shadow-[0_8px_22px_-8px_rgba(0,0,0,0.65)] transition-all duration-150 active:z-30 active:scale-[1.06] active:shadow-[0_18px_40px_-10px_rgba(0,0,0,0.75)]"
+      >
+        <div className={cn('overflow-hidden rounded-sm bg-neutral-200', aspect)}>
+          {entry.foto_url ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={entry.foto_url} alt={entry.naam} className="size-full object-cover" />
+          ) : (
+            <div className={cn('grid size-full place-items-center bg-gradient-to-br', gradient)}>
+              <span className="text-5xl font-bold text-white/90">{initialOf(entry.naam)}</span>
+            </div>
           )}
         </div>
+        <p
+          style={CAVEAT}
+          className="mt-1.5 truncate px-1 text-center text-2xl leading-tight text-neutral-800"
+        >
+          {entry.naam}
+        </p>
+      </button>
+    </div>
+  )
+}
 
+function Detail({ entry, onClose }: { entry: Vriendenboekje; onClose: () => void }) {
+  if (typeof document === 'undefined') return null
+
+  return createPortal(
+    <div className="fixed inset-0 z-[120] overflow-y-auto bg-background/95 backdrop-blur-xl duration-300 animate-in fade-in-0 slide-in-from-bottom-6">
+      {/* Pink/magenta accent glow at the top, matching the page theme */}
+      <div
+        aria-hidden
+        className="pointer-events-none fixed inset-x-0 top-0 -z-10 h-[60vh]"
+        style={{
+          backgroundImage: 'var(--gradient-friends)',
+          maskImage: 'linear-gradient(to bottom, black 0%, black 30%, transparent 90%)',
+          WebkitMaskImage: 'linear-gradient(to bottom, black 0%, black 30%, transparent 90%)',
+        }}
+      />
+
+      <div className="mx-auto w-full max-w-xl px-4 pb-16 pt-5">
         <button
           type="button"
-          onClick={() => setOpen(o => !o)}
-          aria-expanded={open}
-          className="flex shrink-0 items-center gap-1 rounded-full bg-white/10 px-3 py-1.5 text-sm font-medium transition-transform active:scale-95"
+          onClick={onClose}
+          className="mb-5 inline-flex items-center gap-1.5 rounded-full bg-white/10 px-4 py-2 text-sm font-medium backdrop-blur-md transition-transform active:scale-95"
         >
-          {open ? <ChevronDown className="size-4" /> : <ChevronRight className="size-4" />}
-          Lees meer
+          <ArrowLeft className="size-4" />
+          Terug
         </button>
-      </div>
 
-      {open && (
-        <div className="space-y-3 border-t border-white/10 px-4 pb-4 pt-3 text-sm duration-200 animate-in fade-in-0">
+        {/* Polaroid-style header */}
+        <div className="mx-auto max-w-xs -rotate-2 rounded-md bg-[#fbfaf4] p-3 pb-8 shadow-[0_18px_44px_-12px_rgba(0,0,0,0.7)]">
+          <div className="aspect-square overflow-hidden rounded-sm bg-neutral-200">
+            {entry.foto_url ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={entry.foto_url} alt={entry.naam} className="size-full object-cover" />
+            ) : (
+              <div className="grid size-full place-items-center bg-gradient-to-br from-pink-400 to-rose-500">
+                <span className="text-7xl font-bold text-white/90">{initialOf(entry.naam)}</span>
+              </div>
+            )}
+          </div>
+          <p style={CAVEAT} className="mt-2 text-center text-4xl leading-none text-neutral-800">
+            {entry.naam}
+          </p>
+        </div>
+
+        <div className="mt-6 text-center">
+          {entry.dj_naam && <p className="text-base text-pink-200">🎧 {entry.dj_naam}</p>}
+          <p className="mt-1 text-xs text-muted-foreground">Ingevuld op {formatDate(entry.created_at)}</p>
+        </div>
+
+        <div className="mt-6 space-y-3.5 rounded-2xl bg-white/[0.04] p-4 text-sm backdrop-blur-md ring-1 ring-white/10">
           <Row label="Hoe we elkaar ontmoetten" value={entry.ontmoet} />
           <Row label="Front / back / bar" value={DANCEFLOOR_LABEL[entry.dancefloor]} />
           <Row label="Naar huis" value={NAAR_HUIS_LABEL[entry.naar_huis]} />
@@ -130,8 +213,9 @@ function EntryCard({ entry }: { entry: Vriendenboekje }) {
 
           <Row label="Onthoud dit over mij" value={entry.afsluiting} />
         </div>
-      )}
-    </li>
+      </div>
+    </div>,
+    document.body,
   )
 }
 

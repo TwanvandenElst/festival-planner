@@ -289,6 +289,13 @@
   50%      { transform: rotate(-24deg); }
 }
 
+/* Spin-around on each new step (turn on the spot via a perspective Y-rotation). */
+@keyframes vb-spin {
+  from { transform: perspective(160px) rotateY(0deg); }
+  to   { transform: perspective(160px) rotateY(360deg); }
+}
+.vb-spin { animation: vb-spin 700ms ease-in-out; }
+
 .vb-bob { animation: vb-bob 560ms ease-in-out infinite; }
 /* Limbs pivot around the hip / shoulder joints (viewBox coordinates). */
 .vb-dancing .vb-leg-l,
@@ -302,6 +309,7 @@
 
 @media (prefers-reduced-motion: reduce) {
   .vb-bob,
+  .vb-spin,
   .vb-dancing .vb-leg-l,
   .vb-dancing .vb-leg-r,
   .vb-dancing .vb-arm-front,
