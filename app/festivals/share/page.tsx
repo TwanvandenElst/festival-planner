@@ -41,7 +41,7 @@ function formatRange(start: string, end: string | null): string {
 
 function FestivalRow({ f, joinNames }: { f: Festival; joinNames: string[] }) {
   return (
-    <li className="glass-panel relative overflow-hidden rounded-2xl p-4">
+    <li data-reveal-card className="glass-panel relative overflow-hidden rounded-2xl p-4">
       {/* Left column: oversized faded rating, vertically centered, bleeding off the left edge */}
       {f.rating != null && (
         <span
@@ -98,7 +98,9 @@ export default async function FestivalsSharePage() {
   return (
     <div className="mx-auto w-full max-w-xl px-4 py-12 sm:py-16">
       <header>
-        <h1 className="text-2xl font-semibold tracking-tight">Twan&apos;s festivals</h1>
+        <h1 data-reveal-title className="text-2xl font-semibold tracking-tight">
+          Twan&apos;s festivals
+        </h1>
         <p className="mt-1 text-sm text-muted-foreground">Festivals I&apos;m attending this year.</p>
       </header>
 
@@ -116,7 +118,10 @@ export default async function FestivalsSharePage() {
 
           {past.length > 0 && (
             <section className="mt-10">
-              <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+              <h2
+                data-reveal-title
+                className="text-sm font-semibold uppercase tracking-wide text-muted-foreground"
+              >
                 Past
               </h2>
               <ul className="mt-3 space-y-3 opacity-70">
