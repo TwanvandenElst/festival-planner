@@ -61,6 +61,15 @@ export function VriendenboekjeClient({ entries }: { entries: Vriendenboekje[] })
 
   return (
     <div className="space-y-7">
+      <header>
+        <h1 data-reveal-title className="text-2xl font-semibold tracking-tight">
+          Vriendenboekje
+        </h1>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Vul je vriendenboekje in en word officieel vrienden.
+        </p>
+      </header>
+
       <button
         type="button"
         onClick={() => setWriting(true)}

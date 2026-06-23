@@ -1,8 +1,10 @@
 'use client'
 
-import { useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { ArrowLeft, ArrowRight, ImagePlus, Loader2, X } from 'lucide-react'
+import { useGSAP } from '@gsap/react'
+import gsap from 'gsap'
 
 import { supabase } from '@/lib/supabase'
 import { cn } from '@/lib/utils'
@@ -21,6 +23,13 @@ const LAST = TOTAL - 1
 const SELECTED_STYLE: React.CSSProperties = {
   backgroundColor: 'rgba(236, 72, 153, 0.16)',
   boxShadow: '0 0 0 2px #f472b6, 0 0 22px -1px rgba(236, 72, 153, 0.85)',
+}
+
+// Steps that show a full reaction overlay card (with GIF) instead of the small
+// inline reaction text. POC: only naam (0) and dj-naam (1) for now.
+const OVERLAY_REACTIONS: Record<number, { gif: string; text: string }> = {
+  0: { gif: '/gifs/naam.gif', text: 'Klinkt als iemand die tot 6 uur blijft' },
+  1: { gif: '/gifs/dj.gif', text: 'Ik ben je eerste fan' },
 }
 
 const CONFETTI_COLORS = ['#ec4899', '#f43f5e', '#a78bfa', '#22d3ee', '#fb923c', '#ffffff']
@@ -93,6 +102,21 @@ function pick<T>(arr: T[]): T {
   return arr[Math.floor(Math.random() * arr.length)]
 }
 
+// A small, short-lived confetti burst (used for the per-tap bursts).
+function smallBurst(): Piece[] {
+  return Array.from({ length: 7 }, (_, i) => {
+    const angle = (Math.PI * 2 * i) / 7 + Math.random() * 0.6
+    const dist = 16 + Math.random() * 26
+    return {
+      id: i,
+      dx: Math.cos(angle) * dist,
+      dy: Math.sin(angle) * dist - 6,
+      dr: Math.random() * 240 - 120,
+      color: CONFETTI_COLORS[i % CONFETTI_COLORS.length],
+    }
+  })
+}
+
 // Pure multiple-choice steps advance on tap; sliders/photo use a standalone
 // arrow; everything else has the arrow inside its text field.
 function advanceMode(step: number): 'auto' | 'button' | 'input' {
@@ -125,6 +149,24 @@ export function Form({ onDone }: { onDone: () => void }) {
   const [submitted, setSubmitted] = useState(false)
   const [fused, setFused] = useState(false)
   const [burst, setBurst] = useState<Piece[] | null>(null)
+  const [overlay, setOverlay] = useState<{ gif: string; text: string } | null>(null)
+  const [taps, setTaps] = useState<{ id: number; x: number; y: number; pieces: Piece[] }[]>([])
+  const tapId = useRef(0)
+
+  // Confetti on every tap anywhere, from the exact touch point. Capped + short
+  // so rapid tapping is a playful storm without piling up DOM nodes.
+  useEffect(() => {
+    function onPointerDown(e: PointerEvent) {
+      const id = ++tapId.current
+      setTaps(prev => {
+        const next = [...prev, { id, x: e.clientX, y: e.clientY, pieces: smallBurst() }]
+        return next.length > 14 ? next.slice(next.length - 14) : next
+      })
+      setTimeout(() => setTaps(prev => prev.filter(t => t.id !== id)), 560)
+    }
+    window.addEventListener('pointerdown', onPointerDown)
+    return () => window.removeEventListener('pointerdown', onPointerDown)
+  }, [])
 
   const set = <K extends keyof FormState>(key: K, val: FormState[K]) =>
     setForm(f => ({ ...f, [key]: val }))
@@ -191,20 +233,35 @@ export function Form({ onDone }: { onDone: () => void }) {
     }
   }
 
-  // Show the playful reaction, then slide to the next question (or submit).
+  function goNext() {
+    setDir('forward')
+    setStep(s => s + 1)
+  }
+
+  // Show the reaction, then slide to the next question (or submit). Steps with an
+  // overlay reaction show a GIF card first; the rest show the small inline text.
   function advance() {
     if (step === LAST) {
       void submit()
       return
     }
-    setReaction(reactionFor(step))
     setBusy(true)
+    if (OVERLAY_REACTIONS[step]) {
+      setOverlay(OVERLAY_REACTIONS[step])
+      return // ReactionOverlay calls dismissOverlay → goNext
+    }
+    setReaction(reactionFor(step))
     setTimeout(() => {
       setReaction(null)
       setBusy(false)
-      setDir('forward')
-      setStep(s => s + 1)
+      goNext()
     }, 1100)
+  }
+
+  function dismissOverlay() {
+    setOverlay(null)
+    setBusy(false)
+    goNext()
   }
 
   function next() {
@@ -280,6 +337,7 @@ export function Form({ onDone }: { onDone: () => void }) {
           Terug naar overzicht
         </button>
         {burst && <Confetti pieces={burst} />}
+        <TapConfetti taps={taps} />
       </div>
     )
   }
@@ -341,6 +399,11 @@ export function Form({ onDone }: { onDone: () => void }) {
       </div>
 
       {burst && <Confetti pieces={burst} />}
+      <TapConfetti taps={taps} />
+
+      {overlay && (
+        <FullScreenReaction gif={overlay.gif} text={overlay.text} onDismiss={dismissOverlay} />
+      )}
     </div>
   )
 }
@@ -794,6 +857,121 @@ function PhotoStep({
         onChange={e => onPhoto(e.target.files?.[0] ?? null)}
       />
     </div>
+  )
+}
+
+const REACTION_FADE = 'linear-gradient(to bottom, black 0%, black 55%, transparent 92%)'
+
+/** Full-screen reaction step: the GIF + text take over the whole screen (no
+ *  navbar, no card). Tap anywhere or wait ~2.5s to advance. */
+function FullScreenReaction({
+  gif,
+  text,
+  onDismiss,
+}: {
+  gif: string
+  text: string
+  onDismiss: () => void
+}) {
+  const rootRef = useRef<HTMLDivElement>(null)
+  const doneRef = useRef(false)
+
+  const { contextSafe } = useGSAP(
+    () => {
+      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        gsap.set(rootRef.current, { opacity: 1 })
+        return
+      }
+      const tl = gsap.timeline()
+      tl.fromTo(rootRef.current, { opacity: 0 }, { opacity: 1, duration: 0.22, ease: 'power2.out' })
+      tl.fromTo(
+        rootRef.current?.querySelector('[data-react-gif]') ?? null,
+        { scale: 0.92, y: 16 },
+        { scale: 1, y: 0, duration: 0.4, ease: 'back.out(1.5)' },
+        0,
+      )
+    },
+    { scope: rootRef },
+  )
+
+  const dismiss = contextSafe(() => {
+    if (doneRef.current) return
+    doneRef.current = true
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    gsap.to(rootRef.current, {
+      opacity: 0,
+      duration: reduce ? 0 : 0.2,
+      ease: 'power2.in',
+      onComplete: onDismiss,
+    })
+  })
+
+  useEffect(() => {
+    const t = setTimeout(dismiss, 2500)
+    return () => clearTimeout(t)
+  }, [dismiss])
+
+  if (typeof document === 'undefined') return null
+  return createPortal(
+    <div
+      ref={rootRef}
+      onClick={dismiss}
+      className="fixed inset-0 z-[130] flex flex-col items-center justify-center gap-7 overflow-hidden bg-background p-6"
+    >
+      {/* Pink mesh accent on the dark background (no card / border). */}
+      <div
+        aria-hidden
+        className="vb-breathe pointer-events-none absolute inset-x-0 top-0 h-[75vh]"
+        style={{
+          backgroundImage: 'var(--gradient-friends)',
+          maskImage: REACTION_FADE,
+          WebkitMaskImage: REACTION_FADE,
+        }}
+      />
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        data-react-gif
+        src={gif}
+        alt=""
+        className="relative z-10 max-h-[60vh] w-auto max-w-full object-contain"
+      />
+      <p className="relative z-10 max-w-md text-center text-3xl font-bold leading-tight text-white">
+        {text}
+      </p>
+    </div>,
+    document.body,
+  )
+}
+
+function TapConfetti({ taps }: { taps: { id: number; x: number; y: number; pieces: Piece[] }[] }) {
+  if (typeof document === 'undefined' || taps.length === 0) return null
+  return createPortal(
+    <>
+      {taps.map(t => (
+        <div
+          key={t.id}
+          aria-hidden
+          className="pointer-events-none fixed z-[140]"
+          style={{ left: t.x, top: t.y }}
+        >
+          {t.pieces.map(p => (
+            <span
+              key={p.id}
+              className="confetti-piece-sm"
+              style={
+                {
+                  backgroundColor: p.color,
+                  '--dx': `${p.dx}px`,
+                  '--dy': `${p.dy}px`,
+                  '--dr': `${p.dr}deg`,
+                } as React.CSSProperties
+              }
+            />
+          ))}
+        </div>
+      ))}
+    </>,
+    document.body,
   )
 }
 

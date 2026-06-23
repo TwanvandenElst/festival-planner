@@ -52,7 +52,7 @@ export function AnimatedGradient() {
   return (
     <div
       aria-hidden
-      className="pointer-events-none fixed inset-x-0 top-0 -z-10 h-[80vh]"
+      className="vb-breathe pointer-events-none fixed inset-x-0 top-0 -z-10 h-[80vh]"
       style={{ maskImage: FADE, WebkitMaskImage: FADE }}
     >
       {/* layerA starts visible with the initial gradient; layerB is the spare. */}

@@ -16,15 +16,6 @@ export default async function VriendenboekjePage() {
 
   return (
     <div className="mx-auto w-full max-w-xl px-4 py-10 sm:py-14">
-      <header className="mb-8">
-        <h1 data-reveal-title className="text-2xl font-semibold tracking-tight">
-          Vriendenboekje
-        </h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Vul je vriendenboekje in en word officieel vrienden.
-        </p>
-      </header>
-
       <VriendenboekjeClient entries={entries} />
     </div>
   )

@@ -31,12 +31,17 @@ function MicButton({
         start()
       }}
       className={cn(
-        'grid size-9 shrink-0 place-items-center rounded-full transition-transform active:scale-90',
-        listening
-          ? 'animate-pulse bg-pink-500/25 text-pink-200'
-          : 'bg-white/10 text-muted-foreground active:text-foreground',
+        'relative grid size-9 shrink-0 place-items-center rounded-full transition-transform active:scale-90',
+        listening ? 'bg-pink-500/25 text-pink-200' : 'bg-white/10 text-muted-foreground active:text-foreground',
       )}
     >
+      {/* Radiating soundwave rings while listening. */}
+      {listening && (
+        <>
+          <span className="vb-mic-ring" />
+          <span className="vb-mic-ring" style={{ animationDelay: '0.7s' }} />
+        </>
+      )}
       <Mic className="size-4" />
     </button>
   )
