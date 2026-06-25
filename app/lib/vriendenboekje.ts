@@ -63,6 +63,7 @@ export async function submitVriendenboekje(
     dilemma: nullable(input.dilemma),
     stopwoordje: nullable(input.stopwoordje),
     meezingen: nullable(input.meezingen),
+    seksstandje: nullable(input.seksstandje),
     onthoud_mij: nullable(input.onthoud_mij),
     stelling_afterparty: input.stelling_afterparty,
     stelling_afterparty_toelichting: nullable(input.stelling_afterparty_toelichting),
@@ -79,9 +80,15 @@ export async function submitVriendenboekje(
     .single()
 
   if (error || !data) {
-    // Surface the real Postgres/PostgREST error in the server logs for debugging
-    // (e.g. a missing migration shows up as a not-null / RLS violation here).
-    console.error('submitVriendenboekje insert failed:', error)
+    // Surface the real Postgres/PostgREST error in the server logs for debugging.
+    // A missing migration shows up here as PGRST204 ("Could not find the 'X'
+    // column …") or a not-null / RLS violation.
+    console.error('submitVriendenboekje insert failed:', {
+      code: error?.code,
+      message: error?.message,
+      details: error?.details,
+      hint: error?.hint,
+    })
     return { ok: false, error: 'Kon je vriendenboekje niet opslaan. Probeer het opnieuw.' }
   }
 

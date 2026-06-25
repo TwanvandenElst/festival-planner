@@ -20,6 +20,7 @@ export type VriendenboekjeInput = {
   dilemma: string | null
   stopwoordje: string | null
   meezingen: string | null
+  seksstandje: string | null
   onthoud_mij: string | null
   stelling_afterparty: boolean | null
   stelling_afterparty_toelichting: string | null
@@ -79,6 +80,7 @@ export const VRIENDENBOEKJE_FIELDS: VbField[] = [
   },
   { key: 'stopwoordje', label: 'Jouw stopwoordje?', text: e => e.stopwoordje },
   { key: 'meezingen', label: 'Welk nummer zing jij volle borst mee?', text: e => e.meezingen },
+  { key: 'seksstandje', label: 'Wat is je favoriete seksstandje?', text: e => e.seksstandje },
   {
     key: 'onthoud_mij',
     label: 'Als je één ding wilt dat ik over jou onthoudt, wat is het?',

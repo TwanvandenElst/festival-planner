@@ -13,7 +13,7 @@ import type { VriendenboekjeInput } from '@/lib/vriendenboekje-types'
 import { TextField } from './fields'
 import { StickFigures } from './StickFigures'
 
-const TOTAL = 15 // number of steps (questions)
+const TOTAL = 16 // number of steps (questions)
 const LAST = TOTAL - 1
 
 // Pink/magenta glow for a previously selected option (matches --gradient-friends).
@@ -57,6 +57,7 @@ type FormState = {
   dilemma: string
   stopwoordje: string
   meezingen: string
+  seksstandje: string
   onthoud_mij: string
   stelling_afterparty: boolean | null
   stelling_afterparty_toelichting: string
@@ -76,6 +77,7 @@ const INITIAL: FormState = {
   dilemma: '',
   stopwoordje: '',
   meezingen: '',
+  seksstandje: '',
   onthoud_mij: '',
   stelling_afterparty: null,
   stelling_afterparty_toelichting: '',
@@ -106,7 +108,7 @@ function smallBurst(): Piece[] {
 // The photo step uses a standalone arrow; every other step has its arrow inside
 // the text field (the stelling toelichting field carries the arrow too).
 function advanceMode(step: number): 'button' | 'input' {
-  if (step === 13) return 'button' // photo
+  if (step === 14) return 'button' // photo
   return 'input'
 }
 
@@ -222,9 +224,11 @@ export function Form({ onDone }: { onDone: () => void }) {
       case 11:
         return { video: '/gifs/meezingen.webm', text: 'Volle borst inderdaad' }
       case 12:
+        return { video: '/gifs/seksstandje.webm', text: pick(['Ooh echt?', 'Bold.']) }
+      case 13:
         return { video: '/gifs/onthoud.webm', text: 'Deal ✍️' }
       default:
-        return null // photo (13) advances straight through; 14 (last) submits
+        return null // photo (14) advances straight through; 15 (last) submits
     }
   }
 
@@ -569,6 +573,21 @@ function renderStep(step: number, form: FormState, set: SetFn, api: Api, photo: 
     case 12:
       return (
         <>
+          <Question title="Wat is je favoriete seksstandje?" optional />
+          <TextField
+            value={form.seksstandje}
+            onChange={v => set('seksstandje', v)}
+            placeholder="…"
+            autoFocus
+            onSubmit={api.next}
+            submitIcon={submitIcon}
+            disabled={api.busy}
+          />
+        </>
+      )
+    case 13:
+      return (
+        <>
           <Question title="Als je één ding wilt dat ik over jou onthoud, wat is het?" optional />
           <TextField
             value={form.onthoud_mij}
@@ -582,14 +601,14 @@ function renderStep(step: number, form: FormState, set: SetFn, api: Api, photo: 
           />
         </>
       )
-    case 13:
+    case 14:
       return (
         <>
           <Question title="Foto uploaden" optional />
           <PhotoStep preview={photo.photoPreview} onPhoto={photo.onPhoto} />
         </>
       )
-    case 14:
+    case 15:
       return (
         <>
           <Question title="Telefoonnummer" optional />
