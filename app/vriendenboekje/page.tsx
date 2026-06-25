@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 
-import { getVriendenboekjes } from '@/lib/vriendenboekje'
+import { getReactionCounts, getVriendenboekjes } from '@/lib/vriendenboekje'
 import { VriendenboekjeClient } from './VriendenboekjeClient'
 
 // Entries are user-submitted; always reflect the latest state.
@@ -12,11 +12,14 @@ export const metadata: Metadata = {
 }
 
 export default async function VriendenboekjePage() {
-  const entries = await getVriendenboekjes()
+  const [entries, reactionCounts] = await Promise.all([
+    getVriendenboekjes(),
+    getReactionCounts(),
+  ])
 
   return (
-    <div className="mx-auto w-full max-w-xl px-4 py-10 sm:py-14">
-      <VriendenboekjeClient entries={entries} />
+    <div className="mx-auto w-full max-w-xl px-4 pb-10 pt-6">
+      <VriendenboekjeClient entries={entries} initialCounts={reactionCounts} />
     </div>
   )
 }

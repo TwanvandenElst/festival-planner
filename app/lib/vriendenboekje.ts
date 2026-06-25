@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache'
 
 import { supabase } from './supabase'
+import { reactionKey } from './vriendenboekje-types'
 import type {
   Dancefloor,
   NaarHuis,
@@ -28,6 +29,26 @@ export async function getVriendenboekjes(): Promise<Vriendenboekje[]> {
 
   if (error) return []
   return (data ?? []) as Vriendenboekje[]
+}
+
+/**
+ * 😂 reaction counts per answer, keyed by `reactionKey(entry_id, field_name)`.
+ * Aggregated in JS (single-user app — the table stays small). Returns an empty
+ * map if the reactions table doesn't exist yet (migration 0010 not applied).
+ */
+export async function getReactionCounts(): Promise<Record<string, number>> {
+  const { data, error } = await supabase
+    .from('vriendenboekje_reactions')
+    .select('entry_id, field_name')
+
+  if (error || !data) return {}
+
+  const counts: Record<string, number> = {}
+  for (const r of data as { entry_id: string; field_name: string }[]) {
+    const key = reactionKey(r.entry_id, r.field_name)
+    counts[key] = (counts[key] ?? 0) + 1
+  }
+  return counts
 }
 
 /** Validates and inserts a new vriendenboekje (anon insert via RLS). */
