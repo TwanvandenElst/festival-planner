@@ -664,6 +664,7 @@ function Detail({
           {bubbles.map(({ field, stellingVal, body }) => (
             <Bubble
               key={field.key}
+              entryId={entry.id}
               field={field}
               count={counts[reactionKey(entry.id, field.key)] ?? 0}
               onReact={() => onReact(field.key)}
@@ -671,17 +672,16 @@ function Detail({
               {field.stelling ? (
                 <div>
                   <span
-                    className={cn(
-                      'rounded-full px-2.5 py-0.5 text-xs font-semibold',
-                      stellingVal
-                        ? 'bg-pink-500/25 text-pink-100'
-                        : 'bg-white/10 text-muted-foreground',
-                    )}
+                    className="block text-4xl leading-none"
+                    role="img"
+                    aria-label={stellingVal ? 'Eens' : 'Oneens'}
                   >
-                    {stellingVal ? 'Eens' : 'Oneens'}
+                    {stellingVal ? '✅' : '❌'}
                   </span>
                   {body && (
-                    <p className="mt-2 whitespace-pre-wrap text-[15px] leading-snug">{body}</p>
+                    <p className="mt-2 whitespace-pre-wrap text-sm leading-snug text-foreground/80">
+                      {body}
+                    </p>
                   )}
                 </div>
               ) : (
@@ -696,13 +696,16 @@ function Detail({
   )
 }
 
-/** A chat bubble: muted question label, glass body, 😂 reaction in the corner. */
+/** A chat bubble: muted question label, pink-tinted glass body with a tail, and
+ *  a 😂 reaction in the corner. Width fits the content (up to ~85% of screen). */
 function Bubble({
+  entryId,
   field,
   count,
   onReact,
   children,
 }: {
+  entryId: string
   field: VbField
   count: number
   onReact: () => void
@@ -713,22 +716,57 @@ function Bubble({
       <p className="mb-1 px-2 text-xs font-medium text-muted-foreground">{field.label}</p>
       <div
         className={cn(
-          'glass-panel relative max-w-[90%] rounded-2xl rounded-tl-md px-4 pb-9 pt-3',
-          count > 0 && 'ring-1 ring-pink-400/60 shadow-[0_0_22px_-4px_rgba(244,114,182,0.6)]',
+          'vb-bubble relative w-fit min-w-[7rem] max-w-[85%] rounded-2xl rounded-bl-md px-4 pb-9 pt-3',
+          count > 0 && 'vb-bubble-hot',
         )}
       >
         {children}
-        <ReactionButton count={count} onReact={onReact} />
+        <ReactionButton entryId={entryId} fieldName={field.key} count={count} onReact={onReact} />
       </div>
     </div>
   )
 }
 
-/** 😂 button: bounce + a fly-away emoji on tap, with the running count beside it. */
-function ReactionButton({ count, onReact }: { count: number; onReact: () => void }) {
+/**
+ * 😂 button. First tap on a device inserts + animates + increments; after that
+ * the button stays "active" (pink, scaled up) and further taps do nothing. The
+ * one-per-device limit is tracked in localStorage (not account-level).
+ */
+function ReactionButton({
+  entryId,
+  fieldName,
+  count,
+  onReact,
+}: {
+  entryId: string
+  fieldName: string
+  count: number
+  onReact: () => void
+}) {
   const ref = useRef<HTMLButtonElement>(null)
+  const storageKey = `reacted_${entryId}_${fieldName}`
+
+  // Detail only ever renders client-side (a portal opened on tap), so reading
+  // localStorage in the initializer is safe — no SSR pass, no hydration mismatch.
+  const [reacted, setReacted] = useState(() => {
+    if (typeof window === 'undefined') return false
+    try {
+      return localStorage.getItem(storageKey) === '1'
+    } catch {
+      return false // localStorage unavailable (private mode) — treat as not reacted
+    }
+  })
 
   function handle() {
+    if (reacted) return // already reacted on this device: no insert, no animation
+
+    try {
+      localStorage.setItem(storageKey, '1')
+    } catch {
+      // ignore storage failures; the in-memory flag still prevents double taps
+    }
+    setReacted(true)
+
     const btn = ref.current
     if (btn) {
       gsap.fromTo(btn, { scale: 0.7 }, { scale: 1, duration: 0.55, ease: 'back.out(3)' })
@@ -758,8 +796,14 @@ function ReactionButton({ count, onReact }: { count: number; onReact: () => void
       ref={ref}
       type="button"
       onClick={handle}
-      aria-label="Stuur een lach"
-      className="absolute bottom-2 right-2 inline-flex items-center gap-1 rounded-full bg-white/10 px-2.5 py-1 text-xs ring-1 ring-white/15 transition-transform active:scale-90"
+      aria-label={reacted ? 'Je hebt al gelachen' : 'Stuur een lach'}
+      aria-pressed={reacted}
+      className={cn(
+        'absolute bottom-2 right-2 inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs ring-1 transition-transform',
+        reacted
+          ? 'scale-110 bg-pink-500/30 text-pink-100 ring-pink-400/50'
+          : 'bg-white/10 ring-white/15 active:scale-90',
+      )}
     >
       <span className="text-sm leading-none">😂</span>
       {count > 0 && <span className="tabular-nums font-semibold text-pink-200">{count}</span>}

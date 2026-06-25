@@ -267,6 +267,41 @@
   box-shadow: 0 8px 30px -14px rgba(0, 0, 0, 0.2);
 }
 
+/* Chat/speech bubble for the vriendenboekje detail page. Lighter than the page
+   with a pink tint so it reads as a "message", plus a tail on the bottom-left
+   (a rotated square sharing the bubble's fill + two borders). */
+.vb-bubble {
+  --vb-bg: rgba(244, 114, 182, 0.12);
+  --vb-border: rgba(244, 114, 182, 0.30);
+  position: relative;
+  background-color: var(--vb-bg);
+  border: 1px solid var(--vb-border);
+  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px);
+  box-shadow: 0 10px 30px -16px rgba(0, 0, 0, 0.6);
+}
+.vb-bubble::after {
+  content: "";
+  position: absolute;
+  left: 16px;
+  bottom: -7px;
+  width: 16px;
+  height: 16px;
+  background-color: var(--vb-bg);
+  border-left: 1px solid var(--vb-border);
+  border-bottom: 1px solid var(--vb-border);
+  border-bottom-left-radius: 3px;
+  transform: rotate(45deg);
+  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px);
+}
+/* A bubble with reactions glows pink and its tail follows suit. */
+.vb-bubble-hot {
+  --vb-bg: rgba(244, 114, 182, 0.18);
+  --vb-border: rgba(244, 114, 182, 0.6);
+  box-shadow: 0 0 22px -4px rgba(244, 114, 182, 0.6);
+}
+
 /* Vriendenboekje fistbump: a quick scale pop when the stick figures meet. */
 @keyframes vb-pop {
   0% { transform: scale(1); }
