@@ -4,15 +4,7 @@ import { revalidatePath } from 'next/cache'
 
 import { supabase } from './supabase'
 import { reactionKey } from './vriendenboekje-types'
-import type {
-  Dancefloor,
-  NaarHuis,
-  Vriendenboekje,
-  VriendenboekjeInput,
-} from './vriendenboekje-types'
-
-const DANCEFLOORS: Dancefloor[] = ['front', 'back', 'bar']
-const NAAR_HUIS: NaarHuis[] = ['voor_middernacht', 'als_muziek_stopt', 'wat_is_naar_huis']
+import type { Vriendenboekje, VriendenboekjeInput } from './vriendenboekje-types'
 
 /** Trim a string, returning null when it's empty (for nullable columns). */
 function nullable(v: string | null | undefined): string | null {
@@ -58,48 +50,24 @@ export async function submitVriendenboekje(
   const naam = (input.naam ?? '').trim()
   if (!naam) return { ok: false, error: 'Vul je naam in.' }
 
-  if (!DANCEFLOORS.includes(input.dancefloor)) {
-    return { ok: false, error: 'Kies een plek op de dancefloor.' }
-  }
-  if (!NAAR_HUIS.includes(input.naar_huis)) {
-    return { ok: false, error: 'Kies hoe laat je naar huis gaat.' }
-  }
-
-  const dansZelf = Number(input.dans_zelf)
-  const dansDenkt = Number(input.dans_denkt)
-  const inRange = (n: number) => Number.isInteger(n) && n >= 1 && n <= 10
-  if (!inRange(dansZelf) || !inRange(dansDenkt)) {
-    return { ok: false, error: 'Dans-scores moeten tussen 1 en 10 liggen.' }
-  }
-
-  const ontmoet = nullable(input.ontmoet)
-  const eersteIndruk = nullable(input.eerste_indruk)
-  if (!ontmoet) return { ok: false, error: 'Vertel hoe we elkaar ontmoet hebben.' }
-  if (!eersteIndruk) return { ok: false, error: 'Wat was je eerste indruk?' }
-
+  // Question set v2: only `naam` is required — every other question is skippable
+  // and nullable. Legacy columns are omitted (they default to null in the table).
   const row = {
     naam,
     dj_naam: nullable(input.dj_naam),
-    ontmoet,
-    eerste_indruk: eersteIndruk,
-    // The four "spicy" questions are optional (nullable per migration 0009).
-    beschamend: nullable(input.beschamend),
-    seksstandje: nullable(input.seksstandje),
-    laatste_google: nullable(input.laatste_google),
-    ja_zeggen: nullable(input.ja_zeggen),
-    dancefloor: input.dancefloor,
-    naar_huis: input.naar_huis,
-    dans_zelf: dansZelf,
-    dans_denkt: dansDenkt,
+    snack: nullable(input.snack),
+    eerste_indruk: nullable(input.eerste_indruk),
+    guilty_pleasure: nullable(input.guilty_pleasure),
+    bijnaam: nullable(input.bijnaam),
+    jeugdheld: nullable(input.jeugdheld),
+    dilemma: nullable(input.dilemma),
+    stopwoordje: nullable(input.stopwoordje),
+    meezingen: nullable(input.meezingen),
+    onthoud_mij: nullable(input.onthoud_mij),
     stelling_afterparty: input.stelling_afterparty,
     stelling_afterparty_toelichting: nullable(input.stelling_afterparty_toelichting),
-    stelling_gekust: input.stelling_gekust,
-    stelling_gekust_toelichting: nullable(input.stelling_gekust_toelichting),
     stelling_festivaldag: input.stelling_festivaldag,
     stelling_festivaldag_toelichting: nullable(input.stelling_festivaldag_toelichting),
-    stelling_beland: input.stelling_beland,
-    stelling_beland_toelichting: nullable(input.stelling_beland_toelichting),
-    afsluiting: nullable(input.afsluiting),
     foto_url: nullable(input.foto_url),
     telefoonnummer: nullable(input.telefoonnummer),
   }
