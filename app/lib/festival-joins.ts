@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache'
 
 import { supabase } from './supabase'
 import { createAdminClient } from './supabase/admin'
+import { createClient } from './supabase/server'
 import { sendTelegramMessage, escapeHtml } from './telegram'
 
 // Month abbreviations for the notification date, e.g. "10-12 jul 2026".
@@ -54,11 +55,23 @@ export async function joinFestival(
   return { ok: true, name }
 }
 
-/** All joins grouped by festival id (id + name), in join order. */
+/**
+ * Joins for the LOGGED-IN user's festivals only, grouped by festival id
+ * (id + name), in join order. `festival_joins` is publicly readable (allow-all
+ * RLS), so we must scope it explicitly: the `festivals!inner(user_id)` embed +
+ * `eq('festivals.user_id', …)` filters to joins on the caller's own festivals.
+ */
 export async function getJoinsByFestival(): Promise<Record<string, { id: string; name: string }[]>> {
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  if (!user) return {}
+
   const { data, error } = await supabase
     .from('festival_joins')
-    .select('id, festival_id, name, created_at')
+    .select('id, festival_id, name, created_at, festivals!inner(user_id)')
+    .eq('festivals.user_id', user.id)
     .order('created_at', { ascending: true })
 
   if (error) {
@@ -76,6 +89,22 @@ export async function getJoinsByFestival(): Promise<Record<string, { id: string;
 /** Removes a single join by id (admin action from /shows; not on the share page). */
 export async function removeFestivalJoin(joinId: string): Promise<{ ok: boolean; error?: string }> {
   if (!joinId) return { ok: false, error: 'Missing join id.' }
+
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  if (!user) return { ok: false, error: 'Niet ingelogd.' }
+
+  // The delete policy on festival_joins is allow-all, so verify the join belongs
+  // to one of the caller's own festivals before deleting it.
+  const { data: owned } = await supabase
+    .from('festival_joins')
+    .select('id, festivals!inner(user_id)')
+    .eq('id', joinId)
+    .eq('festivals.user_id', user.id)
+    .maybeSingle()
+  if (!owned) return { ok: false, error: 'Niet gevonden.' }
 
   const { error } = await supabase.from('festival_joins').delete().eq('id', joinId)
   if (error) return { ok: false, error: error.message }
