@@ -268,38 +268,36 @@
 }
 
 /* Chat/speech bubble for the vriendenboekje detail page. Lighter than the page
-   with a pink tint so it reads as a "message", plus a tail on the bottom-left
-   (a rotated square sharing the bubble's fill + two borders). */
+   with a pink tint so it reads as a "message", plus a WhatsApp-style tail on the
+   top-left that points out to the left (same fill as the bubble).
+
+   No border: the fill is translucent, so a border would show as a hard seam where
+   the tail meets the body, and overlapping two translucent layers would darken the
+   join. Instead the tail shares the exact same fill + blur and ABUTS the body edge
+   (no overlap, no gap), so the two read as one continuous glass shape. */
 .vb-bubble {
   --vb-bg: rgba(244, 114, 182, 0.12);
-  --vb-border: rgba(244, 114, 182, 0.30);
   position: relative;
   background-color: var(--vb-bg);
-  border: 1px solid var(--vb-border);
   -webkit-backdrop-filter: blur(16px);
   backdrop-filter: blur(16px);
   box-shadow: 0 10px 30px -16px rgba(0, 0, 0, 0.6);
 }
-.vb-bubble::after {
+/* Tail: a left-pointing triangle at the top-left corner. Flat top edge, vertical
+   right edge flush against the bubble's (squared) top-left corner, tip sticking
+   out to the left — like an incoming WhatsApp message. Same fill + blur, no
+   border, so it grows seamlessly out of the body. */
+.vb-bubble::before {
   content: "";
   position: absolute;
-  left: 16px;
-  bottom: -7px;
-  width: 16px;
-  height: 16px;
+  top: 0;
+  left: -8px;
+  width: 8px;
+  height: 14px;
   background-color: var(--vb-bg);
-  border-left: 1px solid var(--vb-border);
-  border-bottom: 1px solid var(--vb-border);
-  border-bottom-left-radius: 3px;
-  transform: rotate(45deg);
   -webkit-backdrop-filter: blur(16px);
   backdrop-filter: blur(16px);
-}
-/* A bubble with reactions glows pink and its tail follows suit. */
-.vb-bubble-hot {
-  --vb-bg: rgba(244, 114, 182, 0.18);
-  --vb-border: rgba(244, 114, 182, 0.6);
-  box-shadow: 0 0 22px -4px rgba(244, 114, 182, 0.6);
+  clip-path: polygon(0 0, 100% 0, 100% 100%);
 }
 
 /* Vriendenboekje fistbump: a quick scale pop when the stick figures meet. */

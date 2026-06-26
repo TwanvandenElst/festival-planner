@@ -29,6 +29,16 @@ export async function insertReaction(
 }
 
 /**
+ * Removes a reaction by row id (used to toggle a 😂 off). Returns whether it
+ * succeeded — false if the delete is rejected (e.g. migration 0013 granting anon
+ * delete hasn't been applied yet).
+ */
+export async function deleteReaction(id: string): Promise<boolean> {
+  const { error } = await supabase.from('vriendenboekje_reactions').delete().eq('id', id)
+  return !error
+}
+
+/**
  * Subscribes to new reactions across all entries and calls `onInsert` for each.
  * Returns an unsubscribe function. No-ops gracefully if realtime isn't enabled.
  */

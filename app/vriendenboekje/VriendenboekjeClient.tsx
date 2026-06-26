@@ -16,7 +16,7 @@ import {
   type VbField,
   type Vriendenboekje,
 } from '@/lib/vriendenboekje-types'
-import { insertReaction, subscribeToReactions } from '@/lib/vriendenboekje-reactions'
+import { deleteReaction, insertReaction, subscribeToReactions } from '@/lib/vriendenboekje-reactions'
 import { Form } from './Form'
 
 // Warm gradients for photo-less placeholders.
@@ -153,12 +153,27 @@ export function VriendenboekjeClient({
     })
   }, [])
 
-  async function react(entryId: string, field: string) {
+  // Add a reaction. Returns the new row id (the button stores it so it can later
+  // toggle the reaction off by deleting that exact row).
+  async function react(entryId: string, field: string): Promise<string | null> {
     const key = reactionKey(entryId, field)
     bump(key, 1) // optimistic
     const id = await insertReaction(entryId, field)
-    if (id) ownIds.current.add(id)
-    else bump(key, -1) // insert failed — roll back
+    if (id) {
+      ownIds.current.add(id)
+      return id
+    }
+    bump(key, -1) // insert failed — roll back
+    return null
+  }
+
+  // Toggle a reaction off by deleting its row. Returns whether it succeeded.
+  async function unreact(entryId: string, field: string, id: string): Promise<boolean> {
+    const key = reactionKey(entryId, field)
+    bump(key, -1) // optimistic
+    const ok = await deleteReaction(id)
+    if (!ok) bump(key, 1) // delete failed (e.g. migration 0013 not applied) — roll back
+    return ok
   }
 
   async function share() {
@@ -213,6 +228,7 @@ export function VriendenboekjeClient({
           entry={selected}
           counts={counts}
           onReact={field => react(selected.id, field)}
+          onUnreact={(field, id) => unreact(selected.id, field, id)}
           onClose={() => setSelected(null)}
         />
       )}
@@ -561,11 +577,13 @@ function Detail({
   entry,
   counts,
   onReact,
+  onUnreact,
   onClose,
 }: {
   entry: Vriendenboekje
   counts: Record<string, number>
-  onReact: (field: string) => void
+  onReact: (field: string) => Promise<string | null>
+  onUnreact: (field: string, id: string) => Promise<boolean>
   onClose: () => void
 }) {
   const scrollerRef = useRef<HTMLDivElement>(null)
@@ -668,18 +686,20 @@ function Detail({
               field={field}
               count={counts[reactionKey(entry.id, field.key)] ?? 0}
               onReact={() => onReact(field.key)}
+              onUnreact={id => onUnreact(field.key, id)}
             >
               {field.stelling ? (
                 <div>
-                  <span
-                    className="block text-4xl leading-none"
-                    role="img"
-                    aria-label={stellingVal ? 'Eens' : 'Oneens'}
+                  <p
+                    className={cn(
+                      'text-base font-semibold',
+                      stellingVal ? 'text-pink-100' : 'text-foreground/70',
+                    )}
                   >
-                    {stellingVal ? '✅' : '❌'}
-                  </span>
+                    {stellingVal ? 'Eens' : 'Oneens'}
+                  </p>
                   {body && (
-                    <p className="mt-2 whitespace-pre-wrap text-sm leading-snug text-foreground/80">
+                    <p className="mt-1.5 whitespace-pre-wrap text-sm leading-snug text-foreground/80">
                       {body}
                     </p>
                   )}
@@ -696,54 +716,66 @@ function Detail({
   )
 }
 
-/** A chat bubble: muted question label, pink-tinted glass body with a tail, and
- *  a 😂 reaction in the corner. Width fits the content (up to ~85% of screen). */
+/** A chat bubble: muted question label, pink-tinted glass body with a tail, and a
+ *  😂 reaction chip that overlaps the bottom-right corner. Extra bottom padding
+ *  reserves an empty band there so the chip never covers the answer text.
+ *  Width fits the content (up to ~85% of screen). */
 function Bubble({
   entryId,
   field,
   count,
   onReact,
+  onUnreact,
   children,
 }: {
   entryId: string
   field: VbField
   count: number
-  onReact: () => void
+  onReact: () => Promise<string | null>
+  onUnreact: (id: string) => Promise<boolean>
   children: React.ReactNode
 }) {
   return (
     <div data-bubble>
-      <p className="mb-1 px-2 text-xs font-medium text-muted-foreground">{field.label}</p>
-      <div
-        className={cn(
-          'vb-bubble relative w-fit min-w-[7rem] max-w-[85%] rounded-2xl rounded-bl-md px-4 pb-9 pt-3',
-          count > 0 && 'vb-bubble-hot',
-        )}
-      >
+      <p className="mb-1 px-2 text-sm font-medium text-muted-foreground">{field.label}</p>
+      {/* The bubble keeps a neutral style even when reacted (no active glow). The
+          chip overlaps the bottom-right corner; pb-6 keeps it clear of the text. */}
+      <div className="vb-bubble relative w-fit min-w-[7rem] max-w-[85%] rounded-2xl rounded-tl-none px-4 pb-6 pt-3">
         {children}
-        <ReactionButton entryId={entryId} fieldName={field.key} count={count} onReact={onReact} />
+        <ReactionButton
+          entryId={entryId}
+          fieldName={field.key}
+          count={count}
+          onReact={onReact}
+          onUnreact={onUnreact}
+        />
       </div>
     </div>
   )
 }
 
 /**
- * 😂 button. First tap on a device inserts + animates + increments; after that
- * the button stays "active" (pink, scaled up) and further taps do nothing. The
- * one-per-device limit is tracked in localStorage (not account-level).
+ * 😂 toggle. First tap inserts a reaction (animates + increments) and stores the
+ * row id in localStorage; tapping again deletes that exact row (decrements). The
+ * value stored is the row id so we know what to delete. Toggling off requires
+ * migration 0013 (anon delete) — without it the delete is rejected and the
+ * on-state is restored.
  */
 function ReactionButton({
   entryId,
   fieldName,
   count,
   onReact,
+  onUnreact,
 }: {
   entryId: string
   fieldName: string
   count: number
-  onReact: () => void
+  onReact: () => Promise<string | null>
+  onUnreact: (id: string) => Promise<boolean>
 }) {
   const ref = useRef<HTMLButtonElement>(null)
+  const busy = useRef(false)
   const storageKey = `reacted_${entryId}_${fieldName}`
 
   // Detail only ever renders client-side (a portal opened on tap), so reading
@@ -751,44 +783,81 @@ function ReactionButton({
   const [reacted, setReacted] = useState(() => {
     if (typeof window === 'undefined') return false
     try {
-      return localStorage.getItem(storageKey) === '1'
+      return localStorage.getItem(storageKey) != null
     } catch {
       return false // localStorage unavailable (private mode) — treat as not reacted
     }
   })
 
-  function handle() {
-    if (reacted) return // already reacted on this device: no insert, no animation
-
+  function readKey(): string | null {
     try {
-      localStorage.setItem(storageKey, '1')
+      return localStorage.getItem(storageKey)
     } catch {
-      // ignore storage failures; the in-memory flag still prevents double taps
+      return null
     }
-    setReacted(true)
+  }
+  function writeKey(v: string | null) {
+    try {
+      if (v == null) localStorage.removeItem(storageKey)
+      else localStorage.setItem(storageKey, v)
+    } catch {
+      /* ignore storage failures */
+    }
+  }
 
+  // The 😂 bounce + a copy flying up and fading out. Only on turn-on.
+  function playFly() {
     const btn = ref.current
-    if (btn) {
-      gsap.fromTo(btn, { scale: 0.7 }, { scale: 1, duration: 0.55, ease: 'back.out(3)' })
-      if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-        const fly = document.createElement('span')
-        fly.textContent = '😂'
-        fly.setAttribute('aria-hidden', 'true')
-        fly.style.cssText =
-          'position:absolute;right:12px;bottom:30px;font-size:22px;pointer-events:none;z-index:20;'
-        btn.parentElement?.appendChild(fly)
-        gsap.to(fly, {
-          y: -66,
-          opacity: 0,
-          scale: 1.7,
-          rotate: gsap.utils.random(-25, 25),
-          duration: 0.9,
-          ease: 'power2.out',
-          onComplete: () => fly.remove(),
-        })
+    if (!btn) return
+    // clearProps drops the inline transform when done, so the inset-based
+    // position is never left offset by a leftover scale matrix.
+    gsap.fromTo(
+      btn,
+      { scale: 0.7 },
+      { scale: 1, duration: 0.55, ease: 'back.out(3)', clearProps: 'transform' },
+    )
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
+    const fly = document.createElement('span')
+    fly.textContent = '😂'
+    fly.setAttribute('aria-hidden', 'true')
+    fly.style.cssText =
+      'position:absolute;right:12px;bottom:30px;font-size:22px;pointer-events:none;z-index:20;'
+    btn.parentElement?.appendChild(fly)
+    gsap.to(fly, {
+      y: -66,
+      opacity: 0,
+      scale: 1.7,
+      rotate: gsap.utils.random(-25, 25),
+      duration: 0.9,
+      ease: 'power2.out',
+      onComplete: () => fly.remove(),
+    })
+  }
+
+  async function handle() {
+    if (busy.current) return // ignore taps while an insert/delete is in flight
+    busy.current = true
+    try {
+      if (!reacted) {
+        setReacted(true) // optimistic on
+        playFly()
+        const id = await onReact()
+        if (id) writeKey(id)
+        else setReacted(false) // insert failed — revert
+      } else {
+        const id = readKey()
+        setReacted(false) // optimistic off
+        if (id) {
+          const ok = await onUnreact(id)
+          if (ok) writeKey(null)
+          else setReacted(true) // delete rejected (migration 0013?) — restore
+        } else {
+          writeKey(null) // no stored id (legacy/blocked) — just clear the flag
+        }
       }
+    } finally {
+      busy.current = false
     }
-    onReact()
   }
 
   return (
@@ -796,17 +865,17 @@ function ReactionButton({
       ref={ref}
       type="button"
       onClick={handle}
-      aria-label={reacted ? 'Je hebt al gelachen' : 'Stuur een lach'}
+      aria-label={reacted ? 'Haal je lach weg' : 'Stuur een lach'}
       aria-pressed={reacted}
+      // Positioned with inset offsets (not translate) so the GSAP scale bounce
+      // can't clobber the transform and slide the chip diagonally.
       className={cn(
-        'absolute bottom-2 right-2 inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs ring-1 transition-transform',
-        reacted
-          ? 'scale-110 bg-pink-500/30 text-pink-100 ring-pink-400/50'
-          : 'bg-white/10 ring-white/15 active:scale-90',
+        'absolute -bottom-3 -right-2 inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold text-white shadow-[0_4px_12px_-4px_rgba(0,0,0,0.7)] ring-1',
+        reacted ? 'bg-pink-500 ring-pink-400' : 'bg-zinc-700 ring-white/15',
       )}
     >
       <span className="text-sm leading-none">😂</span>
-      {count > 0 && <span className="tabular-nums font-semibold text-pink-200">{count}</span>}
+      {count > 0 && <span className="tabular-nums">{count}</span>}
     </button>
   )
 }
