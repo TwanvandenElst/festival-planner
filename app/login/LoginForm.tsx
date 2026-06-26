@@ -90,11 +90,11 @@ export function LoginForm() {
     return (
       <div className="glass-panel rounded-3xl p-7 text-center">
         <CheckCircle2 className="mx-auto size-11 text-emerald-400" />
-        <p className="mt-4 text-lg font-semibold">Check je mail!</p>
+        <p className="mt-4 text-lg font-semibold">Check your email!</p>
         <p className="mt-1.5 text-sm text-muted-foreground">
-          We hebben een magic link gestuurd naar{' '}
-          <span className="font-medium text-foreground">{email.trim()}</span>. Klik de link om in te
-          loggen.
+          We sent a magic link to{' '}
+          <span className="font-medium text-foreground">{email.trim()}</span>. Click the link to sign
+          in.
         </p>
         <button
           type="button"
@@ -104,7 +104,7 @@ export function LoginForm() {
           }}
           className="mt-5 text-sm font-medium text-cyan-300 transition-colors hover:text-cyan-200"
         >
-          Ander e-mailadres gebruiken
+          Use a different email
         </button>
       </div>
     )
@@ -124,12 +124,12 @@ export function LoginForm() {
         ) : (
           <GoogleIcon className="size-5" />
         )}
-        Inloggen met Google
+        Sign in with Google
       </button>
 
       {status === 'error' && (
         <p className="mt-3 px-1 text-center text-sm text-rose-300">
-          Er ging iets mis: {errorMsg || 'probeer het opnieuw.'}
+          Something went wrong: {errorMsg || 'please try again.'}
         </p>
       )}
 
@@ -140,7 +140,7 @@ export function LoginForm() {
           onClick={() => setShowEmail(true)}
           className="mx-auto mt-4 block text-xs font-medium text-muted-foreground/80 transition-colors hover:text-foreground"
         >
-          Of log in met e-mail
+          Or sign in with email
         </button>
       ) : (
         <form onSubmit={handleSubmit} className="mt-5 border-t border-white/10 pt-5">
@@ -148,7 +148,7 @@ export function LoginForm() {
             htmlFor="email"
             className="mb-2 block px-1 text-sm font-medium text-muted-foreground"
           >
-            E-mailadres
+            Email address
           </label>
 
           <div className="flex items-center gap-2.5 rounded-2xl border border-white/10 bg-white/[0.04] px-3.5 transition-colors focus-within:border-cyan-400/50">
@@ -162,7 +162,7 @@ export function LoginForm() {
               required
               value={email}
               onChange={e => setEmail(e.target.value)}
-              placeholder="jij@voorbeeld.nl"
+              placeholder="you@example.com"
               className="h-12 flex-1 bg-transparent text-base outline-none placeholder:text-muted-foreground/70"
             />
           </div>
@@ -174,17 +174,17 @@ export function LoginForm() {
           >
             {status === 'sending' ? (
               <>
-                <Loader2 className="size-4 animate-spin" /> Versturen…
+                <Loader2 className="size-4 animate-spin" /> Sending…
               </>
             ) : (
               <>
-                <Send className="size-4" /> Stuur magic link
+                <Send className="size-4" /> Send magic link
               </>
             )}
           </button>
 
           <p className="mt-4 px-1 text-center text-xs text-muted-foreground/80">
-            Geen wachtwoord nodig — je ontvangt een inloglink per e-mail.
+            No password needed — you&apos;ll get a sign-in link by email.
           </p>
         </form>
       )}

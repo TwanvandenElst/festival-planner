@@ -217,7 +217,7 @@ export async function addFestival(
   const {
     data: { user },
   } = await supabase.auth.getUser()
-  if (!user) return { ok: false, error: 'Niet ingelogd.' }
+  if (!user) return { ok: false, error: 'Not signed in.' }
 
   const { data: row, error } = await supabase
     .from('festivals')

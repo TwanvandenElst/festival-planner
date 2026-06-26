@@ -25,7 +25,7 @@ function MicButton({
   return (
     <button
       type="button"
-      aria-label={listening ? 'Stop met inspreken' : 'Spreek je antwoord in'}
+      aria-label={listening ? 'Stop dictating' : 'Dictate your answer'}
       onClick={() => {
         baseRef.current = value.trim()
         start()
@@ -114,7 +114,7 @@ export function TextField({
           type="button"
           onClick={onSubmit}
           disabled={disabled}
-          aria-label={submitIcon === 'check' ? 'Verstuur' : 'Volgende'}
+          aria-label={submitIcon === 'check' ? 'Send' : 'Next'}
           className="grid size-9 shrink-0 place-items-center rounded-full bg-pink-500/30 text-pink-100 shadow-lg shadow-pink-900/20 transition-transform active:scale-90 disabled:opacity-60"
         >
           {submitIcon === 'check' ? <Check className="size-4" /> : <ArrowRight className="size-4" />}

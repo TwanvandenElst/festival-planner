@@ -53,10 +53,10 @@ export async function followArtist(
   rawName: string,
 ): Promise<{ ok: true; artist: Artist } | { ok: false; error: string }> {
   const name = rawName.trim()
-  if (!name) return { ok: false, error: 'Geef een artiestnaam op.' }
+  if (!name) return { ok: false, error: 'Please enter an artist name.' }
 
   const { supabase, user } = await authed()
-  if (!user) return { ok: false, error: 'Niet ingelogd.' }
+  if (!user) return { ok: false, error: 'Not signed in.' }
 
   // Find-or-create the shared artist.
   const { data: existing } = await supabase
@@ -74,7 +74,7 @@ export async function followArtist(
       .select('id, name, created_at')
       .single()
     if (insErr || !created) {
-      return { ok: false, error: insErr?.message ?? 'Kon artiest niet aanmaken.' }
+      return { ok: false, error: insErr?.message ?? 'Could not create artist.' }
     }
     artist = created as Artist
   }
@@ -100,7 +100,7 @@ export async function unfollowArtist(
   artistId: string,
 ): Promise<{ ok: boolean; error?: string }> {
   const { supabase, user } = await authed()
-  if (!user) return { ok: false, error: 'Niet ingelogd.' }
+  if (!user) return { ok: false, error: 'Not signed in.' }
 
   const { error } = await supabase
     .from('user_artists')

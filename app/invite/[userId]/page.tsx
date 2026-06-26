@@ -7,8 +7,8 @@ import { getInviterName } from '@/lib/invite'
 export const dynamic = 'force-dynamic'
 
 export const metadata: Metadata = {
-  title: 'Uitnodiging — Festival Planner',
-  description: 'Je bent uitgenodigd voor Festival Planner.',
+  title: 'Invitation — Festival Planner',
+  description: "You've been invited to Festival Planner.",
 }
 
 /** Google's 4-colour "G" mark — same as on /login. */
@@ -36,9 +36,9 @@ function GoogleIcon({ className }: { className?: string }) {
 }
 
 const BENEFITS = [
-  { emoji: '🎵', text: 'Volg je favoriete artiesten en zie wanneer ze optreden' },
-  { emoji: '🎪', text: 'Beheer je festivalagenda en deel die met vrienden' },
-  { emoji: '📖', text: 'Vul een digitaal vriendenboekje in voor nieuwe festivalvrienden' },
+  { emoji: '🎵', text: 'Follow your favorite artists and see when they perform' },
+  { emoji: '🎪', text: 'Manage your festival agenda and share it with friends' },
+  { emoji: '📖', text: 'Fill in a digital vriendenboekje for new festival friends' },
 ]
 
 export default async function InvitePage({
@@ -54,7 +54,7 @@ export default async function InvitePage({
       <div className="w-full">
         <header className="text-center">
           <h1 className="text-2xl font-semibold tracking-tight">
-            {name} heeft je uitgenodigd voor Festi!
+            {name} invited you to Festi!
           </h1>
         </header>
 
@@ -82,7 +82,7 @@ export default async function InvitePage({
           className="mt-6 flex w-full items-center justify-center gap-3 rounded-2xl bg-white px-4 py-3 text-base font-semibold text-zinc-800 shadow-lg shadow-black/20 transition-transform hover:bg-zinc-50 active:scale-[0.98]"
         >
           <GoogleIcon className="size-5" />
-          Inloggen met Google
+          Sign in with Google
         </Link>
       </div>
     </div>

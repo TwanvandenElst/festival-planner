@@ -80,14 +80,14 @@ export function WelcomePopup() {
         />
 
         <h2 id="welcome-title" className="mt-4 text-lg font-bold tracking-tight">
-          🎉 Hi, welkom!
+          🎉 Hi, welcome!
         </h2>
 
         <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-          Deze app is een uit de hand gelopen grap en ik ben er nog lang niet
-          klaar mee. Heb je een idee voor een leuke feature, of werkt iets niet
-          lekker? <span className="font-medium text-foreground">Let me know!</span>{' '}
-          Samen maken we er iets moois van. 🙏
+          This app is a joke that got out of hand and I&apos;m far from done with
+          it. Got an idea for a fun feature, or is something not working right?{' '}
+          <span className="font-medium text-foreground">Let me know!</span>{' '}
+          Together we&apos;ll make something great out of it. 🙏
         </p>
 
         <p className="mt-3 text-xs italic text-muted-foreground/80">— Twan</p>
@@ -97,7 +97,7 @@ export function WelcomePopup() {
           onClick={dismiss}
           className="mt-5 w-full rounded-2xl bg-gradient-to-r from-pink-500 to-fuchsia-500 py-3 text-sm font-semibold text-white shadow-lg shadow-pink-900/30 transition-transform active:scale-[0.98]"
         >
-          Klinkt goed! 👊
+          Sounds good! 👊
         </button>
       </div>
     </div>

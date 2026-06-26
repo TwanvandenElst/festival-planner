@@ -30,7 +30,7 @@ const NAV = [
   },
   {
     href: '/vriendenboekje',
-    label: 'Vrienden',
+    label: 'Friends',
     icon: BookHeart,
     match: (p: string) => p.startsWith('/vriendenboekje'),
     activeText: 'text-pink-300',
@@ -52,7 +52,7 @@ function ShareButton() {
     const url = `${window.location.origin}/invite/${user.id}`
     const data = {
       title: 'Festival Planner',
-      text: 'Ontdek Festival Planner — volg artiesten en deel je festivalagenda.',
+      text: 'Discover Festival Planner — follow artists and share your festival agenda.',
       url,
     }
     try {
@@ -74,13 +74,13 @@ function ShareButton() {
     <button
       type="button"
       onClick={handleShare}
-      aria-label="Deel de app"
+      aria-label="Share the app"
       className="flex flex-1 flex-col items-center gap-1 py-1 text-[0.7rem] font-medium text-muted-foreground transition-colors hover:text-foreground"
     >
       <span className="flex size-10 items-center justify-center rounded-2xl bg-transparent transition-colors">
         {copied ? <Check className="size-5 text-emerald-300" /> : <Share2 className="size-5" />}
       </span>
-      {copied ? 'Gekopieerd' : 'Deel'}
+      {copied ? 'Copied' : 'Share'}
     </button>
   )
 }

@@ -32,13 +32,13 @@ type Reaction = { video?: string; text?: string }
 
 const CONFETTI_COLORS = ['#ec4899', '#f43f5e', '#a78bfa', '#22d3ee', '#fb923c', '#ffffff']
 const GENERIC_REACTIONS = [
-  'Leuk!',
-  'Mooi 🙌',
-  'Haha top',
-  'Oké, interessant…',
-  'Genoteerd ✍️',
-  'Echt waar?',
-  'Daar hou ik van',
+  'Nice!',
+  'Beautiful 🙌',
+  'Haha great',
+  'Okay, interesting…',
+  'Noted ✍️',
+  'Really?',
+  'I love that',
   'Nice',
 ]
 
@@ -128,7 +128,7 @@ async function uploadPhoto(file: File): Promise<string | null> {
 export function Form({
   onDone,
   hostId,
-  doneLabel = 'Terug naar overzicht',
+  doneLabel = 'Back to overview',
 }: {
   onDone: () => void
   hostId: string
@@ -203,12 +203,12 @@ export function Form({
   }
 
   function validate(s: number): string | null {
-    if (s === 0 && !form.naam.trim()) return 'Vul je naam in.'
-    if (s === 4 && form.stelling_afterparty == null) return 'Kies eens of oneens.'
-    if (s === 7 && form.stelling_festivaldag == null) return 'Kies eens of oneens.'
-    if (s === 14 && !photoFile) return 'Upload een foto om verder te gaan.'
+    if (s === 0 && !form.naam.trim()) return 'Please enter your name.'
+    if (s === 4 && form.stelling_afterparty == null) return 'Choose agree or disagree.'
+    if (s === 7 && form.stelling_festivaldag == null) return 'Choose agree or disagree.'
+    if (s === 14 && !photoFile) return 'Upload a photo to continue.'
     const field = REQUIRED_FIELDS[s]
-    if (field && !(form[field] as string).trim()) return 'Vul dit in om verder te gaan.'
+    if (field && !(form[field] as string).trim()) return 'Fill this in to continue.'
     return null
   }
 
@@ -219,45 +219,45 @@ export function Form({
       case 0:
         return { video: '/gifs/naam.webm' } // naam — gif only, no text
       case 1:
-        return { video: '/gifs/dj.webm', text: 'Ik ben je eerste fan!' }
+        return { video: '/gifs/dj.webm', text: 'I\'m your first fan!' }
       case 2:
-        return { video: '/gifs/snack.webm', text: 'Ik zou jou wel chappen 😏' }
+        return { video: '/gifs/snack.webm', text: 'I\'d snack on you 😏' }
       case 3:
-        return { video: '/gifs/eerste-indruk.webm', text: 'Ik dacht precies hetzelfde' }
+        return { video: '/gifs/eerste-indruk.webm', text: 'I thought exactly the same' }
       case 4:
         return {
           text:
             form.stelling_afterparty == null
               ? pick(GENERIC_REACTIONS)
               : form.stelling_afterparty
-                ? 'Leuk dat je me uitnodigt!'
-                : 'Dan ken je die van mij nog niet 😈',
+                ? 'Nice of you to invite me!'
+                : 'Then you haven\'t seen mine yet 😈',
         }
       case 5:
-        return { video: '/gifs/guilty.webm', text: 'Wij worden vrienden' }
+        return { video: '/gifs/guilty.webm', text: 'We\'re going to be friends' }
       case 6:
-        return { video: '/gifs/bijnaam.webm', text: 'Ik ga je ook zo noemen' }
+        return { video: '/gifs/bijnaam.webm', text: 'I\'m going to call you that too' }
       case 7:
         return {
           text:
             form.stelling_festivaldag == null
               ? pick(GENERIC_REACTIONS)
               : form.stelling_festivaldag
-                ? 'Dit is waarom we hier zijn'
-                : 'Dan moet je meer x nemen 🤪',
+                ? 'This is why we\'re here'
+                : 'Then you need to take more x 🤪',
         }
       case 8:
-        return { video: '/gifs/jeugdheld.webm', text: 'Goede smaak' }
+        return { video: '/gifs/jeugdheld.webm', text: 'Good taste' }
       case 9:
-        return { video: '/gifs/dilemma.webm', text: 'Ja?' }
+        return { video: '/gifs/dilemma.webm', text: 'Yeah?' }
       case 10:
-        return { video: '/gifs/stopwoordje.webm', text: 'Dit ga ik nu alleen nog maar horen' }
+        return { video: '/gifs/stopwoordje.webm', text: 'Now this is all I\'m going to hear' }
       case 11:
-        return { video: '/gifs/meezingen.webm', text: 'Microfoon is van jou 🎤' }
+        return { video: '/gifs/meezingen.webm', text: 'The mic is yours 🎤' }
       case 12:
-        return { video: '/gifs/seksstandje.webm', text: 'Ooh echt?' }
+        return { video: '/gifs/seksstandje.webm', text: 'Ooh really?' }
       case 13:
-        return { video: '/gifs/onthoud.webm', text: 'Dit zal ik nooit vergeten' }
+        return { video: '/gifs/onthoud.webm', text: 'I\'ll never forget this' }
       default:
         return null // photo (14) advances straight through; 15 (last) submits
     }
@@ -340,7 +340,7 @@ export function Form({
       <div className="flex flex-col items-center gap-6 py-10 text-center">
         <StickFigures progress={1} step={LAST} fused />
         <p className="text-2xl font-semibold tracking-tight">
-          Jeeej we zijn nu officieel vriendjes! ❤️
+          Yaaay we&apos;re officially friends now! ❤️
         </p>
         <button
           type="button"
@@ -382,7 +382,7 @@ export function Form({
           type="button"
           onClick={back}
           disabled={step === 0 || busy}
-          aria-label="Vorige"
+          aria-label="Previous"
           className="grid size-11 place-items-center rounded-full bg-white/10 text-foreground transition-transform active:scale-90 disabled:opacity-30"
         >
           <ArrowLeft className="size-5" />
@@ -395,7 +395,7 @@ export function Form({
             type="button"
             onClick={next}
             disabled={busy || !photoFile}
-            aria-label="Volgende"
+            aria-label="Next"
             className="grid size-11 place-items-center rounded-full bg-pink-500/25 text-pink-100 shadow-lg shadow-pink-900/20 transition-transform active:scale-90 disabled:opacity-60"
           >
             {busy ? <Loader2 className="size-5 animate-spin" /> : <ArrowRight className="size-5" />}
@@ -431,11 +431,11 @@ function renderStep(step: number, form: FormState, set: SetFn, api: Api, photo: 
     case 0:
       return (
         <>
-          <Question title="Wat is je naam?" />
+          <Question title="What's your name?" />
           <TextField
             value={form.naam}
             onChange={v => set('naam', v)}
-            placeholder="Je naam"
+            placeholder="Your name"
             autoFocus
             onSubmit={api.next}
             submitIcon={submitIcon}
@@ -446,7 +446,7 @@ function renderStep(step: number, form: FormState, set: SetFn, api: Api, photo: 
     case 1:
       return (
         <>
-          <Question title="Geef jezelf een dj-naam" />
+          <Question title="Give yourself a DJ name" />
           <TextField
             value={form.dj_naam}
             onChange={v => set('dj_naam', v)}
@@ -461,11 +461,11 @@ function renderStep(step: number, form: FormState, set: SetFn, api: Api, photo: 
     case 2:
       return (
         <>
-          <Question title="Beschrijf jezelf als een snack" />
+          <Question title="Describe yourself as a snack" />
           <TextField
             value={form.snack}
             onChange={v => set('snack', v)}
-            placeholder="Frikandel, Eierbal of Krakeling..."
+            placeholder="Frikandel, Eierbal or Krakeling..."
             autoFocus
             onSubmit={api.next}
             submitIcon={submitIcon}
@@ -476,11 +476,11 @@ function renderStep(step: number, form: FormState, set: SetFn, api: Api, photo: 
     case 3:
       return (
         <>
-          <Question title="Wat was/is je eerste indruk van mij?" />
+          <Question title="What was/is your first impression of me?" />
           <TextField
             value={form.eerste_indruk}
             onChange={v => set('eerste_indruk', v)}
-            placeholder="Je mag eerlijk zijn..."
+            placeholder="You can be honest..."
             multiline
             autoFocus
             onSubmit={api.next}
@@ -492,7 +492,7 @@ function renderStep(step: number, form: FormState, set: SetFn, api: Api, photo: 
     case 4:
       return (
         <Stelling
-          title="De afterparty is altijd beter dan het festival zelf"
+          title="The afterparty is always better than the festival itself"
           value={form.stelling_afterparty}
           onChange={v => set('stelling_afterparty', v)}
           toelichting={form.stelling_afterparty_toelichting}
@@ -503,11 +503,11 @@ function renderStep(step: number, form: FormState, set: SetFn, api: Api, photo: 
     case 5:
       return (
         <>
-          <Question title="Wat is je guilty pleasure?" />
+          <Question title="What's your guilty pleasure?" />
           <TextField
             value={form.guilty_pleasure}
             onChange={v => set('guilty_pleasure', v)}
-            placeholder="Niemand oordeelt…"
+            placeholder="No one's judging…"
             autoFocus
             onSubmit={api.next}
             submitIcon={submitIcon}
@@ -518,7 +518,7 @@ function renderStep(step: number, form: FormState, set: SetFn, api: Api, photo: 
     case 6:
       return (
         <>
-          <Question title="Grappigste bijnaam gekregen of gegeven?" />
+          <Question title="Funniest nickname you've gotten or given?" />
           <TextField
             value={form.bijnaam}
             onChange={v => set('bijnaam', v)}
@@ -533,7 +533,7 @@ function renderStep(step: number, form: FormState, set: SetFn, api: Api, photo: 
     case 7:
       return (
         <Stelling
-          title="Ik ken mensen beter na één festivaldag dan na een jaar normaal contact"
+          title="I know people better after one festival day than after a year of normal contact"
           value={form.stelling_festivaldag}
           onChange={v => set('stelling_festivaldag', v)}
           toelichting={form.stelling_festivaldag_toelichting}
@@ -544,11 +544,11 @@ function renderStep(step: number, form: FormState, set: SetFn, api: Api, photo: 
     case 8:
       return (
         <>
-          <Question title="Jouw jeugdheld?" />
+          <Question title="Your childhood hero?" />
           <TextField
             value={form.jeugdheld}
             onChange={v => set('jeugdheld', v)}
-            placeholder="De held van vroeger…"
+            placeholder="Your hero from back then…"
             autoFocus
             onSubmit={api.next}
             submitIcon={submitIcon}
@@ -560,10 +560,10 @@ function renderStep(step: number, form: FormState, set: SetFn, api: Api, photo: 
       return (
         <>
           <ChoiceQuestion
-            title="Weten wanneer je dood gaat of weten hoe je dood gaat?"
+            title="Know when you'll die or know how you'll die?"
             options={[
-              { label: 'Wanneer', value: 'Wanneer' },
-              { label: 'Hoe', value: 'Hoe' },
+              { label: 'When', value: 'When' },
+              { label: 'How', value: 'How' },
             ]}
             value={form.dilemma || null}
             onChange={v => set('dilemma', v)}
@@ -576,11 +576,11 @@ function renderStep(step: number, form: FormState, set: SetFn, api: Api, photo: 
     case 10:
       return (
         <>
-          <Question title="Jouw stopwoordje?" />
+          <Question title="Your catchphrase?" />
           <TextField
             value={form.stopwoordje}
             onChange={v => set('stopwoordje', v)}
-            placeholder="Echt waar, sowieso, …"
+            placeholder="Really, totally, …"
             autoFocus
             onSubmit={api.next}
             submitIcon={submitIcon}
@@ -591,11 +591,11 @@ function renderStep(step: number, form: FormState, set: SetFn, api: Api, photo: 
     case 11:
       return (
         <>
-          <Question title="Welk nummer zing jij volle borst mee?" />
+          <Question title="Which song do you belt out at the top of your lungs?" />
           <TextField
             value={form.meezingen}
             onChange={v => set('meezingen', v)}
-            placeholder="Titel + artiest…"
+            placeholder="Title + artist…"
             autoFocus
             onSubmit={api.next}
             submitIcon={submitIcon}
@@ -606,7 +606,7 @@ function renderStep(step: number, form: FormState, set: SetFn, api: Api, photo: 
     case 12:
       return (
         <>
-          <Question title="Wat is je favoriete seksstandje?" />
+          <Question title="What's your favorite sex position?" />
           <TextField
             value={form.seksstandje}
             onChange={v => set('seksstandje', v)}
@@ -621,7 +621,7 @@ function renderStep(step: number, form: FormState, set: SetFn, api: Api, photo: 
     case 13:
       return (
         <>
-          <Question title="Als je één ding wilt dat ik over jou onthoud, wat is het?" />
+          <Question title="If there's one thing you want me to remember about you, what is it?" />
           <TextField
             value={form.onthoud_mij}
             onChange={v => set('onthoud_mij', v)}
@@ -637,14 +637,14 @@ function renderStep(step: number, form: FormState, set: SetFn, api: Api, photo: 
     case 14:
       return (
         <>
-          <Question title="Foto uploaden" />
+          <Question title="Upload a photo" />
           <PhotoStep preview={photo.photoPreview} onPhoto={photo.onPhoto} />
         </>
       )
     case 15:
       return (
         <>
-          <Question title="Telefoonnummer" optional />
+          <Question title="Phone number" optional />
           <TextField
             value={form.telefoonnummer}
             onChange={v => set('telefoonnummer', v)}
@@ -687,7 +687,7 @@ function Question({
         )}
       </h2>
       {optional && (
-        <p className="mt-1 text-xs text-muted-foreground">Optioneel — je mag dit overslaan</p>
+        <p className="mt-1 text-xs text-muted-foreground">Optional — you can skip this</p>
       )}
     </div>
   )
@@ -747,7 +747,7 @@ function ChoiceQuestion<T extends string | boolean>({
       <TextField
         value={toelichting}
         onChange={onToelichting}
-        placeholder="Toelichting (optioneel)"
+        placeholder="Explanation (optional)"
         onSubmit={api.next}
         submitIcon="next"
         disabled={api.busy || value == null}
@@ -757,8 +757,8 @@ function ChoiceQuestion<T extends string | boolean>({
 }
 
 const STELLING_OPTIONS = [
-  { label: 'Eens', value: true },
-  { label: 'Oneens', value: false },
+  { label: 'Agree', value: true },
+  { label: 'Disagree', value: false },
 ]
 
 function Stelling({
@@ -802,11 +802,11 @@ function PhotoStep({
       {preview ? (
         <div className="relative w-full">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={preview} alt="Voorbeeld" className="h-56 w-full rounded-2xl object-cover shadow-lg" />
+          <img src={preview} alt="Preview" className="h-56 w-full rounded-2xl object-cover shadow-lg" />
           <button
             type="button"
             onClick={() => onPhoto(null)}
-            aria-label="Verwijder foto"
+            aria-label="Remove photo"
             className="absolute -right-2 -top-2 grid size-7 place-items-center rounded-full bg-black/70 text-white"
           >
             <X className="size-4" />
@@ -820,7 +820,7 @@ function PhotoStep({
         >
           <span className="flex flex-col items-center gap-2">
             <ImagePlus className="size-8" />
-            <span className="text-sm">Kies een foto</span>
+            <span className="text-sm">Choose a photo</span>
           </span>
         </button>
       )}

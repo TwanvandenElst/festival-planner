@@ -25,7 +25,7 @@ export function UserCount() {
 
   return (
     <p className="mt-5 text-center text-xs text-muted-foreground/80">
-      🎪 {count} mensen gebruiken al de app
+      🎪 {count} people already use the app
     </p>
   )
 }

@@ -93,7 +93,7 @@ function initialsOf(name: string) {
 }
 
 function formatDate(iso: string) {
-  return new Date(iso).toLocaleDateString('nl-NL', {
+  return new Date(iso).toLocaleDateString('en-GB', {
     day: 'numeric',
     month: 'long',
     year: 'numeric',
@@ -203,8 +203,8 @@ export function VriendenboekjeClient({
   async function share() {
     const url = shareUrl || `${window.location.origin}/vriendenboekje?host=${hostId}`
     const data = {
-      title: 'Mijn festivalvrienden',
-      text: 'Verzilver onze vriendschap met dit vriendenboekje.',
+      title: 'My festival friends',
+      text: 'Seal our friendship with this vriendenboekje.',
       url,
     }
     if (typeof navigator.share === 'function') {
@@ -227,13 +227,13 @@ export function VriendenboekjeClient({
   // ── Visitor mode: welcome → fill-in form (the form shows its own thank-you).
   if (mode === 'visitor') {
     if (filling) {
-      return <Form hostId={hostId} doneLabel="Klaar" onDone={() => setFilling(false)} />
+      return <Form hostId={hostId} doneLabel="Done" onDone={() => setFilling(false)} />
     }
     return <VisitorWelcome onBegin={() => setFilling(true)} />
   }
 
   // ── Host mode: the owner's own book.
-  // "Word vriendjes" lets the host fill in the book on their own phone — it
+  // "Become friends" lets the host fill in the book on their own phone — it
   // submits with hostId (= the logged-in user's own id) as host_user_id.
   if (filling) {
     return (
@@ -292,9 +292,9 @@ function VisitorWelcome({ onBegin }: { onBegin: () => void }) {
         <BookHeart className="size-8 text-pink-300" />
       </div>
       <div>
-        <h1 className="text-2xl font-bold tracking-tight">Vul dit vriendenboekje in</h1>
+        <h1 className="text-2xl font-bold tracking-tight">Fill in this vriendenboekje</h1>
         <p className="mx-auto mt-2 max-w-xs text-sm text-pink-100/80">
-          Beantwoord een paar speelse vragen en word officieel festivalvriend.
+          Answer a few playful questions and become an official festival friend.
         </p>
       </div>
       <button
@@ -303,7 +303,7 @@ function VisitorWelcome({ onBegin }: { onBegin: () => void }) {
         className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-pink-500 to-rose-500 px-6 py-3.5 text-sm font-semibold text-white shadow-lg shadow-pink-900/30 transition-transform active:scale-[0.97]"
       >
         <PenLine className="size-4" />
-        Begin
+        Start
       </button>
     </div>
   )
@@ -328,9 +328,9 @@ function HostEmptyState({
         <BookHeart className="size-8 text-pink-300" />
       </div>
       <div>
-        <h1 className="text-2xl font-bold tracking-tight">Jouw vriendenboekje is nog leeg</h1>
+        <h1 className="text-2xl font-bold tracking-tight">Your vriendenboekje is still empty</h1>
         <p className="mx-auto mt-2 max-w-xs text-sm text-pink-100/80">
-          Deel jouw link zodat mensen jouw vriendenboekje kunnen invullen.
+          Share your link so people can fill in your vriendenboekje.
         </p>
       </div>
 
@@ -340,7 +340,7 @@ function HostEmptyState({
         className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-pink-500 to-rose-500 px-6 py-3.5 text-sm font-semibold text-white shadow-lg shadow-pink-900/30 transition-transform active:scale-[0.97]"
       >
         <PenLine className="size-4" />
-        Word vriendjes
+        Become friends
       </button>
 
       {shareUrl && (
@@ -355,7 +355,7 @@ function HostEmptyState({
         className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-pink-500 to-rose-500 px-6 py-3.5 text-sm font-semibold text-white shadow-lg shadow-pink-900/30 transition-transform active:scale-[0.97]"
       >
         {copied ? <Check className="size-4" /> : <Share2 className="size-4" />}
-        {copied ? 'Gekopieerd!' : 'Deel je vriendenboekje'}
+        {copied ? 'Copied!' : 'Share your vriendenboekje'}
       </button>
 
       {shareUrl && (
@@ -531,10 +531,10 @@ function Hero({
       {/* Title + CTA */}
       <div className="relative z-10 px-1 text-center">
         <h1 data-reveal-title className="text-3xl font-bold tracking-tight">
-          Mijn festivalvrienden 🎉
+          My festival friends 🎉
         </h1>
         <p className="mx-auto mt-2 max-w-xs text-sm text-pink-100/80">
-          Verzilver onze vriendschap met dit vriendenboekje
+          Seal our friendship with this vriendenboekje
         </p>
 
         <div className="mt-5 space-y-2.5">
@@ -544,7 +544,7 @@ function Hero({
             className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-pink-500 to-rose-500 px-5 py-3.5 text-sm font-semibold text-white shadow-lg shadow-pink-900/30 transition-transform active:scale-[0.97]"
           >
             <PenLine className="size-4" />
-            Word vriendjes
+            Become friends
           </button>
           <button
             type="button"
@@ -552,7 +552,7 @@ function Hero({
             className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-white/10 px-5 py-3 text-sm font-semibold text-pink-100 ring-1 ring-white/15 backdrop-blur-md transition-transform active:scale-[0.97]"
           >
             {copied ? <Check className="size-4" /> : <Share2 className="size-4" />}
-            {copied ? 'Gekopieerd!' : 'Deel je vriendenboekje'}
+            {copied ? 'Copied!' : 'Share your vriendenboekje'}
           </button>
         </div>
       </div>
@@ -563,13 +563,13 @@ function Hero({
 /* --------------------------------- Feed --------------------------------- */
 
 // The answer body for a field, as a single line of feed text. Stellingen read
-// as "Eens — toelichting"; everything else is the raw answer.
+// as "Agree — explanation"; everything else is the raw answer.
 function answerText(field: VbField, entry: Vriendenboekje): string {
   if (field.stelling) {
     const v = field.stelling(entry)
     if (v == null) return ''
     const toelichting = field.text(entry)
-    return `${v ? 'Eens' : 'Oneens'}${toelichting ? ` — ${toelichting}` : ''}`
+    return `${v ? 'Agree' : 'Disagree'}${toelichting ? ` — ${toelichting}` : ''}`
   }
   return field.text(entry) ?? ''
 }
@@ -589,8 +589,8 @@ function Feed({
     return (
       <div className="mt-10 rounded-2xl border border-dashed border-white/15 py-14 text-center">
         <BookHeart className="mx-auto mb-3 size-8 text-muted-foreground/60" />
-        <p className="text-sm font-medium">Nog geen festivalvrienden</p>
-        <p className="mt-1 text-sm text-muted-foreground">Wees de eerste die er één invult.</p>
+        <p className="text-sm font-medium">No festival friends yet</p>
+        <p className="mt-1 text-sm text-muted-foreground">Be the first to fill one in.</p>
       </div>
     )
   }
@@ -625,7 +625,7 @@ function Feed({
               data-reveal-title
               className="text-sm font-semibold uppercase tracking-wide text-pink-100/80"
             >
-              Grappigste reacties
+              Funniest reactions
             </h2>
             {laughsOpen ? (
               <ChevronUp className="size-4 text-pink-100/80" />
@@ -677,7 +677,7 @@ function Feed({
 
       <section className="mt-10 space-y-3">
         <h2 data-reveal-title className="px-1 text-sm font-semibold uppercase tracking-wide text-pink-100/80">
-          Alle festivalvrienden
+          All festival friends
         </h2>
 
       {entries.map(entry => (
@@ -803,7 +803,7 @@ function Detail({
           className="mb-5 inline-flex items-center gap-1.5 rounded-full bg-white/10 px-4 py-2 text-sm font-medium backdrop-blur-md transition-transform active:scale-95"
         >
           <ArrowLeft className="size-4" />
-          Terug
+          Back
         </button>
 
         {/* Polaroid-style header */}
@@ -825,7 +825,7 @@ function Detail({
 
         <div className="mt-6 text-center">
           {entry.dj_naam && <p className="text-base text-pink-200">🎧 {entry.dj_naam}</p>}
-          <p className="mt-1 text-xs text-muted-foreground">Ingevuld op {formatDate(entry.created_at)}</p>
+          <p className="mt-1 text-xs text-muted-foreground">Filled in on {formatDate(entry.created_at)}</p>
         </div>
 
         {/* Chat-style bubbles, one per answered question. */}
@@ -847,7 +847,7 @@ function Detail({
                       stellingVal ? 'text-pink-100' : 'text-foreground/70',
                     )}
                   >
-                    {stellingVal ? 'Eens' : 'Oneens'}
+                    {stellingVal ? 'Agree' : 'Disagree'}
                   </p>
                   {body && (
                     <p className="mt-1.5 whitespace-pre-wrap text-sm leading-snug text-foreground/80">
@@ -1016,7 +1016,7 @@ function ReactionButton({
       ref={ref}
       type="button"
       onClick={handle}
-      aria-label={reacted ? 'Haal je lach weg' : 'Stuur een lach'}
+      aria-label={reacted ? 'Remove your laugh' : 'Send a laugh'}
       aria-pressed={reacted}
       // Positioned with inset offsets (not translate) so the GSAP scale bounce
       // can't clobber the transform and slide the chip diagonally.

@@ -57,34 +57,34 @@ export type VbField = {
 }
 
 export const VRIENDENBOEKJE_FIELDS: VbField[] = [
-  { key: 'snack', label: 'Beschrijf jezelf als een snack', text: e => e.snack },
-  { key: 'eerste_indruk', label: 'Wat was/is je eerste indruk van mij?', text: e => e.eerste_indruk },
+  { key: 'snack', label: 'Describe yourself as a snack', text: e => e.snack },
+  { key: 'eerste_indruk', label: 'What was/is your first impression of me?', text: e => e.eerste_indruk },
   {
     key: 'stelling_afterparty',
-    label: 'De afterparty is altijd beter dan het festival zelf',
+    label: 'The afterparty is always better than the festival itself',
     text: e => e.stelling_afterparty_toelichting,
     stelling: e => e.stelling_afterparty,
   },
-  { key: 'guilty_pleasure', label: 'Wat is je guilty pleasure?', text: e => e.guilty_pleasure },
-  { key: 'bijnaam', label: 'Grappigste bijnaam gekregen of gegeven?', text: e => e.bijnaam },
+  { key: 'guilty_pleasure', label: 'What is your guilty pleasure?', text: e => e.guilty_pleasure },
+  { key: 'bijnaam', label: 'Funniest nickname you\'ve gotten or given?', text: e => e.bijnaam },
   {
     key: 'stelling_festivaldag',
-    label: 'Ik ken mensen beter na één festivaldag dan na een jaar normaal contact',
+    label: 'I know people better after one festival day than after a year of normal contact',
     text: e => e.stelling_festivaldag_toelichting,
     stelling: e => e.stelling_festivaldag,
   },
-  { key: 'jeugdheld', label: 'Jouw jeugdheld?', text: e => e.jeugdheld },
+  { key: 'jeugdheld', label: 'Your childhood hero?', text: e => e.jeugdheld },
   {
     key: 'dilemma',
-    label: 'Weten wanneer je dood gaat of weten hoe je dood gaat?',
+    label: 'Know when you\'ll die or know how you\'ll die?',
     text: e => [e.dilemma, e.dilemma_toelichting].filter(Boolean).join(' — ') || null,
   },
-  { key: 'stopwoordje', label: 'Jouw stopwoordje?', text: e => e.stopwoordje },
-  { key: 'meezingen', label: 'Welk nummer zing jij volle borst mee?', text: e => e.meezingen },
-  { key: 'seksstandje', label: 'Wat is je favoriete seksstandje?', text: e => e.seksstandje },
+  { key: 'stopwoordje', label: 'Your catchphrase?', text: e => e.stopwoordje },
+  { key: 'meezingen', label: 'Which song do you belt out at the top of your lungs?', text: e => e.meezingen },
+  { key: 'seksstandje', label: 'What is your favorite sex position?', text: e => e.seksstandje },
   {
     key: 'onthoud_mij',
-    label: 'Als je één ding wilt dat ik over jou onthoudt, wat is het?',
+    label: 'If there\'s one thing you want me to remember about you, what is it?',
     text: e => e.onthoud_mij,
   },
 ]

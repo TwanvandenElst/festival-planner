@@ -10,7 +10,7 @@ export const dynamic = 'force-dynamic'
 
 export const metadata: Metadata = {
   title: 'Vriendenboekje',
-  description: 'Vul jouw vriendenboekje in en word officieel vrienden.',
+  description: 'Fill in your vriendenboekje and become official friends.',
 }
 
 export default async function VriendenboekjePage({

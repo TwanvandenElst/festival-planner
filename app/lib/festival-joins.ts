@@ -94,7 +94,7 @@ export async function removeFestivalJoin(joinId: string): Promise<{ ok: boolean;
   const {
     data: { user },
   } = await supabase.auth.getUser()
-  if (!user) return { ok: false, error: 'Niet ingelogd.' }
+  if (!user) return { ok: false, error: 'Not signed in.' }
 
   // The delete policy on festival_joins is allow-all, so verify the join belongs
   // to one of the caller's own festivals before deleting it.
@@ -104,7 +104,7 @@ export async function removeFestivalJoin(joinId: string): Promise<{ ok: boolean;
     .eq('id', joinId)
     .eq('festivals.user_id', user.id)
     .maybeSingle()
-  if (!owned) return { ok: false, error: 'Niet gevonden.' }
+  if (!owned) return { ok: false, error: 'Not found.' }
 
   const { error } = await supabase.from('festival_joins').delete().eq('id', joinId)
   if (error) return { ok: false, error: error.message }

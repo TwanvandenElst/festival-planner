@@ -64,8 +64,8 @@ export async function submitVriendenboekje(
   hostUserId: string,
 ): Promise<{ ok: true; id: string } | { ok: false; error: string }> {
   const naam = (input.naam ?? '').trim()
-  if (!naam) return { ok: false, error: 'Vul je naam in.' }
-  if (!hostUserId) return { ok: false, error: 'Onbekend vriendenboekje.' }
+  if (!naam) return { ok: false, error: 'Please enter your name.' }
+  if (!hostUserId) return { ok: false, error: 'Unknown vriendenboekje.' }
 
   // Question set v2: only `naam` is required — every other question is skippable
   // and nullable. Legacy columns are omitted (they default to null in the table).
@@ -108,7 +108,7 @@ export async function submitVriendenboekje(
       details: error?.details,
       hint: error?.hint,
     })
-    return { ok: false, error: 'Kon je vriendenboekje niet opslaan. Probeer het opnieuw.' }
+    return { ok: false, error: 'Could not save your vriendenboekje. Please try again.' }
   }
 
   revalidatePath('/vriendenboekje')

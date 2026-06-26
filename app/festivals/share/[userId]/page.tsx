@@ -110,7 +110,7 @@ export default async function FestivalsSharePage({
       <div className="mx-auto w-full max-w-xl px-4 py-12 sm:py-16">
         <h1 className="text-2xl font-semibold tracking-tight">Festivals</h1>
         <p className="mt-3 text-sm text-muted-foreground">
-          Deze pagina is even niet beschikbaar. Probeer het later opnieuw.
+          This page is currently unavailable. Please try again later.
         </p>
       </div>
     )
