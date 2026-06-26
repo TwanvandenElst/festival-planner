@@ -3,7 +3,16 @@
 import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createPortal } from 'react-dom'
-import { ArrowLeft, BookHeart, Check, Headphones, PenLine, Share2 } from 'lucide-react'
+import {
+  ArrowLeft,
+  BookHeart,
+  Check,
+  ChevronDown,
+  ChevronUp,
+  Headphones,
+  PenLine,
+  Share2,
+} from 'lucide-react'
 import { useGSAP } from '@gsap/react'
 import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
@@ -180,7 +189,7 @@ export function VriendenboekjeClient({
     const url = window.location.href
     const data = {
       title: 'Mijn festivalvrienden',
-      text: 'Schrijf jouw verhaal en word deel van de legende.',
+      text: 'Verzilver onze vriendschap met dit vriendenboekje.',
       url,
     }
     if (typeof navigator.share === 'function') {
@@ -221,7 +230,13 @@ export function VriendenboekjeClient({
         onSelect={setSelected}
       />
 
-      <Feed entries={entries} counts={counts} onSelect={setSelected} />
+      <Feed
+        entries={entries}
+        counts={counts}
+        onSelect={setSelected}
+        onReact={entryId => react(entryId, 'overview')}
+        onUnreact={(entryId, id) => unreact(entryId, 'overview', id)}
+      />
 
       {selected && (
         <Detail
@@ -405,7 +420,7 @@ function Hero({
           Mijn festivalvrienden 🎉
         </h1>
         <p className="mx-auto mt-2 max-w-xs text-sm text-pink-100/80">
-          Schrijf jouw verhaal en word deel van de legende
+          Verzilver onze vriendschap met dit vriendenboekje
         </p>
 
         <div className="mt-5 flex items-center gap-2.5">
@@ -453,11 +468,25 @@ function Feed({
   entries,
   counts,
   onSelect,
+  onReact,
+  onUnreact,
 }: {
   entries: Vriendenboekje[]
   counts: Record<string, number>
   onSelect: (e: Vriendenboekje) => void
+  onReact: (entryId: string) => Promise<string | null>
+  onUnreact: (entryId: string, id: string) => Promise<boolean>
 }) {
+  const [laughsOpen, setLaughsOpen] = useState(true)
+
+  // Total 😂 for an entry: every reaction bucket whose key belongs to it
+  // (per-answer reactions from the detail page + the "overview" reactions).
+  const totalForEntry = (entryId: string) =>
+    Object.entries(counts).reduce(
+      (sum, [key, n]) => (key.startsWith(`${entryId}::`) ? sum + n : sum),
+      0,
+    )
+
   if (entries.length === 0) {
     return (
       <div className="mt-10 rounded-2xl border border-dashed border-white/15 py-14 text-center">
@@ -488,39 +517,61 @@ function Feed({
     <>
       {posts.length > 0 && (
         <section className="mt-10 space-y-3">
-          <h2
-            data-reveal-title
-            className="px-1 text-sm font-semibold uppercase tracking-wide text-pink-100/80"
+          <button
+            type="button"
+            onClick={() => setLaughsOpen(o => !o)}
+            aria-expanded={laughsOpen}
+            className="flex w-full items-center justify-between px-1 transition-transform active:scale-[0.99]"
           >
-            Meest gelachen 😂
-          </h2>
-
-          {posts.map(({ entry, field, count }) => (
-            <button
-              key={`${entry.id}:${field.key}`}
-              type="button"
-              data-reveal-card
-              onClick={() => onSelect(entry)}
-              className="glass-panel block w-full rounded-2xl p-4 text-left shadow-[0_0_22px_-6px_rgba(244,114,182,0.55)] ring-1 ring-pink-400/40 transition-transform active:scale-[0.99]"
+            <h2
+              data-reveal-title
+              className="text-sm font-semibold uppercase tracking-wide text-pink-100/80"
             >
-              <div className="flex items-center gap-3">
-                <div className="size-9 shrink-0 overflow-hidden rounded-full ring-2 ring-white/15">
-                  <Avatar entry={entry} textClass="text-xs" />
-                </div>
-                <p className="min-w-0 flex-1 truncate text-sm font-semibold">{entry.naam}</p>
-                <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-pink-500/20 px-2.5 py-1 text-xs font-semibold text-pink-100">
-                  😂 <span className="tabular-nums">{count}</span>
-                </span>
-              </div>
+              Grappigste reacties
+            </h2>
+            {laughsOpen ? (
+              <ChevronUp className="size-4 text-pink-100/80" />
+            ) : (
+              <ChevronDown className="size-4 text-pink-100/80" />
+            )}
+          </button>
 
-              <p className="mt-2 px-0.5 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
-                {field.label}
-              </p>
-              <p className="mt-0.5 line-clamp-3 px-0.5 text-[15px] italic text-foreground/90">
-                “{answerText(field, entry)}”
-              </p>
-            </button>
-          ))}
+          {/* 0fr → 1fr grid trick: smooth height transition without measuring. */}
+          <div
+            className="grid transition-[grid-template-rows] duration-300 ease-out"
+            style={{ gridTemplateRows: laughsOpen ? '1fr' : '0fr' }}
+          >
+            <div className="min-h-0 overflow-hidden">
+              <div className="space-y-3">
+                {posts.map(({ entry, field, count }) => (
+                  <button
+                    key={`${entry.id}:${field.key}`}
+                    type="button"
+                    data-reveal-card
+                    onClick={() => onSelect(entry)}
+                    className="glass-panel block w-full rounded-2xl p-4 text-left shadow-[0_0_22px_-6px_rgba(244,114,182,0.55)] ring-1 ring-pink-400/40 transition-transform active:scale-[0.99]"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="size-9 shrink-0 overflow-hidden rounded-full ring-2 ring-white/15">
+                        <Avatar entry={entry} textClass="text-xs" />
+                      </div>
+                      <p className="min-w-0 flex-1 truncate text-sm font-semibold">{entry.naam}</p>
+                      <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-pink-500/20 px-2.5 py-1 text-xs font-semibold text-pink-100">
+                        😂 <span className="tabular-nums">{count}</span>
+                      </span>
+                    </div>
+
+                    <p className="mt-2 px-0.5 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                      {field.label}
+                    </p>
+                    <p className="mt-0.5 line-clamp-3 px-0.5 text-[15px] italic text-foreground/90">
+                      “{answerText(field, entry)}”
+                    </p>
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
         </section>
       )}
 
@@ -530,8 +581,8 @@ function Feed({
         </h2>
 
       {entries.map(entry => (
+        <div key={entry.id} className="relative">
         <button
-          key={entry.id}
           type="button"
           data-reveal-card
           onClick={() => onSelect(entry)}
@@ -565,6 +616,14 @@ function Feed({
             </div>
           </div>
         </button>
+        <ReactionButton
+          entryId={entry.id}
+          fieldName="overview"
+          count={totalForEntry(entry.id)}
+          onReact={() => onReact(entry.id)}
+          onUnreact={id => onUnreact(entry.id, id)}
+        />
+        </div>
       ))}
       </section>
     </>
