@@ -125,7 +125,15 @@ async function uploadPhoto(file: File): Promise<string | null> {
   return supabase.storage.from('vriendenboekje').getPublicUrl(path).data.publicUrl
 }
 
-export function Form({ onDone }: { onDone: () => void }) {
+export function Form({
+  onDone,
+  hostId,
+  doneLabel = 'Terug naar overzicht',
+}: {
+  onDone: () => void
+  hostId: string
+  doneLabel?: string
+}) {
   const [step, setStep] = useState(0)
   const [dir, setDir] = useState<'forward' | 'back'>('forward')
   const [form, setForm] = useState<FormState>(INITIAL)
@@ -306,7 +314,7 @@ export function Form({ onDone }: { onDone: () => void }) {
     let foto_url: string | null = null
     if (photoFile) foto_url = await uploadPhoto(photoFile)
 
-    const res = await submitVriendenboekje({ ...form, foto_url } as VriendenboekjeInput)
+    const res = await submitVriendenboekje({ ...form, foto_url } as VriendenboekjeInput, hostId)
 
     if (!res.ok) {
       setError(res.error)
@@ -339,7 +347,7 @@ export function Form({ onDone }: { onDone: () => void }) {
           onClick={onDone}
           className="glass-panel rounded-full bg-pink-500/20 px-6 py-3 text-sm font-semibold text-pink-100 transition-transform active:scale-95"
         >
-          Terug naar overzicht
+          {doneLabel}
         </button>
         {burst && <Confetti pieces={burst} />}
         <TapConfetti taps={taps} />

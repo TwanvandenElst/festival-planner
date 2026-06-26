@@ -16,6 +16,7 @@ import {
 import { useGSAP } from '@gsap/react'
 import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
+import { QRCodeSVG } from 'qrcode.react'
 
 import { cn } from '@/lib/utils'
 import { useGsapReveal } from '@/lib/use-gsap-reveal'
@@ -125,14 +126,26 @@ function Avatar({ entry, textClass }: { entry: Vriendenboekje; textClass?: strin
 export function VriendenboekjeClient({
   entries,
   initialCounts,
+  mode,
+  hostId,
 }: {
   entries: Vriendenboekje[]
   initialCounts: Record<string, number>
+  mode: 'host' | 'visitor'
+  hostId: string
 }) {
   const router = useRouter()
-  const [writing, setWriting] = useState(false)
   const [selected, setSelected] = useState<Vriendenboekje | null>(null)
   const [copied, setCopied] = useState(false)
+  // Visitor fill-in flow: a welcome screen, then the form (which shows its own
+  // thank-you). `null` = welcome, true = form open.
+  const [filling, setFilling] = useState(false)
+
+  // The host's shareable link: visitors open it to fill in this book.
+  const [shareUrl, setShareUrl] = useState('')
+  useEffect(() => {
+    setShareUrl(`${window.location.origin}/vriendenboekje?host=${hostId}`)
+  }, [hostId])
 
   // 😂 counts keyed by reactionKey(entryId, field). Seeded from the server, then
   // kept live: optimistic on tap + Supabase realtime for everyone else's taps.
@@ -151,8 +164,9 @@ export function VriendenboekjeClient({
   }
 
   // Live updates from other visitors. We tag our own inserts by id and skip
-  // their realtime echo so a tap isn't counted twice.
+  // their realtime echo so a tap isn't counted twice. Host overview only.
   useEffect(() => {
+    if (mode !== 'host') return
     return subscribeToReactions(row => {
       if (ownIds.current.has(row.id)) {
         ownIds.current.delete(row.id)
@@ -160,7 +174,7 @@ export function VriendenboekjeClient({
       }
       bump(reactionKey(row.entry_id, row.field_name), 1)
     })
-  }, [])
+  }, [mode])
 
   // Add a reaction. Returns the new row id (the button stores it so it can later
   // toggle the reaction off by deleting that exact row).
@@ -185,8 +199,9 @@ export function VriendenboekjeClient({
     return ok
   }
 
+  // Share the host's fill-in link (not the current page URL).
   async function share() {
-    const url = window.location.href
+    const url = shareUrl || `${window.location.origin}/vriendenboekje?host=${hostId}`
     const data = {
       title: 'Mijn festivalvrienden',
       text: 'Verzilver onze vriendschap met dit vriendenboekje.',
@@ -209,13 +224,36 @@ export function VriendenboekjeClient({
     }
   }
 
-  if (writing) {
+  // ── Visitor mode: welcome → fill-in form (the form shows its own thank-you).
+  if (mode === 'visitor') {
+    if (filling) {
+      return <Form hostId={hostId} doneLabel="Klaar" onDone={() => setFilling(false)} />
+    }
+    return <VisitorWelcome onBegin={() => setFilling(true)} />
+  }
+
+  // ── Host mode: the owner's own book.
+  // "Word vriendjes" lets the host fill in the book on their own phone — it
+  // submits with hostId (= the logged-in user's own id) as host_user_id.
+  if (filling) {
     return (
       <Form
+        hostId={hostId}
         onDone={() => {
-          setWriting(false)
+          setFilling(false)
           router.refresh()
         }}
+      />
+    )
+  }
+
+  if (entries.length === 0) {
+    return (
+      <HostEmptyState
+        shareUrl={shareUrl}
+        copied={copied}
+        onShare={share}
+        onWrite={() => setFilling(true)}
       />
     )
   }
@@ -225,8 +263,8 @@ export function VriendenboekjeClient({
       <Hero
         entries={entries}
         copied={copied}
-        onWrite={() => setWriting(true)}
         onShare={share}
+        onWrite={() => setFilling(true)}
         onSelect={setSelected}
       />
 
@@ -245,19 +283,101 @@ export function VriendenboekjeClient({
   )
 }
 
+/* ----------------------------- Visitor welcome ---------------------------- */
+
+function VisitorWelcome({ onBegin }: { onBegin: () => void }) {
+  return (
+    <div className="flex min-h-[70vh] flex-col items-center justify-center gap-6 text-center">
+      <div className="glass-panel grid size-16 place-items-center rounded-3xl">
+        <BookHeart className="size-8 text-pink-300" />
+      </div>
+      <div>
+        <h1 className="text-2xl font-bold tracking-tight">Vul dit vriendenboekje in</h1>
+        <p className="mx-auto mt-2 max-w-xs text-sm text-pink-100/80">
+          Beantwoord een paar speelse vragen en word officieel festivalvriend.
+        </p>
+      </div>
+      <button
+        type="button"
+        onClick={onBegin}
+        className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-pink-500 to-rose-500 px-6 py-3.5 text-sm font-semibold text-white shadow-lg shadow-pink-900/30 transition-transform active:scale-[0.97]"
+      >
+        <PenLine className="size-4" />
+        Begin
+      </button>
+    </div>
+  )
+}
+
+/* ----------------------------- Host empty state --------------------------- */
+
+function HostEmptyState({
+  shareUrl,
+  copied,
+  onShare,
+  onWrite,
+}: {
+  shareUrl: string
+  copied: boolean
+  onShare: () => void
+  onWrite: () => void
+}) {
+  return (
+    <div className="flex min-h-[70vh] flex-col items-center justify-center gap-6 text-center">
+      <div className="glass-panel grid size-16 place-items-center rounded-3xl">
+        <BookHeart className="size-8 text-pink-300" />
+      </div>
+      <div>
+        <h1 className="text-2xl font-bold tracking-tight">Jouw vriendenboekje is nog leeg</h1>
+        <p className="mx-auto mt-2 max-w-xs text-sm text-pink-100/80">
+          Deel jouw link zodat mensen jouw vriendenboekje kunnen invullen.
+        </p>
+      </div>
+
+      <button
+        type="button"
+        onClick={onWrite}
+        className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-pink-500 to-rose-500 px-6 py-3.5 text-sm font-semibold text-white shadow-lg shadow-pink-900/30 transition-transform active:scale-[0.97]"
+      >
+        <PenLine className="size-4" />
+        Word vriendjes
+      </button>
+
+      {shareUrl && (
+        <div className="rounded-2xl bg-white p-3">
+          <QRCodeSVG value={shareUrl} size={150} bgColor="#ffffff" fgColor="#000000" level="M" />
+        </div>
+      )}
+
+      <button
+        type="button"
+        onClick={onShare}
+        className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-pink-500 to-rose-500 px-6 py-3.5 text-sm font-semibold text-white shadow-lg shadow-pink-900/30 transition-transform active:scale-[0.97]"
+      >
+        {copied ? <Check className="size-4" /> : <Share2 className="size-4" />}
+        {copied ? 'Gekopieerd!' : 'Deel je vriendenboekje'}
+      </button>
+
+      {shareUrl && (
+        <p className="max-w-xs break-all text-xs text-muted-foreground">{shareUrl}</p>
+      )}
+    </div>
+  )
+}
+
 /* --------------------------------- Hero --------------------------------- */
 
 function Hero({
   entries,
   copied,
-  onWrite,
   onShare,
+  onWrite,
   onSelect,
 }: {
   entries: Vriendenboekje[]
   copied: boolean
-  onWrite: () => void
   onShare: () => void
+  onWrite: () => void
   onSelect: (e: Vriendenboekje) => void
 }) {
   const heroRef = useRef<HTMLDivElement | null>(null)
@@ -417,26 +537,22 @@ function Hero({
           Verzilver onze vriendschap met dit vriendenboekje
         </p>
 
-        <div className="mt-5 flex items-center gap-2.5">
+        <div className="mt-5 space-y-2.5">
           <button
             type="button"
             onClick={onWrite}
-            className="inline-flex flex-1 items-center justify-center gap-2 rounded-full bg-gradient-to-r from-pink-500 to-rose-500 px-5 py-3.5 text-sm font-semibold text-white shadow-lg shadow-pink-900/30 transition-transform active:scale-[0.97]"
+            className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-pink-500 to-rose-500 px-5 py-3.5 text-sm font-semibold text-white shadow-lg shadow-pink-900/30 transition-transform active:scale-[0.97]"
           >
             <PenLine className="size-4" />
-            Word festivalvriend
+            Word vriendjes
           </button>
           <button
             type="button"
             onClick={onShare}
-            aria-label="Deel deze pagina"
-            className="inline-flex size-12 shrink-0 items-center justify-center rounded-full bg-white/10 backdrop-blur-md ring-1 ring-white/15 transition-transform active:scale-[0.95]"
+            className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-white/10 px-5 py-3 text-sm font-semibold text-pink-100 ring-1 ring-white/15 backdrop-blur-md transition-transform active:scale-[0.97]"
           >
-            {copied ? (
-              <Check className="size-5 text-pink-200" />
-            ) : (
-              <Share2 className="size-5" />
-            )}
+            {copied ? <Check className="size-4" /> : <Share2 className="size-4" />}
+            {copied ? 'Gekopieerd!' : 'Deel je vriendenboekje'}
           </button>
         </div>
       </div>

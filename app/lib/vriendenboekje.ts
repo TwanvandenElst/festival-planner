@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache'
 
 import { supabase } from './supabase'
+import { createClient } from './supabase/server'
 import { reactionKey } from './vriendenboekje-types'
 import type { Vriendenboekje, VriendenboekjeInput } from './vriendenboekje-types'
 
@@ -12,11 +13,18 @@ function nullable(v: string | null | undefined): string | null {
   return t.length > 0 ? t : null
 }
 
-/** All entries, newest first (public read). */
-export async function getVriendenboekjes(): Promise<Vriendenboekje[]> {
+/**
+ * Entries filled in for a specific host (the logged-in owner's book), newest
+ * first. Scoped by `host_user_id` — the public-read RLS returns all rows, so the
+ * filter is what isolates one host's entries.
+ */
+export async function getVriendenboekjesForHost(hostUserId: string): Promise<Vriendenboekje[]> {
+  if (!hostUserId) return []
+  const supabase = await createClient()
   const { data, error } = await supabase
     .from('vriendenboekjes')
     .select('*')
+    .eq('host_user_id', hostUserId)
     .order('created_at', { ascending: false })
 
   if (error) return []
@@ -24,14 +32,17 @@ export async function getVriendenboekjes(): Promise<Vriendenboekje[]> {
 }
 
 /**
- * 😂 reaction counts per answer, keyed by `reactionKey(entry_id, field_name)`.
- * Aggregated in JS (single-user app — the table stays small). Returns an empty
- * map if the reactions table doesn't exist yet (migration 0010 not applied).
+ * 😂 reaction counts for the given entries, keyed by
+ * `reactionKey(entry_id, field_name)`. Scoped to the host's entry ids so counts
+ * don't leak across books. Returns {} for no ids / missing reactions table.
  */
-export async function getReactionCounts(): Promise<Record<string, number>> {
+export async function getReactionCounts(entryIds: string[]): Promise<Record<string, number>> {
+  if (entryIds.length === 0) return {}
+  const supabase = await createClient()
   const { data, error } = await supabase
     .from('vriendenboekje_reactions')
     .select('entry_id, field_name')
+    .in('entry_id', entryIds)
 
   if (error || !data) return {}
 
@@ -43,17 +54,24 @@ export async function getReactionCounts(): Promise<Record<string, number>> {
   return counts
 }
 
-/** Validates and inserts a new vriendenboekje (anon insert via RLS). */
+/**
+ * Validates and inserts a new vriendenboekje (anon insert via RLS). The entry is
+ * filed under `hostUserId` — the owner of the share link the visitor used, NOT
+ * the visitor — so it shows up in that host's overview.
+ */
 export async function submitVriendenboekje(
   input: VriendenboekjeInput,
+  hostUserId: string,
 ): Promise<{ ok: true; id: string } | { ok: false; error: string }> {
   const naam = (input.naam ?? '').trim()
   if (!naam) return { ok: false, error: 'Vul je naam in.' }
+  if (!hostUserId) return { ok: false, error: 'Onbekend vriendenboekje.' }
 
   // Question set v2: only `naam` is required — every other question is skippable
   // and nullable. Legacy columns are omitted (they default to null in the table).
   const row = {
     naam,
+    host_user_id: hostUserId,
     dj_naam: nullable(input.dj_naam),
     snack: nullable(input.snack),
     eerste_indruk: nullable(input.eerste_indruk),
