@@ -73,6 +73,7 @@ export function UserMenu() {
         aria-haspopup="menu"
         aria-expanded={open}
         aria-label="Account"
+        data-tour="account"
         className="grid size-9 place-items-center rounded-full bg-blue-500/80 text-sm font-semibold text-white shadow-lg shadow-blue-900/30 transition-transform active:scale-95"
       >
         {initial}

@@ -50,6 +50,8 @@ export function WelcomePopup() {
     setVisible(false)
     // Remove from the DOM once the fade-out transition has finished.
     setTimeout(() => setMounted(false), 200)
+    // Let the onboarding tour know it can start now that the greeting is gone.
+    window.dispatchEvent(new Event('welcome-dismissed'))
   }
 
   if (!mounted) return null

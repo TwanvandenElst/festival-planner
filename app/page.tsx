@@ -87,6 +87,7 @@ export default function HomePage() {
 
       <div className="mb-8 flex gap-2">
         <Input
+          data-tour="add-artist"
           placeholder="Add an artist…"
           value={input}
           onChange={e => setInput(e.target.value)}
