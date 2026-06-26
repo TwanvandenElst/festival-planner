@@ -6,9 +6,10 @@ import { Check, Loader2, Send, X } from 'lucide-react'
 import { submitFeedback } from '@/lib/feedback'
 
 /**
- * Feedback modal: a glass dialog with a personal note from Twan, a name/email
- * field (pre-filled with the signed-in email), and a message textarea. On submit
- * the message is sent to the owner via Telegram, then a success state is shown.
+ * Feedback modal: a glass dialog with a personal note from Twan and a message
+ * textarea. The sender (`defaultFrom`, the signed-in email) is attached
+ * automatically — there's no editable name field. On submit the message is sent
+ * to the owner via Telegram, then a success state is shown.
  */
 export function FeedbackModal({
   defaultFrom = '',
@@ -17,7 +18,6 @@ export function FeedbackModal({
   defaultFrom?: string
   onClose: () => void
 }) {
-  const [from, setFrom] = useState(defaultFrom)
   const [text, setText] = useState('')
   const [sending, setSending] = useState(false)
   const [sent, setSent] = useState(false)
@@ -37,7 +37,7 @@ export function FeedbackModal({
     if (!trimmed || sending) return
     setSending(true)
     setError(null)
-    const res = await submitFeedback(trimmed, from)
+    const res = await submitFeedback(trimmed, defaultFrom)
     setSending(false)
     if (res.ok) setSent(true)
     else setError(res.error)
@@ -82,21 +82,13 @@ export function FeedbackModal({
             </p>
             <p className="mt-2 text-sm italic text-muted-foreground/80">Twan</p>
 
-            <input
-              type="text"
-              value={from}
-              onChange={e => setFrom(e.target.value)}
-              placeholder="Your name or email (optional)"
-              className="mt-4 w-full rounded-xl border border-white/10 bg-white/[0.04] px-3.5 py-2.5 text-sm outline-none transition-colors focus:border-pink-400/50 placeholder:text-muted-foreground/70"
-            />
-
             <textarea
               value={text}
               onChange={e => setText(e.target.value)}
               placeholder="Your idea, feedback or bug..."
               rows={4}
               autoFocus
-              className="mt-3 min-h-[6rem] w-full resize-none rounded-xl border border-white/10 bg-white/[0.04] px-3.5 py-2.5 text-sm outline-none transition-colors focus:border-pink-400/50 placeholder:text-muted-foreground/70"
+              className="mt-4 min-h-[6rem] w-full resize-none rounded-xl border border-white/10 bg-white/[0.04] px-3.5 py-2.5 text-sm outline-none transition-colors focus:border-pink-400/50 placeholder:text-muted-foreground/70"
             />
 
             {error && <p className="mt-2 text-sm text-rose-300">{error}</p>}
