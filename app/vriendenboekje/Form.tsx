@@ -175,9 +175,27 @@ export function Form({ onDone }: { onDone: () => void }) {
     setTimeout(() => setBurst(null), 1200)
   }
 
-  // Only `naam` is required; every other question is skippable.
+  // Open text questions are required; foto (14) and telefoonnummer (15) stay
+  // optional, and the stellingen (4, 7) are gated by their eens/oneens toggle.
+  const REQUIRED_FIELDS: Partial<Record<number, keyof FormState>> = {
+    0: 'naam',
+    1: 'dj_naam',
+    2: 'snack',
+    3: 'eerste_indruk',
+    5: 'guilty_pleasure',
+    6: 'bijnaam',
+    8: 'jeugdheld',
+    9: 'dilemma',
+    10: 'stopwoordje',
+    11: 'meezingen',
+    12: 'seksstandje',
+    13: 'onthoud_mij',
+  }
+
   function validate(s: number): string | null {
     if (s === 0 && !form.naam.trim()) return 'Vul je naam in.'
+    const field = REQUIRED_FIELDS[s]
+    if (field && !(form[field] as string).trim()) return 'Vul dit in om verder te gaan.'
     return null
   }
 
@@ -186,21 +204,21 @@ export function Form({ onDone }: { onDone: () => void }) {
   function reactionFor(s: number): Reaction | null {
     switch (s) {
       case 0:
-        return { video: '/gifs/naam.webm', text: 'Klinkt als iemand die tot 6 uur blijft' }
+        return null // naam — no reaction
       case 1:
-        return { video: '/gifs/dj.webm', text: 'Ik ben je eerste fan' }
+        return { video: '/gifs/dj.webm', text: 'Ik ben je eerste fan!' }
       case 2:
-        return { video: '/gifs/snack.webm', text: 'Hmmmm lekker' }
+        return { video: '/gifs/snack.webm', text: 'Ik zou jou wel chappen 😏' }
       case 3:
-        return { video: '/gifs/eerste-indruk.webm', text: 'Dat had ik ook' }
+        return { video: '/gifs/eerste-indruk.webm', text: 'Ik dacht precies hetzelfde 👀' }
       case 4:
         return {
           text:
             form.stelling_afterparty == null
               ? pick(GENERIC_REACTIONS)
               : form.stelling_afterparty
-                ? 'Vertel meer!'
-                : 'Sure….',
+                ? 'Leuk dat je me uitnodigt! 🎉'
+                : 'Dan ken je die van mij nog niet 😈',
         }
       case 5:
         return { video: '/gifs/guilty.webm', text: 'Wij worden vrienden' }
@@ -218,15 +236,15 @@ export function Form({ onDone }: { onDone: () => void }) {
       case 8:
         return { video: '/gifs/jeugdheld.webm', text: 'Goede smaak' }
       case 9:
-        return { video: '/gifs/dilemma.webm', text: 'Zware vraag voor zo laat' }
+        return { video: '/gifs/dilemma.webm', text: 'Ja?' }
       case 10:
-        return { video: '/gifs/stopwoordje.webm', text: 'Ga ik onthouden' }
+        return { video: '/gifs/stopwoordje.webm', text: 'Dit ga ik nu alleen nog maar horen' }
       case 11:
-        return { video: '/gifs/meezingen.webm', text: 'Volle borst inderdaad' }
+        return { video: '/gifs/meezingen.webm', text: 'Microfoon is van jou 🎤' }
       case 12:
-        return { video: '/gifs/seksstandje.webm', text: pick(['Ooh echt?', 'Bold.']) }
+        return { video: '/gifs/seksstandje.webm', text: 'Ooh echt?' }
       case 13:
-        return { video: '/gifs/onthoud.webm', text: 'Deal ✍️' }
+        return { video: '/gifs/onthoud.webm', text: 'Dit zal ik nooit vergeten' }
       default:
         return null // photo (14) advances straight through; 15 (last) submits
     }
@@ -415,7 +433,7 @@ function renderStep(step: number, form: FormState, set: SetFn, api: Api, photo: 
     case 1:
       return (
         <>
-          <Question title="Geef jezelf een dj-naam" optional />
+          <Question title="Geef jezelf een dj-naam" />
           <TextField
             value={form.dj_naam}
             onChange={v => set('dj_naam', v)}
@@ -423,14 +441,14 @@ function renderStep(step: number, form: FormState, set: SetFn, api: Api, photo: 
             autoFocus
             onSubmit={api.next}
             submitIcon={submitIcon}
-            disabled={api.busy}
+            disabled={api.busy || !form.dj_naam.trim()}
           />
         </>
       )
     case 2:
       return (
         <>
-          <Question title="Beschrijf jezelf als een snack" optional />
+          <Question title="Beschrijf jezelf als een snack" />
           <TextField
             value={form.snack}
             onChange={v => set('snack', v)}
@@ -438,14 +456,14 @@ function renderStep(step: number, form: FormState, set: SetFn, api: Api, photo: 
             autoFocus
             onSubmit={api.next}
             submitIcon={submitIcon}
-            disabled={api.busy}
+            disabled={api.busy || !form.snack.trim()}
           />
         </>
       )
     case 3:
       return (
         <>
-          <Question title="Wat was/is je eerste indruk van mij?" optional />
+          <Question title="Wat was/is je eerste indruk van mij?" />
           <TextField
             value={form.eerste_indruk}
             onChange={v => set('eerste_indruk', v)}
@@ -454,7 +472,7 @@ function renderStep(step: number, form: FormState, set: SetFn, api: Api, photo: 
             autoFocus
             onSubmit={api.next}
             submitIcon={submitIcon}
-            disabled={api.busy}
+            disabled={api.busy || !form.eerste_indruk.trim()}
           />
         </>
       )
@@ -472,7 +490,7 @@ function renderStep(step: number, form: FormState, set: SetFn, api: Api, photo: 
     case 5:
       return (
         <>
-          <Question title="Wat is je guilty pleasure?" optional />
+          <Question title="Wat is je guilty pleasure?" />
           <TextField
             value={form.guilty_pleasure}
             onChange={v => set('guilty_pleasure', v)}
@@ -480,14 +498,14 @@ function renderStep(step: number, form: FormState, set: SetFn, api: Api, photo: 
             autoFocus
             onSubmit={api.next}
             submitIcon={submitIcon}
-            disabled={api.busy}
+            disabled={api.busy || !form.guilty_pleasure.trim()}
           />
         </>
       )
     case 6:
       return (
         <>
-          <Question title="Grappigste bijnaam gekregen of gegeven?" optional />
+          <Question title="Grappigste bijnaam gekregen of gegeven?" />
           <TextField
             value={form.bijnaam}
             onChange={v => set('bijnaam', v)}
@@ -495,7 +513,7 @@ function renderStep(step: number, form: FormState, set: SetFn, api: Api, photo: 
             autoFocus
             onSubmit={api.next}
             submitIcon={submitIcon}
-            disabled={api.busy}
+            disabled={api.busy || !form.bijnaam.trim()}
           />
         </>
       )
@@ -513,7 +531,7 @@ function renderStep(step: number, form: FormState, set: SetFn, api: Api, photo: 
     case 8:
       return (
         <>
-          <Question title="Jouw jeugdheld?" optional />
+          <Question title="Jouw jeugdheld?" />
           <TextField
             value={form.jeugdheld}
             onChange={v => set('jeugdheld', v)}
@@ -521,14 +539,14 @@ function renderStep(step: number, form: FormState, set: SetFn, api: Api, photo: 
             autoFocus
             onSubmit={api.next}
             submitIcon={submitIcon}
-            disabled={api.busy}
+            disabled={api.busy || !form.jeugdheld.trim()}
           />
         </>
       )
     case 9:
       return (
         <>
-          <Question title="Weten wanneer je dood gaat of weten hoe je dood gaat?" optional />
+          <Question title="Weten wanneer je dood gaat of weten hoe je dood gaat?" />
           <TextField
             value={form.dilemma}
             onChange={v => set('dilemma', v)}
@@ -536,14 +554,14 @@ function renderStep(step: number, form: FormState, set: SetFn, api: Api, photo: 
             autoFocus
             onSubmit={api.next}
             submitIcon={submitIcon}
-            disabled={api.busy}
+            disabled={api.busy || !form.dilemma.trim()}
           />
         </>
       )
     case 10:
       return (
         <>
-          <Question title="Jouw stopwoordje?" optional />
+          <Question title="Jouw stopwoordje?" />
           <TextField
             value={form.stopwoordje}
             onChange={v => set('stopwoordje', v)}
@@ -551,14 +569,14 @@ function renderStep(step: number, form: FormState, set: SetFn, api: Api, photo: 
             autoFocus
             onSubmit={api.next}
             submitIcon={submitIcon}
-            disabled={api.busy}
+            disabled={api.busy || !form.stopwoordje.trim()}
           />
         </>
       )
     case 11:
       return (
         <>
-          <Question title="Welk nummer zing jij volle borst mee?" optional />
+          <Question title="Welk nummer zing jij volle borst mee?" />
           <TextField
             value={form.meezingen}
             onChange={v => set('meezingen', v)}
@@ -566,14 +584,14 @@ function renderStep(step: number, form: FormState, set: SetFn, api: Api, photo: 
             autoFocus
             onSubmit={api.next}
             submitIcon={submitIcon}
-            disabled={api.busy}
+            disabled={api.busy || !form.meezingen.trim()}
           />
         </>
       )
     case 12:
       return (
         <>
-          <Question title="Wat is je favoriete seksstandje?" optional />
+          <Question title="Wat is je favoriete seksstandje?" />
           <TextField
             value={form.seksstandje}
             onChange={v => set('seksstandje', v)}
@@ -581,14 +599,14 @@ function renderStep(step: number, form: FormState, set: SetFn, api: Api, photo: 
             autoFocus
             onSubmit={api.next}
             submitIcon={submitIcon}
-            disabled={api.busy}
+            disabled={api.busy || !form.seksstandje.trim()}
           />
         </>
       )
     case 13:
       return (
         <>
-          <Question title="Als je één ding wilt dat ik over jou onthoud, wat is het?" optional />
+          <Question title="Als je één ding wilt dat ik over jou onthoud, wat is het?" />
           <TextField
             value={form.onthoud_mij}
             onChange={v => set('onthoud_mij', v)}
@@ -597,7 +615,7 @@ function renderStep(step: number, form: FormState, set: SetFn, api: Api, photo: 
             autoFocus
             onSubmit={api.next}
             submitIcon={submitIcon}
-            disabled={api.busy}
+            disabled={api.busy || !form.onthoud_mij.trim()}
           />
         </>
       )
