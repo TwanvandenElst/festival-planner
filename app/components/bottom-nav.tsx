@@ -7,6 +7,7 @@ import gsap from 'gsap'
 
 import { cn } from '@/lib/utils'
 import { ThemeToggle } from './theme-toggle'
+import { UserMenu } from './user-menu'
 
 const NAV = [
   {
@@ -67,9 +68,12 @@ export function BottomNav() {
 
   return (
     <>
-      {/* Floating theme toggle (top-right) */}
-      <div className="glass-panel fixed top-4 right-4 z-50 rounded-full">
-        <ThemeToggle />
+      {/* Floating top-right cluster: account menu + theme toggle */}
+      <div className="fixed top-4 right-4 z-50 flex items-center gap-2">
+        <UserMenu />
+        <div className="glass-panel rounded-full">
+          <ThemeToggle />
+        </div>
       </div>
 
       {/* Bottom tab bar — glass surface with a top-only border */}
