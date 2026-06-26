@@ -93,10 +93,28 @@ export default async function FestivalsSharePage({
   params: Promise<{ userId: string }>
 }) {
   const { userId } = await params
-  const [festivals, joins] = await Promise.all([
-    getFestivalsForUser(userId),
-    getJoinsForUserFestivals(userId),
-  ])
+
+  // The data helpers use the service-role client, which throws if
+  // SUPABASE_SERVICE_ROLE_KEY is missing/invalid in the environment. Catch that
+  // here so a misconfiguration shows a friendly message instead of a 500.
+  let festivals: Festival[]
+  let joins: Record<string, { id: string; name: string }[]>
+  try {
+    ;[festivals, joins] = await Promise.all([
+      getFestivalsForUser(userId),
+      getJoinsForUserFestivals(userId),
+    ])
+  } catch (err) {
+    console.error('[festivals/share] failed to load festivals:', err)
+    return (
+      <div className="mx-auto w-full max-w-xl px-4 py-12 sm:py-16">
+        <h1 className="text-2xl font-semibold tracking-tight">Festivals</h1>
+        <p className="mt-3 text-sm text-muted-foreground">
+          Deze pagina is even niet beschikbaar. Probeer het later opnieuw.
+        </p>
+      </div>
+    )
+  }
   // festivals already sorted by start_date asc
 
   const upcoming = festivals.filter(f => (f.end_date ?? f.start_date) >= TODAY)
