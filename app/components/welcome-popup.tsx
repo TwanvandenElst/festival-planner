@@ -4,25 +4,31 @@ import { useEffect, useState } from 'react'
 import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 
-const SEEN_KEY = 'welcome_seen'
+import { useUser } from '@/lib/use-user'
+
+// Per-user so every new account is greeted once on this device.
+const seenKey = (userId: string) => `welcome_seen_${userId}`
 // Only greet people once they've landed on the main app, never on public pages.
 const ALLOWED_PATHS = ['/', '/artists']
 
 /**
  * One-time personal welcome note from Twan. Appears 4s after a first-time user
- * lands on the main app (/ or /artists), then is remembered in localStorage so
- * it never shows again — not after a refresh, re-login, or revisit. Excluded
- * from /login and the public /vriendenboekje and /festivals/share pages.
+ * lands on the main app (/ or /artists), then is remembered per account in
+ * localStorage so it never shows that user again — not after a refresh,
+ * re-login, or revisit. A different account sees it once too. Excluded from
+ * /login and the public /vriendenboekje and /festivals/share pages.
  */
 export function WelcomePopup() {
   const pathname = usePathname()
+  const { user, loading } = useUser()
   const [mounted, setMounted] = useState(false) // in the DOM at all
   const [visible, setVisible] = useState(false) // drives the fade/scale state
 
   useEffect(() => {
     if (typeof window === 'undefined') return
+    if (loading || !user) return
     if (!ALLOWED_PATHS.includes(pathname)) return
-    if (localStorage.getItem(SEEN_KEY)) return
+    if (localStorage.getItem(seenKey(user.id))) return
 
     const timer = setTimeout(() => {
       setMounted(true)
@@ -31,13 +37,15 @@ export function WelcomePopup() {
     }, 4000)
 
     return () => clearTimeout(timer)
-  }, [pathname])
+  }, [pathname, user, loading])
 
   function dismiss() {
-    try {
-      localStorage.setItem(SEEN_KEY, 'true')
-    } catch {
-      // Private mode / storage disabled — worst case it shows once more.
+    if (user) {
+      try {
+        localStorage.setItem(seenKey(user.id), 'true')
+      } catch {
+        // Private mode / storage disabled — worst case it shows once more.
+      }
     }
     setVisible(false)
     // Remove from the DOM once the fade-out transition has finished.
@@ -55,8 +63,8 @@ export function WelcomePopup() {
       aria-modal="true"
       aria-labelledby="welcome-title"
     >
-      {/* Dimmed backdrop — click to dismiss. */}
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={dismiss} />
+      {/* Dimmed backdrop — does not dismiss; only the button closes the popup. */}
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
 
       <div
         className={`glass-panel relative w-full max-w-sm rounded-xl border-pink-400/30 p-6 text-center shadow-2xl shadow-pink-900/20 transition-transform duration-200 ${
@@ -66,17 +74,17 @@ export function WelcomePopup() {
         <Image
           src="/twan-profile.jpg"
           alt="Twan"
-          width={64}
-          height={64}
-          className="mx-auto size-16 rounded-full border border-white/20 object-cover shadow-lg"
+          width={128}
+          height={128}
+          className="mx-auto size-32 rounded-full border border-white/20 object-cover shadow-lg"
         />
 
         <h2 id="welcome-title" className="mt-4 text-lg font-bold tracking-tight">
-          🎉 Hey, welkom!
+          🎉 Hi, welkom!
         </h2>
 
         <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-          Deze app is een uit de hand gelopen grap — en ik ben er nog lang niet
+          Deze app is een uit de hand gelopen grap en ik ben er nog lang niet
           klaar mee. Heb je een idee voor een leuke feature, of werkt iets niet
           lekker? <span className="font-medium text-foreground">Let me know!</span>{' '}
           Samen maken we er iets moois van. 🙏
