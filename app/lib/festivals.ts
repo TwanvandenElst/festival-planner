@@ -2,7 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 
-import { supabase } from './supabase'
+import { createClient } from './supabase/server'
 import { normalize } from './normalize'
 import type { Festival, FestivalSearchResult, FestivalStatus } from './festivals-types'
 
@@ -12,6 +12,7 @@ async function searchShows(q: string): Promise<FestivalSearchResult[]> {
   // Escape LIKE wildcards so user input is treated literally.
   const pattern = `%${q.replace(/[\\%_]/g, c => `\\${c}`)}%`
 
+  const supabase = await createClient()
   const { data, error } = await supabase
     .from('shows')
     .select('venue, date, city, source_url')
@@ -212,6 +213,12 @@ export async function addFestival(
     return { ok: false, error: 'Festival is missing a name or date.' }
   }
 
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  if (!user) return { ok: false, error: 'Niet ingelogd.' }
+
   const { data: row, error } = await supabase
     .from('festivals')
     .insert({
@@ -224,6 +231,7 @@ export async function addFestival(
       url: data.url || null,
       source: data.source,
       external_id: data.url || null,
+      user_id: user.id, // owner — required by the festivals RLS check
     })
     .select('*')
     .single()
@@ -241,6 +249,8 @@ export async function updateFestivalStatus(
   id: string,
   status: FestivalStatus,
 ): Promise<{ ok: boolean; error?: string }> {
+  const supabase = await createClient()
+  // RLS (festivals owner access) limits the update to the caller's own row.
   const { error } = await supabase.from('festivals').update({ status }).eq('id', id)
   if (error) return { ok: false, error: error.message }
   revalidateFestivals()
@@ -252,6 +262,7 @@ export async function updateFestivalRating(
   id: string,
   rating: number | null,
 ): Promise<{ ok: boolean; error?: string }> {
+  const supabase = await createClient()
   const { error } = await supabase.from('festivals').update({ rating }).eq('id', id)
   if (error) return { ok: false, error: error.message }
   revalidateFestivals()
@@ -260,14 +271,16 @@ export async function updateFestivalRating(
 
 /** Deletes a festival by id. */
 export async function removeFestival(id: string): Promise<{ ok: boolean; error?: string }> {
+  const supabase = await createClient()
   const { error } = await supabase.from('festivals').delete().eq('id', id)
   if (error) return { ok: false, error: error.message }
   revalidateFestivals()
   return { ok: true }
 }
 
-/** All saved festivals, soonest first. */
+/** The logged-in user's saved festivals, soonest first (RLS scopes to owner). */
 export async function getMyFestivals(): Promise<Festival[]> {
+  const supabase = await createClient()
   const { data, error } = await supabase
     .from('festivals')
     .select('*')

@@ -1,4 +1,5 @@
-import { supabase } from '@/lib/supabase'
+import { createClient } from '@/lib/supabase/server'
+import { getFollowedArtists } from '@/lib/artists'
 import { getMyFestivals } from '@/lib/festivals'
 import { getJoinsByFestival } from '@/lib/festival-joins'
 import ShowsClient from './ShowsClient'
@@ -21,9 +22,21 @@ type Show = {
 }
 
 export default async function ShowsPage() {
-  const [{ data: shows }, { data: artists }, festivals, joins] = await Promise.all([
-    supabase.from('shows').select('*, artists(name)').order('date', { ascending: true }),
-    supabase.from('artists').select('id, name').order('name', { ascending: true }),
+  const supabase = await createClient()
+
+  // Only the user's followed artists, and only shows for those artists.
+  const followed = await getFollowedArtists()
+  const artists = followed.map(a => ({ id: a.id, name: a.name }))
+  const artistIds = followed.map(a => a.id)
+
+  const [{ data: shows }, festivals, joins] = await Promise.all([
+    artistIds.length > 0
+      ? supabase
+          .from('shows')
+          .select('*, artists(name)')
+          .in('artist_id', artistIds)
+          .order('date', { ascending: true })
+      : Promise.resolve({ data: [] as Show[] }),
     getMyFestivals(),
     getJoinsByFestival(),
   ])
@@ -62,7 +75,7 @@ export default async function ShowsPage() {
             Every show matched for your followed artists.
           </p>
         </header>
-        <ShowsClient shows={(shows ?? []) as Show[]} artists={artists ?? []} />
+        <ShowsClient shows={(shows ?? []) as Show[]} artists={artists} />
       </section>
     </div>
   )

@@ -4,17 +4,11 @@ import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { ChevronRight, Loader2, Music2, X } from 'lucide-react'
 
-import { supabase } from '@/lib/supabase'
+import { followArtist, getFollowedArtists, unfollowArtist, type Artist } from '@/lib/artists'
 import { triggerScrape } from '@/scrape-test/actions'
 import { useGsapReveal } from '@/lib/use-gsap-reveal'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-
-type Artist = {
-  id: string
-  name: string
-  created_at: string
-}
 
 export default function HomePage() {
   const [artists, setArtists] = useState<Artist[]>([])
@@ -30,20 +24,17 @@ export default function HomePage() {
   useGsapReveal(listRef, [artists, loading])
 
   useEffect(() => {
-    supabase
-      .from('artists')
-      .select('*')
-      .order('created_at', { ascending: false })
-      .then(({ data }) => {
-        setArtists(data ?? [])
-        setLoading(false)
-      })
+    getFollowedArtists().then(data => {
+      setArtists(data)
+      setLoading(false)
+    })
   }, [])
 
+  // Unfollow: removes only this user's link (the shared artist row stays).
   async function handleRemove(id: string) {
     setRemovingId(id)
-    const { error } = await supabase.from('artists').delete().eq('id', id)
-    if (!error) {
+    const { ok } = await unfollowArtist(id)
+    if (ok) {
       setArtists(prev => prev.filter(a => a.id !== id))
     }
     setRemovingId(null)
@@ -71,14 +62,13 @@ export default function HomePage() {
     const name = input.trim()
     if (!name) return
     setAdding(true)
-    const { data, error } = await supabase
-      .from('artists')
-      .insert({ name })
-      .select()
-      .single()
+    const result = await followArtist(name)
     setAdding(false)
-    if (!error && data) {
-      setArtists(prev => [data, ...prev])
+    if (result.ok) {
+      // Avoid a duplicate row if this artist is somehow already in the list.
+      setArtists(prev =>
+        prev.some(a => a.id === result.artist.id) ? prev : [result.artist, ...prev],
+      )
       setInput('')
       await scrapeArtist(name)
     }
