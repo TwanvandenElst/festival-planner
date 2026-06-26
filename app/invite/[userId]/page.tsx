@@ -52,16 +52,23 @@ export default async function InvitePage({
   return (
     <div className="mx-auto flex min-h-[100dvh] w-full max-w-md flex-col items-center justify-center px-6 py-16">
       <div className="w-full">
-        <header className="mb-8 text-center">
+        <header className="text-center">
           <h1 className="text-2xl font-semibold tracking-tight">
-            {name} heeft je uitgenodigd voor Festival Planner
+            {name} heeft je uitgenodigd voor Festi!
           </h1>
-          <p className="mx-auto mt-2 max-w-xs text-sm text-muted-foreground">
-            Ontdek wat de app voor jou kan doen:
-          </p>
         </header>
 
-        <ul className="glass-panel space-y-4 rounded-3xl p-6">
+        <video
+          autoPlay
+          loop
+          muted
+          playsInline
+          className="mx-auto mt-6 max-h-[200px] w-auto rounded-2xl shadow-lg shadow-black/20"
+        >
+          <source src="/gifs/invite.webm" type="video/webm" />
+        </video>
+
+        <ul className="mt-8 space-y-4">
           {BENEFITS.map(b => (
             <li key={b.text} className="flex items-start gap-3">
               <span className="text-xl leading-tight">{b.emoji}</span>
