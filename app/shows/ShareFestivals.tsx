@@ -6,17 +6,19 @@ import { Check, Link2, Share2 } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
-
-const SHARE_PATH = '/festivals/share'
+import { useUser } from '@/lib/use-user'
 
 export function ShareFestivals() {
+  const { user } = useUser()
   const [shareUrl, setShareUrl] = useState('')
   const [copied, setCopied] = useState(false)
 
-  // window is client-only — compute the absolute URL after mount.
+  // window is client-only — compute the absolute per-user URL after mount.
+  // The link points at the logged-in user's own festivals.
   useEffect(() => {
-    setShareUrl(window.location.origin + SHARE_PATH)
-  }, [])
+    if (!user) return
+    setShareUrl(`${window.location.origin}/festivals/share/${user.id}`)
+  }, [user])
 
   async function copyLink() {
     try {

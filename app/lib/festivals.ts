@@ -198,7 +198,7 @@ export async function searchFestivals(query: string): Promise<FestivalSearchResu
 
 function revalidateFestivals() {
   revalidatePath('/shows') // festivals UI now lives on the shows page
-  revalidatePath('/festivals/share')
+  revalidatePath('/festivals/share/[userId]', 'page')
 }
 
 /**

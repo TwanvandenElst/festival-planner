@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache'
 
 import { supabase } from './supabase'
+import { createAdminClient } from './supabase/admin'
 import { sendTelegramMessage, escapeHtml } from './telegram'
 
 // Month abbreviations for the notification date, e.g. "10-12 jul 2026".
@@ -33,8 +34,10 @@ export async function joinFestival(
   const { error } = await supabase.from('festival_joins').insert({ festival_id: festivalId, name })
   if (error) return { ok: false, error: error.message }
 
-  // Best-effort Telegram notification — never blocks/breaks the join.
-  const { data: fest } = await supabase
+  // Best-effort Telegram notification — never blocks/breaks the join. The
+  // festival is owner-only under RLS, so read it with the admin client (the
+  // joiner is anonymous on the public share page).
+  const { data: fest } = await createAdminClient()
     .from('festivals')
     .select('name, start_date, end_date')
     .eq('id', festivalId)
@@ -46,7 +49,7 @@ export async function joinFestival(
     )
   }
 
-  revalidatePath('/festivals/share')
+  revalidatePath('/festivals/share/[userId]', 'page')
   revalidatePath('/shows')
   return { ok: true, name }
 }
@@ -78,6 +81,6 @@ export async function removeFestivalJoin(joinId: string): Promise<{ ok: boolean;
   if (error) return { ok: false, error: error.message }
 
   revalidatePath('/shows')
-  revalidatePath('/festivals/share')
+  revalidatePath('/festivals/share/[userId]', 'page')
   return { ok: true }
 }

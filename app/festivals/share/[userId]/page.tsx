@@ -1,14 +1,13 @@
 import type { Metadata } from 'next'
-import { getMyFestivals } from '@/lib/festivals'
-import { getJoinsByFestival } from '@/lib/festival-joins'
+import { getFestivalsForUser, getJoinsForUserFestivals } from '@/lib/festivals-public'
 import type { Festival, FestivalStatus } from '@/lib/festivals-types'
-import { JoinFestival } from './JoinFestival'
+import { JoinFestival } from '../JoinFestival'
 
-// Public, read-only, no auth needed (RLS allows anon read).
+// Public, read-only. Data is fetched per-user with the service-role client.
 export const dynamic = 'force-dynamic'
 
 export const metadata: Metadata = {
-  title: "Twan's festivals",
+  title: 'Festivals',
   description: "Festivals I'm attending this year.",
 }
 
@@ -88,8 +87,16 @@ function FestivalRow({ f, joinNames }: { f: Festival; joinNames: string[] }) {
   )
 }
 
-export default async function FestivalsSharePage() {
-  const [festivals, joins] = await Promise.all([getMyFestivals(), getJoinsByFestival()])
+export default async function FestivalsSharePage({
+  params,
+}: {
+  params: Promise<{ userId: string }>
+}) {
+  const { userId } = await params
+  const [festivals, joins] = await Promise.all([
+    getFestivalsForUser(userId),
+    getJoinsForUserFestivals(userId),
+  ])
   // festivals already sorted by start_date asc
 
   const upcoming = festivals.filter(f => (f.end_date ?? f.start_date) >= TODAY)
@@ -99,7 +106,7 @@ export default async function FestivalsSharePage() {
     <div className="mx-auto w-full max-w-xl px-4 py-12 sm:py-16">
       <header>
         <h1 data-reveal-title className="text-2xl font-semibold tracking-tight">
-          Twan&apos;s festivals
+          Festivals
         </h1>
         <p className="mt-1 text-sm text-muted-foreground">Festivals I&apos;m attending this year.</p>
       </header>
