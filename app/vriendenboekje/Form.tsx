@@ -194,6 +194,7 @@ export function Form({ onDone }: { onDone: () => void }) {
 
   function validate(s: number): string | null {
     if (s === 0 && !form.naam.trim()) return 'Vul je naam in.'
+    if (s === 14 && !photoFile) return 'Upload een foto om verder te gaan.'
     const field = REQUIRED_FIELDS[s]
     if (field && !(form[field] as string).trim()) return 'Vul dit in om verder te gaan.'
     return null
@@ -210,14 +211,14 @@ export function Form({ onDone }: { onDone: () => void }) {
       case 2:
         return { video: '/gifs/snack.webm', text: 'Ik zou jou wel chappen 😏' }
       case 3:
-        return { video: '/gifs/eerste-indruk.webm', text: 'Ik dacht precies hetzelfde 👀' }
+        return { video: '/gifs/eerste-indruk.webm', text: 'Ik dacht precies hetzelfde' }
       case 4:
         return {
           text:
             form.stelling_afterparty == null
               ? pick(GENERIC_REACTIONS)
               : form.stelling_afterparty
-                ? 'Leuk dat je me uitnodigt! 🎉'
+                ? 'Leuk dat je me uitnodigt!'
                 : 'Dan ken je die van mij nog niet 😈',
         }
       case 5:
@@ -230,7 +231,7 @@ export function Form({ onDone }: { onDone: () => void }) {
             form.stelling_festivaldag == null
               ? pick(GENERIC_REACTIONS)
               : form.stelling_festivaldag
-                ? 'Dit is waarom we hier zijn 🫶'
+                ? 'Dit is waarom we hier zijn'
                 : 'Dan moet je meer x nemen 🤪',
         }
       case 8:
@@ -381,7 +382,7 @@ export function Form({ onDone }: { onDone: () => void }) {
           <button
             type="button"
             onClick={next}
-            disabled={busy}
+            disabled={busy || !photoFile}
             aria-label="Volgende"
             className="grid size-11 place-items-center rounded-full bg-pink-500/25 text-pink-100 shadow-lg shadow-pink-900/20 transition-transform active:scale-90 disabled:opacity-60"
           >
@@ -622,7 +623,7 @@ function renderStep(step: number, form: FormState, set: SetFn, api: Api, photo: 
     case 14:
       return (
         <>
-          <Question title="Foto uploaden" optional />
+          <Question title="Foto uploaden" />
           <PhotoStep preview={photo.photoPreview} onPhoto={photo.onPhoto} />
         </>
       )
