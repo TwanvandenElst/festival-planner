@@ -4,6 +4,7 @@ import "./globals.css";
 import { satoshi } from "./fonts/satoshi-font";
 import { BottomNav } from "./components/bottom-nav";
 import { AnimatedGradient } from "./components/animated-gradient";
+import { WelcomePopup } from "./components/welcome-popup";
 
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
@@ -46,6 +47,7 @@ export default function RootLayout({
         <AnimatedGradient />
         <main className="flex-1 pb-28">{children}</main>
         <BottomNav />
+        <WelcomePopup />
       </body>
     </html>
   );

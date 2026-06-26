@@ -1,0 +1,97 @@
+'use client'
+
+import { useEffect, useState } from 'react'
+import Image from 'next/image'
+import { usePathname } from 'next/navigation'
+
+const SEEN_KEY = 'welcome_seen'
+// Only greet people once they've landed on the main app, never on public pages.
+const ALLOWED_PATHS = ['/', '/artists']
+
+/**
+ * One-time personal welcome note from Twan. Appears 4s after a first-time user
+ * lands on the main app (/ or /artists), then is remembered in localStorage so
+ * it never shows again — not after a refresh, re-login, or revisit. Excluded
+ * from /login and the public /vriendenboekje and /festivals/share pages.
+ */
+export function WelcomePopup() {
+  const pathname = usePathname()
+  const [mounted, setMounted] = useState(false) // in the DOM at all
+  const [visible, setVisible] = useState(false) // drives the fade/scale state
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    if (!ALLOWED_PATHS.includes(pathname)) return
+    if (localStorage.getItem(SEEN_KEY)) return
+
+    const timer = setTimeout(() => {
+      setMounted(true)
+      // Next frame: flip to visible so the enter transition runs.
+      requestAnimationFrame(() => requestAnimationFrame(() => setVisible(true)))
+    }, 4000)
+
+    return () => clearTimeout(timer)
+  }, [pathname])
+
+  function dismiss() {
+    try {
+      localStorage.setItem(SEEN_KEY, 'true')
+    } catch {
+      // Private mode / storage disabled — worst case it shows once more.
+    }
+    setVisible(false)
+    // Remove from the DOM once the fade-out transition has finished.
+    setTimeout(() => setMounted(false), 200)
+  }
+
+  if (!mounted) return null
+
+  return (
+    <div
+      className={`fixed inset-0 z-50 flex items-center justify-center p-4 transition-opacity duration-200 ${
+        visible ? 'opacity-100' : 'opacity-0'
+      }`}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="welcome-title"
+    >
+      {/* Dimmed backdrop — click to dismiss. */}
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={dismiss} />
+
+      <div
+        className={`glass-panel relative w-full max-w-sm rounded-xl border-pink-400/30 p-6 text-center shadow-2xl shadow-pink-900/20 transition-transform duration-200 ${
+          visible ? 'scale-100' : 'scale-90'
+        }`}
+      >
+        <Image
+          src="/twan-profile.jpg"
+          alt="Twan"
+          width={64}
+          height={64}
+          className="mx-auto size-16 rounded-full border border-white/20 object-cover shadow-lg"
+        />
+
+        <h2 id="welcome-title" className="mt-4 text-lg font-bold tracking-tight">
+          🎉 Hey, welkom!
+        </h2>
+
+        <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+          Deze app is een uit de hand gelopen grap — en ik ben er nog lang niet
+          klaar mee. Heb je een idee voor een leuke feature, of werkt iets niet
+          lekker? <span className="font-medium text-foreground">Let me know!</span>{' '}
+          Samen maken we er iets moois van. 🙏
+        </p>
+
+        <p className="mt-3 text-xs italic text-muted-foreground/80">— Twan</p>
+
+        <button
+          type="button"
+          onClick={dismiss}
+          className="mt-5 w-full rounded-2xl bg-gradient-to-r from-pink-500 to-fuchsia-500 py-3 text-sm font-semibold text-white shadow-lg shadow-pink-900/30 transition-transform active:scale-[0.98]"
+        >
+          Klinkt goed! 👊
+        </button>
+      </div>
+    </div>
+  )
+}
