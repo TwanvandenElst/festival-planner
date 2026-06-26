@@ -28,7 +28,7 @@ const SELECTED_STYLE: React.CSSProperties = {
 // exists) plus a line of text. `video` is optional — steps without one (and any
 // missing .webm at runtime) fall back to a text-only card. Stelling reactions
 // depend on the answer, so they're resolved per-render in `reactionFor`.
-type Reaction = { video?: string; text: string }
+type Reaction = { video?: string; text?: string }
 
 const CONFETTI_COLORS = ['#ec4899', '#f43f5e', '#a78bfa', '#22d3ee', '#fb923c', '#ffffff']
 const GENERIC_REACTIONS = [
@@ -204,7 +204,7 @@ export function Form({ onDone }: { onDone: () => void }) {
   function reactionFor(s: number): Reaction | null {
     switch (s) {
       case 0:
-        return null // naam — no reaction
+        return { video: '/gifs/naam.webm' } // naam — gif only, no text
       case 1:
         return { video: '/gifs/dj.webm', text: 'Ik ben je eerste fan!' }
       case 2:
@@ -784,7 +784,7 @@ function FullScreenReaction({
   onDismiss,
 }: {
   video?: string
-  text: string
+  text?: string
   onDismiss: () => void
 }) {
   const rootRef = useRef<HTMLDivElement>(null)
@@ -862,7 +862,9 @@ function FullScreenReaction({
             className="max-h-[60vh] w-auto max-w-full rounded-2xl object-contain"
           />
         )}
-        <p className="max-w-md text-center text-3xl font-bold leading-tight text-white">{text}</p>
+        {text && (
+          <p className="max-w-md text-center text-3xl font-bold leading-tight text-white">{text}</p>
+        )}
       </div>
     </div>,
     document.body,
