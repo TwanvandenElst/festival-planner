@@ -62,6 +62,9 @@ export function BottomNav() {
   // The public share page is standalone — no app chrome.
   if (pathname.startsWith('/festivals/share')) return null
 
+  // The login page is pre-auth — no nav to protected pages.
+  if (pathname.startsWith('/login')) return null
+
   return (
     <>
       {/* Floating theme toggle (top-right) */}
