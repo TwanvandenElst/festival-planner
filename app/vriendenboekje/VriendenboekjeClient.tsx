@@ -522,6 +522,11 @@ function Feed({
           <div
             className="grid transition-[grid-template-rows] duration-300 ease-out"
             style={{ gridTemplateRows: laughsOpen ? '1fr' : '0fr' }}
+            // Collapsing shifts the cards below up into view; ScrollTrigger must
+            // recompute positions or their reveal (opacity 0 → 1) never fires.
+            onTransitionEnd={e => {
+              if (e.propertyName === 'grid-template-rows') ScrollTrigger.refresh()
+            }}
           >
             <div className="min-h-0 overflow-hidden">
               <div className="space-y-3">
