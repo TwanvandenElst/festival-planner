@@ -2,10 +2,11 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { LogOut } from 'lucide-react'
+import { LogOut, MessageSquare } from 'lucide-react'
 
 import { useUser } from '@/lib/use-user'
 import { createClient } from '@/lib/supabase/client'
+import { FeedbackModal } from './feedback-modal'
 
 /**
  * Small logged-in indicator: an avatar circle (first letter of the email) that
@@ -16,6 +17,7 @@ export function UserMenu() {
   const { user } = useUser()
   const router = useRouter()
   const [open, setOpen] = useState(false)
+  const [feedbackOpen, setFeedbackOpen] = useState(false)
   const [signingOut, setSigningOut] = useState(false)
   const [userCount, setUserCount] = useState<number | null>(null)
   const ref = useRef<HTMLDivElement>(null)
@@ -96,14 +98,30 @@ export function UserMenu() {
 
           <button
             type="button"
+            onClick={() => {
+              setOpen(false)
+              setFeedbackOpen(true)
+            }}
+            className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-white/10 py-2.5 text-sm font-semibold transition-colors hover:bg-white/15"
+          >
+            <MessageSquare className="size-4" />
+            Share feedback
+          </button>
+
+          <button
+            type="button"
             onClick={signOut}
             disabled={signingOut}
-            className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-white/10 py-2.5 text-sm font-semibold transition-colors hover:bg-white/15 disabled:opacity-50"
+            className="mt-2 flex w-full items-center justify-center gap-2 rounded-xl bg-white/10 py-2.5 text-sm font-semibold transition-colors hover:bg-white/15 disabled:opacity-50"
           >
             <LogOut className="size-4" />
             {signingOut ? 'Signing out…' : 'Sign out'}
           </button>
         </div>
+      )}
+
+      {feedbackOpen && (
+        <FeedbackModal defaultFrom={email} onClose={() => setFeedbackOpen(false)} />
       )}
     </div>
   )
