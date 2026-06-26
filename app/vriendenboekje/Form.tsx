@@ -55,6 +55,7 @@ type FormState = {
   bijnaam: string
   jeugdheld: string
   dilemma: string
+  dilemma_toelichting: string
   stopwoordje: string
   meezingen: string
   seksstandje: string
@@ -75,6 +76,7 @@ const INITIAL: FormState = {
   bijnaam: '',
   jeugdheld: '',
   dilemma: '',
+  dilemma_toelichting: '',
   stopwoordje: '',
   meezingen: '',
   seksstandje: '',
@@ -194,6 +196,8 @@ export function Form({ onDone }: { onDone: () => void }) {
 
   function validate(s: number): string | null {
     if (s === 0 && !form.naam.trim()) return 'Vul je naam in.'
+    if (s === 4 && form.stelling_afterparty == null) return 'Kies eens of oneens.'
+    if (s === 7 && form.stelling_festivaldag == null) return 'Kies eens of oneens.'
     if (s === 14 && !photoFile) return 'Upload een foto om verder te gaan.'
     const field = REQUIRED_FIELDS[s]
     if (field && !(form[field] as string).trim()) return 'Vul dit in om verder te gaan.'
@@ -453,7 +457,7 @@ function renderStep(step: number, form: FormState, set: SetFn, api: Api, photo: 
           <TextField
             value={form.snack}
             onChange={v => set('snack', v)}
-            placeholder="Zoet, zout of allebei…"
+            placeholder="Frikandel, Eierbal of Krakeling..."
             autoFocus
             onSubmit={api.next}
             submitIcon={submitIcon}
@@ -468,7 +472,7 @@ function renderStep(step: number, form: FormState, set: SetFn, api: Api, photo: 
           <TextField
             value={form.eerste_indruk}
             onChange={v => set('eerste_indruk', v)}
-            placeholder="Eerlijk mag…"
+            placeholder="Je mag eerlijk zijn..."
             multiline
             autoFocus
             onSubmit={api.next}
@@ -547,15 +551,17 @@ function renderStep(step: number, form: FormState, set: SetFn, api: Api, photo: 
     case 9:
       return (
         <>
-          <Question title="Weten wanneer je dood gaat of weten hoe je dood gaat?" />
-          <TextField
-            value={form.dilemma}
+          <ChoiceQuestion
+            title="Weten wanneer je dood gaat of weten hoe je dood gaat?"
+            options={[
+              { label: 'Wanneer', value: 'Wanneer' },
+              { label: 'Hoe', value: 'Hoe' },
+            ]}
+            value={form.dilemma || null}
             onChange={v => set('dilemma', v)}
-            placeholder="Wanneer of hoe…"
-            autoFocus
-            onSubmit={api.next}
-            submitIcon={submitIcon}
-            disabled={api.busy || !form.dilemma.trim()}
+            toelichting={form.dilemma_toelichting}
+            onToelichting={v => set('dilemma_toelichting', v)}
+            api={api}
           />
         </>
       )
@@ -679,6 +685,74 @@ function Question({
   )
 }
 
+// Two side-by-side choice pills. Works for boolean stellingen (Eens/Oneens) and
+// string choices (Wanneer/Hoe) alike.
+function ChoiceButtons<T extends string | boolean>({
+  options,
+  value,
+  onChange,
+}: {
+  options: { label: string; value: T }[]
+  value: T | null
+  onChange: (v: T) => void
+}) {
+  return (
+    <div className="flex gap-3">
+      {options.map(o => (
+        <button
+          key={String(o.value)}
+          type="button"
+          onClick={() => onChange(o.value)}
+          style={value === o.value ? SELECTED_STYLE : undefined}
+          className="glass-panel flex-1 rounded-2xl py-3 text-base font-semibold transition-transform active:scale-95"
+        >
+          {o.label}
+        </button>
+      ))}
+    </div>
+  )
+}
+
+// A required two-choice question (eens/oneens, wanneer/hoe, …) with an optional
+// toelichting. The arrow stays disabled until a choice is picked.
+function ChoiceQuestion<T extends string | boolean>({
+  title,
+  options,
+  value,
+  onChange,
+  toelichting,
+  onToelichting,
+  api,
+}: {
+  title: string
+  options: { label: string; value: T }[]
+  value: T | null
+  onChange: (v: T) => void
+  toelichting: string
+  onToelichting: (v: string) => void
+  api: Api
+}) {
+  return (
+    <>
+      <Question title={title} />
+      <ChoiceButtons options={options} value={value} onChange={onChange} />
+      <TextField
+        value={toelichting}
+        onChange={onToelichting}
+        placeholder="Toelichting (optioneel)"
+        onSubmit={api.next}
+        submitIcon="next"
+        disabled={api.busy || value == null}
+      />
+    </>
+  )
+}
+
+const STELLING_OPTIONS = [
+  { label: 'Eens', value: true },
+  { label: 'Oneens', value: false },
+]
+
 function Stelling({
   title,
   value,
@@ -695,35 +769,15 @@ function Stelling({
   api: Api
 }) {
   return (
-    <>
-      <Question title={title} />
-      <div className="flex gap-3">
-        <button
-          type="button"
-          onClick={() => onChange(true)}
-          style={value === true ? SELECTED_STYLE : undefined}
-          className="glass-panel flex-1 rounded-2xl py-3 text-base font-semibold transition-transform active:scale-95"
-        >
-          Eens
-        </button>
-        <button
-          type="button"
-          onClick={() => onChange(false)}
-          style={value === false ? SELECTED_STYLE : undefined}
-          className="glass-panel flex-1 rounded-2xl py-3 text-base font-semibold transition-transform active:scale-95"
-        >
-          Oneens
-        </button>
-      </div>
-      <TextField
-        value={toelichting}
-        onChange={onToelichting}
-        placeholder="Toelichting (optioneel)"
-        onSubmit={api.next}
-        submitIcon="next"
-        disabled={api.busy}
-      />
-    </>
+    <ChoiceQuestion
+      title={title}
+      options={STELLING_OPTIONS}
+      value={value}
+      onChange={onChange}
+      toelichting={toelichting}
+      onToelichting={onToelichting}
+      api={api}
+    />
   )
 }
 
@@ -736,11 +790,11 @@ function PhotoStep({
 }) {
   const inputRef = useRef<HTMLInputElement>(null)
   return (
-    <div className="flex flex-col items-center gap-3">
+    <div className="flex flex-col gap-3">
       {preview ? (
-        <div className="relative">
+        <div className="relative w-full">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={preview} alt="Voorbeeld" className="size-44 rounded-2xl object-cover shadow-lg" />
+          <img src={preview} alt="Voorbeeld" className="h-56 w-full rounded-2xl object-cover shadow-lg" />
           <button
             type="button"
             onClick={() => onPhoto(null)}
@@ -754,7 +808,7 @@ function PhotoStep({
         <button
           type="button"
           onClick={() => inputRef.current?.click()}
-          className="glass-panel grid size-44 place-items-center rounded-2xl text-muted-foreground transition-transform active:scale-95"
+          className="glass-panel grid h-56 w-full place-items-center rounded-2xl text-muted-foreground transition-transform active:scale-95"
         >
           <span className="flex flex-col items-center gap-2">
             <ImagePlus className="size-8" />

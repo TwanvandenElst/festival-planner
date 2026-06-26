@@ -18,6 +18,7 @@ export type VriendenboekjeInput = {
   bijnaam: string | null
   jeugdheld: string | null
   dilemma: string | null
+  dilemma_toelichting: string | null
   stopwoordje: string | null
   meezingen: string | null
   seksstandje: string | null
@@ -76,7 +77,7 @@ export const VRIENDENBOEKJE_FIELDS: VbField[] = [
   {
     key: 'dilemma',
     label: 'Weten wanneer je dood gaat of weten hoe je dood gaat?',
-    text: e => e.dilemma,
+    text: e => [e.dilemma, e.dilemma_toelichting].filter(Boolean).join(' — ') || null,
   },
   { key: 'stopwoordje', label: 'Jouw stopwoordje?', text: e => e.stopwoordje },
   { key: 'meezingen', label: 'Welk nummer zing jij volle borst mee?', text: e => e.meezingen },

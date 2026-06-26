@@ -61,6 +61,7 @@ export async function submitVriendenboekje(
     bijnaam: nullable(input.bijnaam),
     jeugdheld: nullable(input.jeugdheld),
     dilemma: nullable(input.dilemma),
+    dilemma_toelichting: nullable(input.dilemma_toelichting),
     stopwoordje: nullable(input.stopwoordje),
     meezingen: nullable(input.meezingen),
     seksstandje: nullable(input.seksstandje),
