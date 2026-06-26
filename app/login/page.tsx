@@ -14,12 +14,12 @@ export default function LoginPage() {
       <div className="w-full">
         <header className="mb-8 text-center">
           <Image
-            src="/icon-512.png"
+            src="/icon-f-mark.png"
             alt="Artist Tracker"
             width={80}
             height={80}
             priority
-            className="mx-auto mb-4 size-20 rounded-2xl shadow-lg shadow-black/20"
+            className="mx-auto mb-4 size-20"
           />
           <h1 className="text-2xl font-semibold tracking-tight">Welkom terug</h1>
           <p className="mx-auto mt-1.5 max-w-xs text-sm text-muted-foreground">
