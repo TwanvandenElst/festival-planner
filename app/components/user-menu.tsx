@@ -17,7 +17,20 @@ export function UserMenu() {
   const router = useRouter()
   const [open, setOpen] = useState(false)
   const [signingOut, setSigningOut] = useState(false)
+  const [userCount, setUserCount] = useState<number | null>(null)
   const ref = useRef<HTMLDivElement>(null)
+
+  // Total number of accounts, for the "X mensen gebruiken de app" line.
+  useEffect(() => {
+    let active = true
+    const supabase = createClient()
+    supabase.rpc('get_user_count').then(({ data, error }) => {
+      if (active && !error && typeof data === 'number') setUserCount(data)
+    })
+    return () => {
+      active = false
+    }
+  }, [])
 
   // Close on outside click / Escape.
   useEffect(() => {
@@ -74,6 +87,12 @@ export function UserMenu() {
           <p className="mt-0.5 truncate px-1 text-sm font-medium" title={email}>
             {email}
           </p>
+
+          {userCount !== null && (
+            <p className="mt-2 px-1 text-xs text-muted-foreground">
+              🎪 {userCount} mensen gebruiken de app
+            </p>
+          )}
 
           <button
             type="button"

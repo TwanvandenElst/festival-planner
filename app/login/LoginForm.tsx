@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Mail, Send, CheckCircle2, Loader2 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 
@@ -36,6 +36,19 @@ export function LoginForm() {
   const [errorMsg, setErrorMsg] = useState('')
   const [showEmail, setShowEmail] = useState(false)
   const [googleLoading, setGoogleLoading] = useState(false)
+  const [userCount, setUserCount] = useState<number | null>(null)
+
+  // Social proof: total number of accounts already using the app.
+  useEffect(() => {
+    let active = true
+    const supabase = createClient()
+    supabase.rpc('get_user_count').then(({ data, error }) => {
+      if (active && !error && typeof data === 'number') setUserCount(data)
+    })
+    return () => {
+      active = false
+    }
+  }, [])
 
   async function signInWithGoogle() {
     setGoogleLoading(true)
@@ -187,6 +200,12 @@ export function LoginForm() {
             Geen wachtwoord nodig — je ontvangt een inloglink per e-mail.
           </p>
         </form>
+      )}
+
+      {userCount !== null && (
+        <p className="mt-4 px-1 text-center text-xs text-muted-foreground/80">
+          🎪 {userCount} mensen gebruiken al de app
+        </p>
       )}
     </div>
   )
