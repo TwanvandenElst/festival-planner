@@ -101,6 +101,7 @@ async function notifyNewShows(shows: ScrapedShow[]): Promise<void> {
 async function notifyFollowersOfShows(
   items: { show: ScrapedShow; artistId: string }[],
 ): Promise<void> {
+  console.log(`[push] notifyFollowersOfShows called with ${items.length} new shows`)
   if (items.length === 0) return
 
   const admin = createAdminClient()

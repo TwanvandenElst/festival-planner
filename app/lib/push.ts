@@ -1,4 +1,7 @@
-'use server'
+// Server-only utility (NOT a Server Action). It's invoked server-to-server from
+// the scraper orchestrator and joinFestival — never from the client — so it must
+// stay a plain module. Marking it 'use server' turned it into a Server Action,
+// whose body did not execute when called from the cron route in production.
 
 import webpush from 'web-push'
 
