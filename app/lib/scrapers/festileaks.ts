@@ -131,6 +131,10 @@ async function fetchWithRetry(
     const ok     = status >= 200 && status < 300
 
     if (ok) return { result: lastResult, retriesUsed: attempt - 1 }
+    // 404 is definitive — the artist/festival isn't on festileaks. Retrying it
+    // 3× (with delays) is pure waste; return immediately. Only transient errors
+    // (429 / 5xx / network) below are worth a retry.
+    if (status === 404) return { result: lastResult, retriesUsed: attempt - 1 }
     if (attempt === MAX_ATTEMPTS) break
 
     const delay = RETRY_DELAYS_MS[attempt - 1]
@@ -161,21 +165,25 @@ function parseArtistPage(html: string): FestivalRow[] {
     if (seenUrls.has(url)) return
     seenUrls.add(url)
 
-    // Festival name may be inside the <a> itself, or in an ancestor container.
-    // Check the link first; then walk up from .parent() so the node type stays
-    // consistent (Cheerio<AnyNode>) throughout the loop.
-    const nameInLink = $(el).find('h4').first().text().replace(/\s+/g, ' ').trim()
-
-    let node = $(el).parent()
-    for (let i = 0; i < 5; i++) {
-      if (node.find('h4').length > 0) break
-      node = node.parent()
+    // Festival name + date. The 2026 festileaks layout nests them inside the
+    // <a> itself (.festival-slide-content > h3 + span). Older layouts used an
+    // <h4> in an ancestor container, so try the link first (h3/h4), then walk
+    // up. Without this the name comes back empty and every row is skipped.
+    const $el = $(el)
+    let scope = $el
+    if (scope.find('h3, h4').length === 0) {
+      let node = $el.parent()
+      for (let i = 0; i < 5; i++) {
+        if (node.find('h3, h4').length > 0) break
+        node = node.parent()
+      }
+      scope = node
     }
 
-    const festivalName = nameInLink || node.find('h4').first().text().replace(/\s+/g, ' ').trim()
+    const festivalName = scope.find('h3, h4').first().text().replace(/\s+/g, ' ').trim()
     if (!festivalName) return  // no name recoverable; skip
 
-    const dateText  = node.find('span').first().text().replace(/\s+/g, ' ').trim()
+    const dateText  = scope.find('span').first().text().replace(/\s+/g, ' ').trim()
     const startDate = parseDutchDate(dateText)
     if (!startDate) {
       console.warn(`[festileaks] Could not parse date "${dateText}" for "${festivalName}" — will still fetch festival page`)
