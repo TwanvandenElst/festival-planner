@@ -269,6 +269,20 @@ export async function updateFestivalRating(
   return { ok: true }
 }
 
+/** Renames a festival. */
+export async function updateFestivalName(
+  id: string,
+  name: string,
+): Promise<{ ok: boolean; error?: string }> {
+  const trimmed = name.trim()
+  if (trimmed.length < 2) return { ok: false, error: 'Name is too short.' }
+  const supabase = await createClient()
+  const { error } = await supabase.from('festivals').update({ name: trimmed }).eq('id', id)
+  if (error) return { ok: false, error: error.message }
+  revalidateFestivals()
+  return { ok: true }
+}
+
 /** Deletes a festival by id. */
 export async function removeFestival(id: string): Promise<{ ok: boolean; error?: string }> {
   const supabase = await createClient()

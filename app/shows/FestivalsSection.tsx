@@ -1,14 +1,16 @@
 'use client'
 
-import { Fragment, useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import {
   CalendarX2,
-  ChevronDown,
-  ChevronRight,
-  ExternalLink,
+  Check,
   Loader2,
+  MoreHorizontal,
+  Pencil,
   Plus,
   Search,
+  Star,
+  Trash2,
   X,
 } from 'lucide-react'
 
@@ -18,6 +20,7 @@ import {
   removeFestival,
   updateFestivalStatus,
   updateFestivalRating,
+  updateFestivalName,
 } from '@/lib/festivals'
 import { removeFestivalJoin } from '@/lib/festival-joins'
 import type { Festival, FestivalSearchResult, FestivalStatus } from '@/lib/festivals-types'
@@ -27,39 +30,29 @@ import { ShareFestivals } from './ShareFestivals'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table'
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 
-const STATUS_ORDER: FestivalStatus[] = ['tickets_gekocht', 'in_optie', 'wishlist']
+// Tapping the status pill cycles in this order (per the card design).
+const STATUS_CYCLE: Record<FestivalStatus, FestivalStatus> = {
+  wishlist: 'in_optie',
+  in_optie: 'tickets_gekocht',
+  tickets_gekocht: 'wishlist',
+}
 // Display labels are English; the stored DB values stay as-is.
 const STATUS_LABEL: Record<FestivalStatus, string> = {
   tickets_gekocht: 'Tickets Bought',
   in_optie: 'Optioned',
   wishlist: 'Wishlist',
 }
-const STATUS_ITEMS: Record<string, string> = STATUS_LABEL
-const STATUS_TRIGGER: Record<FestivalStatus, string> = {
-  tickets_gekocht: 'border-transparent bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300',
-  in_optie: 'border-transparent bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-300',
-  wishlist: 'border-transparent bg-muted text-muted-foreground',
+const STATUS_PILL: Record<FestivalStatus, string> = {
+  tickets_gekocht: 'bg-green-500/20 text-green-400',
+  in_optie: 'bg-orange-500/20 text-orange-400',
+  wishlist: 'bg-white/10 text-white/50',
 }
-
-const RATING_ITEMS: Record<string, string> = {
-  none: '—',
-  ...Object.fromEntries(Array.from({ length: 10 }, (_, i) => [String(i + 1), String(i + 1)])),
+const STATUS_DOT: Record<FestivalStatus, string> = {
+  tickets_gekocht: 'bg-green-400',
+  in_optie: 'bg-orange-400',
+  wishlist: 'bg-white/40',
 }
 
 // A followed artist's show, used to match against saved festivals.
@@ -82,6 +75,7 @@ function showMatchesFestival(
   return d >= lo && d <= hi
 }
 
+/** Long date with year — used in the search results list. */
 function formatDate(date: string) {
   return new Date(date).toLocaleDateString('en-GB', {
     day: 'numeric',
@@ -89,6 +83,14 @@ function formatDate(date: string) {
     year: 'numeric',
     timeZone: 'UTC',
   })
+}
+
+/** Compact date for the card header, e.g. "3 Jul" or "3 Jul – 5 Jul". */
+function formatCardDate(start: string, end: string | null) {
+  const opts = { day: 'numeric', month: 'short', timeZone: 'UTC' } as const
+  const s = new Date(start).toLocaleDateString('en-GB', opts)
+  if (!end || end === start) return s
+  return `${s} – ${new Date(end).toLocaleDateString('en-GB', opts)}`
 }
 
 // Initials-avatar palette, mirrored from the public share page (JoinFestival).
@@ -104,40 +106,296 @@ const gradientAt = (i: number) => AVATAR_GRADIENTS[i % AVATAR_GRADIENTS.length]
 const initialOf = (name: string) => name.trim().charAt(0).toUpperCase() || '?'
 
 /**
- * Non-interactive overlapping initials stack shown on the (collapsed) festival
- * row. Names + removal live in the expandable detail row, so this is purely a
- * visual indicator — it must not be a button (it renders inside the row's
- * expand button).
+ * Overlapping initials stack of joined users. Max 3 circles: when there are more
+ * than 3, the last slot becomes a "+N" chip. Purely visual — the tappable
+ * popover that wraps it (in the card) exposes names + removal.
  */
-function JoinAvatarStack({ names }: { names: string[] }) {
-  const MAX = 4 // total circles before collapsing into a "+N" chip
-  const overflow = names.length > MAX ? names.length - (MAX - 1) : 0
-  const shown = overflow > 0 ? names.slice(0, MAX - 1) : names
+function AvatarStack({ names }: { names: string[] }) {
+  const overflow = names.length > 3 ? names.length - 2 : 0
+  const shown = overflow > 0 ? names.slice(0, 2) : names
 
   return (
-    <span
-      className="inline-flex shrink-0 items-center"
-      aria-label={`${names.length} joined`}
-    >
+    <span className="inline-flex shrink-0 items-center">
       {shown.map((name, i) => (
         <span
           key={i}
           style={{ zIndex: shown.length - i }}
           className={cn(
-            'grid size-5 place-items-center rounded-full bg-gradient-to-br text-[10px] font-bold text-white ring-2 ring-background',
+            'grid size-6 place-items-center rounded-full bg-gradient-to-br text-[11px] font-bold text-white ring-2 ring-background',
             gradientAt(i),
-            i > 0 && '-ml-1',
+            i > 0 && '-ml-1.5',
           )}
         >
           {initialOf(name)}
         </span>
       ))}
       {overflow > 0 && (
-        <span className="-ml-1 grid size-5 place-items-center rounded-full bg-muted text-[10px] font-semibold text-muted-foreground ring-2 ring-background">
+        <span className="-ml-1.5 grid size-6 place-items-center rounded-full bg-muted text-[11px] font-semibold text-muted-foreground ring-2 ring-background">
           +{overflow}
         </span>
       )}
     </span>
+  )
+}
+
+/** Inline 1–5 star rating. Tapping a star saves immediately; tapping the
+ * current rating again clears it. Legacy >5 ratings show as a full 5 stars. */
+function StarRating({
+  rating,
+  onRate,
+}: {
+  rating: number | null
+  onRate: (n: number | null) => void
+}) {
+  const filled = Math.min(rating ?? 0, 5)
+  return (
+    <div className="flex items-center" role="group" aria-label="Rating">
+      {[1, 2, 3, 4, 5].map(n => (
+        <button
+          key={n}
+          type="button"
+          onClick={() => onRate(rating === n ? null : n)}
+          className="p-0.5 transition-transform active:scale-90"
+          aria-label={`Rate ${n} star${n > 1 ? 's' : ''}`}
+        >
+          <Star
+            className={cn(
+              'size-4',
+              n <= filled ? 'fill-amber-400 text-amber-400' : 'text-muted-foreground/40',
+            )}
+          />
+        </button>
+      ))}
+    </div>
+  )
+}
+
+type Join = { id: string; name: string }
+
+/** A single festival card — all interactions (status cycle, rating, rename,
+ * delete, join removal) happen inline here, no modals. */
+function FestivalCard({
+  festival: f,
+  isPast,
+  artistCount,
+  joins,
+  onCycleStatus,
+  onRate,
+  onRename,
+  onDelete,
+  onRemoveJoin,
+  removing,
+  removingJoinId,
+}: {
+  festival: Festival
+  isPast: boolean
+  artistCount: number
+  joins: Join[]
+  onCycleStatus: () => void
+  onRate: (n: number | null) => void
+  onRename: (name: string) => Promise<boolean>
+  onDelete: () => void
+  onRemoveJoin: (joinId: string) => void
+  removing: boolean
+  removingJoinId: string | null
+}) {
+  const [pulse, setPulse] = useState(false)
+  const [editing, setEditing] = useState(false)
+  const [editValue, setEditValue] = useState(f.name)
+  const [savingName, setSavingName] = useState(false)
+  const [menuOpen, setMenuOpen] = useState(false)
+  const [confirmDelete, setConfirmDelete] = useState(false)
+
+  function handleCycle() {
+    setPulse(true)
+    onCycleStatus()
+    window.setTimeout(() => setPulse(false), 320)
+  }
+
+  async function saveName() {
+    if (editValue.trim().length < 2) return
+    setSavingName(true)
+    const ok = await onRename(editValue)
+    setSavingName(false)
+    if (ok) setEditing(false)
+  }
+
+  return (
+    <div
+      data-reveal-card
+      className={cn('glass-panel rounded-2xl p-4 transition-opacity', isPast && 'opacity-50')}
+    >
+      {/* Row 1 — name + date */}
+      <div className="flex items-start justify-between gap-3">
+        {editing ? (
+          <div className="flex flex-1 items-center gap-2">
+            <Input
+              autoFocus
+              value={editValue}
+              onChange={e => setEditValue(e.target.value)}
+              onKeyDown={e => {
+                if (e.key === 'Enter') saveName()
+                if (e.key === 'Escape') {
+                  setEditing(false)
+                  setEditValue(f.name)
+                }
+              }}
+              className="h-8 flex-1"
+            />
+            <Button
+              size="icon-sm"
+              onClick={saveName}
+              disabled={savingName || editValue.trim().length < 2}
+              aria-label="Save name"
+            >
+              {savingName ? <Loader2 className="animate-spin" /> : <Check />}
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              onClick={() => {
+                setEditing(false)
+                setEditValue(f.name)
+              }}
+              aria-label="Cancel rename"
+            >
+              <X />
+            </Button>
+          </div>
+        ) : (
+          <>
+            <h3 className="min-w-0 flex-1 break-words text-lg font-bold leading-tight text-foreground">
+              {f.name}
+            </h3>
+            <span className="shrink-0 whitespace-nowrap pt-0.5 text-sm text-muted-foreground">
+              {formatCardDate(f.start_date, f.end_date)}
+            </span>
+          </>
+        )}
+      </div>
+
+      {/* Row 2 — status pill + star rating */}
+      <div className="mt-3 flex items-center justify-between gap-3">
+        <button
+          type="button"
+          onClick={handleCycle}
+          className={cn(
+            'inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold transition-transform active:scale-95',
+            STATUS_PILL[f.status],
+            pulse && 'animate-[badge-pop_0.32s_ease-out]',
+          )}
+          aria-label={`Status: ${STATUS_LABEL[f.status]}. Tap to change.`}
+        >
+          <span className={cn('size-1.5 rounded-full', STATUS_DOT[f.status])} />
+          {STATUS_LABEL[f.status]}
+        </button>
+
+        <StarRating rating={f.rating} onRate={onRate} />
+      </div>
+
+      {/* Row 3 — joined avatars (+ artist-match chip) and the three-dot menu */}
+      <div className="mt-3 flex items-center justify-between gap-3">
+        <div className="flex min-h-[24px] items-center gap-2">
+          {joins.length > 0 && (
+            <Popover>
+              <PopoverTrigger
+                className="rounded-full outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                aria-label={`${joins.length} joined`}
+              >
+                <AvatarStack names={joins.map(j => j.name)} />
+              </PopoverTrigger>
+              <PopoverContent align="start" className="w-auto min-w-[180px] p-3">
+                <p className="mb-1.5 text-xs font-semibold text-muted-foreground">Joined</p>
+                <ul className="flex flex-col gap-1">
+                  {joins.map(j => (
+                    <li key={j.id} className="flex items-center justify-between gap-2 text-sm">
+                      <span className="truncate">{j.name}</span>
+                      <Button
+                        variant="ghost"
+                        size="icon-xs"
+                        className="text-muted-foreground hover:text-destructive"
+                        onClick={() => onRemoveJoin(j.id)}
+                        disabled={removingJoinId === j.id}
+                        aria-label={`Remove ${j.name}`}
+                      >
+                        {removingJoinId === j.id ? <Loader2 className="animate-spin" /> : <X />}
+                      </Button>
+                    </li>
+                  ))}
+                </ul>
+              </PopoverContent>
+            </Popover>
+          )}
+
+          {artistCount > 0 && (
+            <span className="inline-flex items-center gap-1 rounded-full bg-white/10 px-2 py-0.5 text-[11px] font-medium text-muted-foreground">
+              🎵 {artistCount}
+            </span>
+          )}
+        </div>
+
+        <Popover
+          open={menuOpen}
+          onOpenChange={o => {
+            setMenuOpen(o)
+            if (!o) setConfirmDelete(false)
+          }}
+        >
+          <PopoverTrigger
+            className="grid size-8 place-items-center rounded-full text-muted-foreground transition-colors hover:bg-white/10 hover:text-foreground"
+            aria-label="Festival options"
+          >
+            <MoreHorizontal className="size-5" />
+          </PopoverTrigger>
+          <PopoverContent align="end" className="w-auto min-w-[190px] p-1.5">
+            {confirmDelete ? (
+              <div className="flex flex-col gap-2 p-1.5">
+                <p className="text-sm font-medium">Delete this festival?</p>
+                <div className="flex gap-2">
+                  <Button
+                    size="sm"
+                    variant="destructive"
+                    onClick={() => {
+                      onDelete()
+                      setMenuOpen(false)
+                      setConfirmDelete(false)
+                    }}
+                    disabled={removing}
+                  >
+                    {removing ? <Loader2 className="animate-spin" /> : <Trash2 />}
+                    Delete
+                  </Button>
+                  <Button size="sm" variant="ghost" onClick={() => setConfirmDelete(false)}>
+                    Cancel
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <div className="flex flex-col">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setEditValue(f.name)
+                    setEditing(true)
+                    setMenuOpen(false)
+                  }}
+                  className="flex items-center gap-2 rounded-md px-2.5 py-2 text-left text-sm hover:bg-white/10"
+                >
+                  <Pencil className="size-4 text-muted-foreground" /> Edit name
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setConfirmDelete(true)}
+                  className="flex items-center gap-2 rounded-md px-2.5 py-2 text-left text-sm text-destructive hover:bg-destructive/10"
+                >
+                  <Trash2 className="size-4" /> Delete festival
+                </button>
+              </div>
+            )}
+          </PopoverContent>
+        </Popover>
+      </div>
+    </div>
   )
 }
 
@@ -168,7 +426,6 @@ export default function FestivalsSection({
   const [adding, setAdding] = useState(false)
   const [removingId, setRemovingId] = useState<string | null>(null)
   const [actionError, setActionError] = useState<string | null>(null)
-  const [expanded, setExpanded] = useState<Set<string>>(new Set())
   const [joinsState, setJoinsState] = useState(joins)
   const [removingJoinId, setRemovingJoinId] = useState<string | null>(null)
 
@@ -283,6 +540,37 @@ export default function FestivalsSection({
     }
   }
 
+  async function handleRename(id: string, name: string): Promise<boolean> {
+    const trimmed = name.trim()
+    if (trimmed.length < 2) {
+      setActionError('Festival name is too short.')
+      return false
+    }
+    setActionError(null)
+    const prev = myFestivals
+    setMyFestivals(list => list.map(f => (f.id === id ? { ...f, name: trimmed } : f)))
+    const res = await updateFestivalName(id, trimmed)
+    if (!res.ok) {
+      setMyFestivals(prev)
+      setActionError(res.error ?? 'Could not rename festival.')
+      return false
+    }
+    return true
+  }
+
+  async function handleRemoveJoin(festivalId: string, joinId: string) {
+    setActionError(null)
+    const prev = joinsState
+    setRemovingJoinId(joinId)
+    setJoinsState(s => ({ ...s, [festivalId]: (s[festivalId] ?? []).filter(j => j.id !== joinId) }))
+    const res = await removeFestivalJoin(joinId)
+    if (!res.ok) {
+      setJoinsState(prev)
+      setActionError(res.error ?? 'Could not remove join.')
+    }
+    setRemovingJoinId(null)
+  }
+
   // Followed-artist names whose shows match each saved festival.
   const matchesByFestival = useMemo(() => {
     const map = new Map<string, string[]>()
@@ -301,27 +589,19 @@ export default function FestivalsSection({
     return map
   }, [myFestivals, shows])
 
-  function toggleExpanded(id: string) {
-    setExpanded(prev => {
-      const next = new Set(prev)
-      if (next.has(id)) next.delete(id)
-      else next.add(id)
-      return next
-    })
-  }
-
-  async function handleRemoveJoin(festivalId: string, joinId: string) {
-    setActionError(null)
-    const prev = joinsState
-    setRemovingJoinId(joinId)
-    setJoinsState(s => ({ ...s, [festivalId]: (s[festivalId] ?? []).filter(j => j.id !== joinId) }))
-    const res = await removeFestivalJoin(joinId)
-    if (!res.ok) {
-      setJoinsState(prev)
-      setActionError(res.error ?? 'Could not remove join.')
+  // Soonest first; past festivals (end/start before today) pushed to the bottom.
+  const sortedFestivals = useMemo(() => {
+    const upcoming: Festival[] = []
+    const past: Festival[] = []
+    for (const f of myFestivals) {
+      if ((f.end_date ?? f.start_date) < today) past.push(f)
+      else upcoming.push(f)
     }
-    setRemovingJoinId(null)
-  }
+    const byStart = (a: Festival, b: Festival) => a.start_date.localeCompare(b.start_date)
+    upcoming.sort(byStart)
+    past.sort(byStart)
+    return [...upcoming, ...past]
+  }, [myFestivals, today])
 
   const query = search.trim()
 
@@ -455,7 +735,7 @@ export default function FestivalsSection({
         {actionError && <p className="mt-3 text-sm text-destructive">{actionError}</p>}
       </div>
 
-      {/* ── Saved festivals (below) ───────────────────────────────────── */}
+      {/* ── Saved festivals (cards) ───────────────────────────────────── */}
       {myFestivals.length === 0 ? (
         <div className="rounded-xl border border-dashed border-border py-12 text-center">
           <CalendarX2 className="mx-auto mb-3 size-8 text-muted-foreground/60" />
@@ -465,174 +745,23 @@ export default function FestivalsSection({
           </p>
         </div>
       ) : (
-        <div className="glass-panel overflow-hidden rounded-xl">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Festival</TableHead>
-                <TableHead>Date</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Rating</TableHead>
-                <TableHead>Link</TableHead>
-                <TableHead className="w-10" />
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {myFestivals.map(f => {
-                const isPast = (f.end_date ?? f.start_date) < today
-                const artists = matchesByFestival.get(f.id) ?? []
-                const festivalJoins = joinsState[f.id] ?? []
-                const hasMatches = artists.length > 0
-                const hasJoins = festivalJoins.length > 0
-                const hasExpandable = hasMatches || hasJoins
-                const isExpanded = expanded.has(f.id)
-                return (
-                  <Fragment key={f.id}>
-                  <TableRow data-reveal-card>
-                    <TableCell className="font-medium">
-                      {hasExpandable ? (
-                        <button
-                          type="button"
-                          onClick={() => toggleExpanded(f.id)}
-                          className="inline-flex items-center gap-2 text-left hover:underline"
-                          aria-expanded={isExpanded}
-                        >
-                          {isExpanded ? (
-                            <ChevronDown className="size-4 shrink-0 text-muted-foreground" />
-                          ) : (
-                            <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
-                          )}
-                          <span>{f.name}</span>
-                          {hasMatches && (
-                            <Badge variant="secondary" className="shrink-0 font-normal">
-                              🎵 {artists.length} {artists.length === 1 ? 'artist' : 'artists'}
-                            </Badge>
-                          )}
-                          {hasJoins && (
-                            <JoinAvatarStack names={festivalJoins.map(j => j.name)} />
-                          )}
-                        </button>
-                      ) : (
-                        f.name
-                      )}
-                    </TableCell>
-                    <TableCell className="whitespace-nowrap text-muted-foreground">
-                      <span className="inline-flex items-center gap-2">
-                        {formatDate(f.start_date)}
-                        {f.end_date ? ` – ${formatDate(f.end_date)}` : ''}
-                        {isPast && <Badge variant="secondary" className="shrink-0">Past</Badge>}
-                      </span>
-                    </TableCell>
-                    <TableCell>
-                      <Select
-                        items={STATUS_ITEMS}
-                        value={f.status}
-                        onValueChange={value => handleStatusChange(f.id, value as FestivalStatus)}
-                      >
-                        <SelectTrigger size="sm" className={cn('w-[140px]', STATUS_TRIGGER[f.status])}>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {STATUS_ORDER.map(s => (
-                            <SelectItem key={s} value={s}>
-                              {STATUS_LABEL[s]}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </TableCell>
-                    <TableCell>
-                      <Select
-                        items={RATING_ITEMS}
-                        value={f.rating ? String(f.rating) : 'none'}
-                        onValueChange={value =>
-                          handleRatingChange(f.id, value === 'none' ? null : Number(value))
-                        }
-                      >
-                        <SelectTrigger size="sm" className="w-[72px]">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="none">—</SelectItem>
-                          {Array.from({ length: 10 }, (_, i) => String(i + 1)).map(n => (
-                            <SelectItem key={n} value={n}>
-                              {n}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </TableCell>
-                    <TableCell>
-                      {f.url ? (
-                        <a
-                          href={f.url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1 text-blue-600 hover:underline"
-                        >
-                          View <ExternalLink className="size-3.5" />
-                        </a>
-                      ) : (
-                        <span className="text-muted-foreground">—</span>
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      <Button
-                        variant="ghost"
-                        size="icon-sm"
-                        className="text-muted-foreground hover:text-destructive"
-                        onClick={() => handleRemove(f.id)}
-                        disabled={removingId === f.id}
-                        aria-label={`Remove ${f.name}`}
-                      >
-                        {removingId === f.id ? <Loader2 className="animate-spin" /> : <X />}
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                  {hasExpandable && isExpanded && (
-                    <TableRow>
-                      <TableCell colSpan={6} className="space-y-1 bg-muted/30 text-sm text-muted-foreground">
-                        {hasMatches && (
-                          <p>
-                            <span className="font-medium text-foreground">Followed artists playing: </span>
-                            {artists.join(', ')}
-                          </p>
-                        )}
-                        {hasJoins && (
-                          <p className="flex flex-wrap items-center gap-1.5">
-                            <span className="font-medium text-foreground">Joined:</span>
-                            {festivalJoins.map(j => (
-                              <span
-                                key={j.id}
-                                className="inline-flex items-center gap-0.5 rounded bg-background py-0.5 pr-0.5 pl-2"
-                              >
-                                {j.name}
-                                <Button
-                                  variant="ghost"
-                                  size="icon-xs"
-                                  className="text-muted-foreground hover:text-destructive"
-                                  onClick={() => handleRemoveJoin(f.id, j.id)}
-                                  disabled={removingJoinId === j.id}
-                                  aria-label={`Remove ${j.name}`}
-                                >
-                                  {removingJoinId === j.id ? (
-                                    <Loader2 className="animate-spin" />
-                                  ) : (
-                                    <X />
-                                  )}
-                                </Button>
-                              </span>
-                            ))}
-                          </p>
-                        )}
-                      </TableCell>
-                    </TableRow>
-                  )}
-                  </Fragment>
-                )
-              })}
-            </TableBody>
-          </Table>
+        <div className="space-y-3">
+          {sortedFestivals.map(f => (
+            <FestivalCard
+              key={f.id}
+              festival={f}
+              isPast={(f.end_date ?? f.start_date) < today}
+              artistCount={(matchesByFestival.get(f.id) ?? []).length}
+              joins={joinsState[f.id] ?? []}
+              onCycleStatus={() => handleStatusChange(f.id, STATUS_CYCLE[f.status])}
+              onRate={rating => handleRatingChange(f.id, rating)}
+              onRename={name => handleRename(f.id, name)}
+              onDelete={() => handleRemove(f.id)}
+              onRemoveJoin={joinId => handleRemoveJoin(f.id, joinId)}
+              removing={removingId === f.id}
+              removingJoinId={removingJoinId}
+            />
+          ))}
         </div>
       )}
     </div>

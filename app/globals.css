@@ -292,6 +292,13 @@
   box-shadow: 0 8px 30px -14px rgba(0, 0, 0, 0.2);
 }
 
+/* Festival status badge: a brief scale pulse when tapped to cycle status. */
+@keyframes badge-pop {
+  0% { transform: scale(1); }
+  40% { transform: scale(1.15); }
+  100% { transform: scale(1); }
+}
+
 /* Chat/speech bubble for the vriendenboekje detail page. Lighter than the page
    with a pink tint so it reads as a "message", plus a WhatsApp-style tail on the
    top-left that points out to the left (same fill as the bubble).
