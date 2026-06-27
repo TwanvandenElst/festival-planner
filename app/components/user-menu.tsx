@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Bell, LogOut, MessageSquare } from 'lucide-react'
+import { LogOut, MessageSquare } from 'lucide-react'
 
 import { useUser } from '@/lib/use-user'
 import { createClient } from '@/lib/supabase/client'
@@ -20,8 +20,6 @@ export function UserMenu() {
   const [feedbackOpen, setFeedbackOpen] = useState(false)
   const [signingOut, setSigningOut] = useState(false)
   const [userCount, setUserCount] = useState<number | null>(null)
-  const [testingPush, setTestingPush] = useState(false)
-  const [toast, setToast] = useState<string | null>(null)
   const ref = useRef<HTMLDivElement>(null)
 
   // Total number of accounts, for the "X people use the app" line.
@@ -57,31 +55,6 @@ export function UserMenu() {
 
   const email = user.email ?? ''
   const initial = (email[0] ?? '?').toUpperCase()
-
-  // Brief auto-dismissing toast for transient feedback.
-  function showToast(message: string) {
-    setToast(message)
-    setTimeout(() => setToast(null), 4000)
-  }
-
-  // TEMP (dev/test): fire a server-side push to this user via /api/push/test and
-  // surface the result. The real delivery shows in the [push] server logs.
-  async function testPush() {
-    setTestingPush(true)
-    try {
-      const res = await fetch('/api/push/test')
-      const data = (await res.json().catch(() => ({}))) as { ok?: boolean; error?: string }
-      if (res.ok && data.ok) {
-        showToast('✅ Test push sent. Check your notifications')
-      } else {
-        showToast(`⚠️ Failed (${res.status})${data.error ? `: ${data.error}` : ''}`)
-      }
-    } catch {
-      showToast('⚠️ Request failed. Are you online?')
-    } finally {
-      setTestingPush(false)
-    }
-  }
 
   // TEMP (dev/test): wipe onboarding state and replay the tour immediately,
   // without a page reload (OnboardingTour listens for the 'replay-tour' event).
@@ -160,17 +133,6 @@ export function UserMenu() {
             {signingOut ? 'Signing out…' : 'Sign out'}
           </button>
 
-          {/* TEMP dev/test option — remove when push testing is done. */}
-          <button
-            type="button"
-            onClick={testPush}
-            disabled={testingPush}
-            className="mt-2 flex w-full items-center justify-center gap-1.5 rounded-lg py-1.5 text-xs font-medium text-muted-foreground/70 transition-colors hover:text-foreground disabled:opacity-60"
-          >
-            <Bell className="size-3.5" />
-            {testingPush ? 'Sending…' : '🔔 Test push'}
-          </button>
-
           {/* TEMP dev/test option — remove when onboarding testing is done. */}
           <button
             type="button"
@@ -185,15 +147,6 @@ export function UserMenu() {
 
       {feedbackOpen && (
         <FeedbackModal defaultFrom={email} onClose={() => setFeedbackOpen(false)} />
-      )}
-
-      {/* Transient toast for the test-push result. */}
-      {toast && (
-        <div className="fixed inset-x-0 bottom-[calc(5.5rem+env(safe-area-inset-bottom))] z-[60] flex justify-center px-4">
-          <div className="glass-panel max-w-sm rounded-full px-4 py-2.5 text-sm font-medium shadow-xl">
-            {toast}
-          </div>
-        </div>
       )}
     </div>
   )
