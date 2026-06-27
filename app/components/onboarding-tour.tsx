@@ -87,7 +87,7 @@ export function OnboardingTour() {
       // the body because the popover's backdrop-filter would otherwise trap a
       // position:fixed child inside the card.)
       onPopoverRender: popover => {
-        popover.closeButton.innerText = 'Skip'
+        popover.closeButton.innerText = 'Skip tour'
         const { footer, footerButtons, progress, previousButton, nextButton, closeButton } =
           popover
         footer.appendChild(previousButton)
