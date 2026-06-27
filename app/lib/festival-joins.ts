@@ -5,20 +5,21 @@ import { revalidatePath } from 'next/cache'
 import { supabase } from './supabase'
 import { createAdminClient } from './supabase/admin'
 import { createClient } from './supabase/server'
-import { sendTelegramMessage, escapeHtml } from './telegram'
+// import { sendTelegramMessage, escapeHtml } from './telegram' // disabled: using push instead
 import { sendPushNotification } from './push'
 
 // Month abbreviations for the notification date, e.g. "10-12 jul 2026".
-const MONTHS = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec']
+// Disabled along with the Telegram join notification below; kept for re-enabling.
+// const MONTHS = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec']
 
-function formatRange(start: string, end: string | null): string {
-  const [sy, sm, sd] = start.split('-').map(Number)
-  if (!end || end === start) return `${sd} ${MONTHS[sm - 1]} ${sy}`
-  const [ey, em, ed] = end.split('-').map(Number)
-  if (sy === ey && sm === em) return `${sd}-${ed} ${MONTHS[sm - 1]} ${sy}`
-  if (sy === ey) return `${sd} ${MONTHS[sm - 1]} – ${ed} ${MONTHS[em - 1]} ${sy}`
-  return `${sd} ${MONTHS[sm - 1]} ${sy} – ${ed} ${MONTHS[em - 1]} ${ey}`
-}
+// function formatRange(start: string, end: string | null): string {
+//   const [sy, sm, sd] = start.split('-').map(Number)
+//   if (!end || end === start) return `${sd} ${MONTHS[sm - 1]} ${sy}`
+//   const [ey, em, ed] = end.split('-').map(Number)
+//   if (sy === ey && sm === em) return `${sd}-${ed} ${MONTHS[sm - 1]} ${sy}`
+//   if (sy === ey) return `${sd} ${MONTHS[sm - 1]} – ${ed} ${MONTHS[em - 1]} ${sy}`
+//   return `${sd} ${MONTHS[sm - 1]} ${sy} – ${ed} ${MONTHS[em - 1]} ${ey}`
+// }
 
 /**
  * Adds a public "join" to a festival (from the share page). Validates the name,
@@ -45,17 +46,17 @@ export async function joinFestival(
     .eq('id', festivalId)
     .single()
   if (fest) {
-    const when = formatRange(fest.start_date as string, (fest.end_date as string | null) ?? null)
-    await sendTelegramMessage(
-      `🎉 ${escapeHtml(name)} wants to join ${escapeHtml(fest.name as string)} (${escapeHtml(when)})!`,
-    )
+    // const when = formatRange(fest.start_date as string, (fest.end_date as string | null) ?? null)
+    // await sendTelegramMessage( // disabled: using push instead
+    //   `🎉 ${escapeHtml(name)} wants to join ${escapeHtml(fest.name as string)} (${escapeHtml(when)})!`,
+    // )
 
     // Push the festival owner (best-effort) that someone joined their lineup.
     const ownerId = fest.user_id as string | null
     if (ownerId) {
       await sendPushNotification(
         ownerId,
-        '🎉 Someone joined your festival',
+        'Someone wants to join you! 🎪',
         `${name} wants to join ${fest.name as string}`,
         '/shows',
       )

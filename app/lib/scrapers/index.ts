@@ -1,6 +1,6 @@
 import { supabase } from '../supabase'
 import { createAdminClient } from '../supabase/admin'
-import { sendTelegramMessage, escapeHtml } from '../telegram'
+// import { sendTelegramMessage, escapeHtml } from '../telegram' // disabled: using push instead
 import { sendPushNotification } from '../push'
 // import { fakeScraper } from './fake'  // keep for local testing; disabled in prod
 import { raScraper } from './ra'
@@ -71,41 +71,42 @@ function normalizeArtist(s: string): string {
     .trim()
 }
 
-/** Formats one newly inserted show as a Telegram HTML message block. */
-function formatShowNotification(show: ScrapedShow): string {
-  const date = new Date(show.date).toLocaleDateString('en-GB', {
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
-    timeZone: 'UTC', // date is "YYYY-MM-DD"; avoid a local-tz day shift
-  })
-  return (
-    `🎵 <b>${escapeHtml(show.artistName)}</b>\n` +
-    `📅 ${escapeHtml(date)}\n` +
-    `🎪 ${escapeHtml(show.venue)}\n` +
-    `📍 ${escapeHtml(show.city)}\n` +
-    `🔗 <a href="${escapeHtml(show.sourceUrl)}">View event</a>`
-  )
-}
+// Telegram show notifications disabled: using push instead. Kept for re-enabling.
+// /** Formats one newly inserted show as a Telegram HTML message block. */
+// function formatShowNotification(show: ScrapedShow): string {
+//   const date = new Date(show.date).toLocaleDateString('en-GB', {
+//     day: 'numeric',
+//     month: 'long',
+//     year: 'numeric',
+//     timeZone: 'UTC', // date is "YYYY-MM-DD"; avoid a local-tz day shift
+//   })
+//   return (
+//     `🎵 <b>${escapeHtml(show.artistName)}</b>\n` +
+//     `📅 ${escapeHtml(date)}\n` +
+//     `🎪 ${escapeHtml(show.venue)}\n` +
+//     `📍 ${escapeHtml(show.city)}\n` +
+//     `🔗 <a href="${escapeHtml(show.sourceUrl)}">View event</a>`
+//   )
+// }
 
-/**
- * Notifies about newly inserted shows. 1–3 shows → one message each; more than
- * 3 → a single batched message to avoid spam. 0 shows → nothing sent.
- */
-async function notifyNewShows(shows: ScrapedShow[]): Promise<void> {
-  if (shows.length === 0) return
-
-  if (shows.length > 3) {
-    const header = `🎵 <b>${shows.length} nieuwe shows gevonden</b>`
-    const body = shows.map(formatShowNotification).join('\n\n')
-    await sendTelegramMessage(`${header}\n\n${body}`)
-    return
-  }
-
-  for (const show of shows) {
-    await sendTelegramMessage(formatShowNotification(show))
-  }
-}
+// /**
+//  * Notifies about newly inserted shows. 1–3 shows → one message each; more than
+//  * 3 → a single batched message to avoid spam. 0 shows → nothing sent.
+//  */
+// async function notifyNewShows(shows: ScrapedShow[]): Promise<void> {
+//   if (shows.length === 0) return
+//
+//   if (shows.length > 3) {
+//     const header = `🎵 <b>${shows.length} nieuwe shows gevonden</b>`
+//     const body = shows.map(formatShowNotification).join('\n\n')
+//     await sendTelegramMessage(`${header}\n\n${body}`)
+//     return
+//   }
+//
+//   for (const show of shows) {
+//     await sendTelegramMessage(formatShowNotification(show))
+//   }
+// }
 
 /**
  * Web-push every user who follows an artist that just got a newly inserted show.
@@ -299,7 +300,7 @@ export async function runScrapers(
   //    user who follows a freshly added artist.
   console.log('[scraper] insertedShows count:', insertedShows.length)
   console.log('[scraper] insertedWithArtist count:', insertedWithArtist.length)
-  await notifyNewShows(insertedShows)
+  // await notifyNewShows(insertedShows) // disabled: using push instead
   await notifyFollowersOfShows(insertedWithArtist)
 
   return {
