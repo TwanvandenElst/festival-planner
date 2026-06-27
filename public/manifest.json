@@ -1,11 +1,11 @@
 {
-  "name": "Artist Tracker",
-  "short_name": "Artist Tracker",
+  "name": "Festival Planner",
+  "short_name": "Festi",
   "description": "Track when your followed artists perform in the Netherlands.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#0a0a0a",
-  "theme_color": "#0a0a0a",
+  "background_color": "#080808",
+  "theme_color": "#080808",
   "icons": [
     {
       "src": "/icon-192.png",

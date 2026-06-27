@@ -6,6 +6,7 @@ import { supabase } from './supabase'
 import { createAdminClient } from './supabase/admin'
 import { createClient } from './supabase/server'
 import { sendTelegramMessage, escapeHtml } from './telegram'
+import { sendPushNotification } from './push'
 
 // Month abbreviations for the notification date, e.g. "10-12 jul 2026".
 const MONTHS = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec']
@@ -40,7 +41,7 @@ export async function joinFestival(
   // joiner is anonymous on the public share page).
   const { data: fest } = await createAdminClient()
     .from('festivals')
-    .select('name, start_date, end_date')
+    .select('name, start_date, end_date, user_id')
     .eq('id', festivalId)
     .single()
   if (fest) {
@@ -48,6 +49,17 @@ export async function joinFestival(
     await sendTelegramMessage(
       `🎉 ${escapeHtml(name)} wants to join ${escapeHtml(fest.name as string)} (${escapeHtml(when)})!`,
     )
+
+    // Push the festival owner (best-effort) that someone joined their lineup.
+    const ownerId = fest.user_id as string | null
+    if (ownerId) {
+      await sendPushNotification(
+        ownerId,
+        '🎉 Someone joined your festival',
+        `${name} wants to join ${fest.name as string}`,
+        '/shows',
+      )
+    }
   }
 
   revalidatePath('/festivals/share/[userId]', 'page')

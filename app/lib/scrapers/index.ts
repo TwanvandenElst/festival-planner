@@ -1,5 +1,7 @@
 import { supabase } from '../supabase'
+import { createAdminClient } from '../supabase/admin'
 import { sendTelegramMessage, escapeHtml } from '../telegram'
+import { sendPushNotification } from '../push'
 // import { fakeScraper } from './fake'  // keep for local testing; disabled in prod
 import { raScraper } from './ra'
 import { festivalinfoScraper } from './festivalinfo'
@@ -92,6 +94,56 @@ async function notifyNewShows(shows: ScrapedShow[]): Promise<void> {
 }
 
 /**
+ * Web-push every user who follows an artist that just got a newly inserted show.
+ * Best-effort. Reads `user_artists` (artist → followers) with the service-role
+ * client because the scraper/cron runs without a user session.
+ */
+async function notifyFollowersOfShows(
+  items: { show: ScrapedShow; artistId: string }[],
+): Promise<void> {
+  if (items.length === 0) return
+
+  const admin = createAdminClient()
+  const artistIds = [...new Set(items.map(i => i.artistId))]
+  const { data: follows, error } = await admin
+    .from('user_artists')
+    .select('user_id, artist_id')
+    .in('artist_id', artistIds)
+
+  if (error) {
+    console.error('[push] failed to load followers:', error.message)
+    return
+  }
+  if (!follows || follows.length === 0) return
+
+  // artist_id → [user_id, …]
+  const followersByArtist = new Map<string, string[]>()
+  for (const f of follows as { user_id: string; artist_id: string }[]) {
+    const list = followersByArtist.get(f.artist_id) ?? []
+    list.push(f.user_id)
+    followersByArtist.set(f.artist_id, list)
+  }
+
+  for (const { show, artistId } of items) {
+    const userIds = followersByArtist.get(artistId) ?? []
+    const date = new Date(show.date).toLocaleDateString('en-GB', {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+      timeZone: 'UTC',
+    })
+    for (const userId of userIds) {
+      await sendPushNotification(
+        userId,
+        `🎵 ${show.artistName} added to a lineup`,
+        `${show.venue}, ${show.city} — ${date}`,
+        '/shows',
+      )
+    }
+  }
+}
+
+/**
  * Runs every scraper and stores matched shows.
  * Pass `{ artistName }` to narrow matching/insertion to a single followed
  * artist (used by the auto-scrape-on-add flow). The scrapers themselves still
@@ -163,6 +215,8 @@ export async function runScrapers(
   let merged = 0
   let skipped = 0
   const insertedShows: ScrapedShow[] = []
+  // Same inserted shows, tagged with their artist_id for follower push.
+  const insertedWithArtist: { show: ScrapedShow; artistId: string }[] = []
 
   for (const show of matched) {
     const artistId = artistMap.get(show.artistName.toLowerCase().trim())!
@@ -206,13 +260,16 @@ export async function runScrapers(
     if (!error && row) {
       inserted++
       insertedShows.push(show)
+      insertedWithArtist.push({ show, artistId })
       // Track in-memory so later shows in this same run merge instead of dup.
       existing.set(key, { id: row.id, sources })
     }
   }
 
-  // 6. Notify (best-effort) about newly inserted shows.
+  // 6. Notify (best-effort): Telegram digest to the owner + a web push to each
+  //    user who follows a freshly added artist.
   await notifyNewShows(insertedShows)
+  await notifyFollowersOfShows(insertedWithArtist)
 
   return {
     totalScraped: allShows.length,

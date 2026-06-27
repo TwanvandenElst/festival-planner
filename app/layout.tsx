@@ -6,6 +6,8 @@ import { BottomNav } from "./components/bottom-nav";
 import { AnimatedGradient } from "./components/animated-gradient";
 import { WelcomePopup } from "./components/welcome-popup";
 import { OnboardingTour } from "./components/onboarding-tour";
+import { ServiceWorkerRegister } from "./components/service-worker-register";
+import { NotificationsPrompt } from "./components/notifications-prompt";
 
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
@@ -50,6 +52,8 @@ export default function RootLayout({
         <BottomNav />
         <WelcomePopup />
         <OnboardingTour />
+        <ServiceWorkerRegister />
+        <NotificationsPrompt />
       </body>
     </html>
   );
