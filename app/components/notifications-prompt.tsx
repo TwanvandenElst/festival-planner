@@ -205,8 +205,8 @@ export function NotificationsPrompt() {
 
   return (
     <div className="fixed inset-x-0 bottom-[calc(5.5rem+env(safe-area-inset-bottom))] z-40 flex justify-center px-4">
-      <div className="glass-panel flex w-full max-w-md items-start gap-3 rounded-2xl border-pink-400/30 p-4 shadow-xl shadow-pink-900/20 duration-300 animate-in fade-in slide-in-from-bottom-4">
-        <span className="mt-0.5 grid size-9 shrink-0 place-items-center rounded-full bg-pink-500/20 text-pink-300">
+      <div className="glass-panel flex w-full max-w-md items-start gap-3 rounded-2xl border-emerald-400/30 p-4 shadow-xl shadow-emerald-900/20 duration-300 animate-in fade-in slide-in-from-bottom-4">
+        <span className="mt-0.5 grid size-9 shrink-0 place-items-center rounded-full bg-emerald-500/20 text-emerald-600 dark:text-emerald-300">
           <Bell className="size-4" />
         </span>
 
@@ -221,7 +221,7 @@ export function NotificationsPrompt() {
               type="button"
               onClick={enable}
               disabled={busy}
-              className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-pink-500 to-fuchsia-500 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-pink-900/30 transition-transform active:scale-[0.97] disabled:opacity-60"
+              className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-emerald-500 to-teal-500 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-emerald-900/30 transition-transform active:scale-[0.97] disabled:opacity-60"
             >
               {busy ? <Loader2 className="size-4 animate-spin" /> : null}
               Enable

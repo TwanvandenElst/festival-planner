@@ -117,11 +117,11 @@ export function HomeScreenGuide({
       {/* Dimmed, blurred backdrop. */}
       <div className="absolute inset-0 bg-black/70 backdrop-blur-md" />
 
-      <div className="glass-panel relative mx-auto flex h-full w-full max-w-md flex-col border-pink-400/20 px-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-[max(1.25rem,env(safe-area-inset-top))] sm:my-auto sm:h-auto sm:rounded-3xl">
+      <div className="glass-panel relative mx-auto flex h-full w-full max-w-md flex-col border-emerald-400/20 px-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-[max(1.25rem,env(safe-area-inset-top))] sm:my-auto sm:h-auto sm:rounded-3xl">
         {/* Top bar: step indicator + dismiss */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <span className="text-xs font-semibold text-pink-300">
+            <span className="text-xs font-semibold text-emerald-600 dark:text-emerald-300">
               Step {index + 1} of {steps.length}
             </span>
             <span className="flex items-center gap-1.5">
@@ -130,7 +130,7 @@ export function HomeScreenGuide({
                   key={i}
                   className={
                     i === index
-                      ? 'size-1.5 rounded-full bg-pink-400'
+                      ? 'size-1.5 rounded-full bg-emerald-400'
                       : 'size-1.5 rounded-full bg-black/[0.12] dark:bg-white/25'
                   }
                 />
@@ -165,7 +165,7 @@ export function HomeScreenGuide({
                 <button
                   type="button"
                   onClick={copyLink}
-                  className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-gradient-to-r from-pink-500 to-fuchsia-500 px-3 py-1.5 text-xs font-semibold text-white transition-transform active:scale-95"
+                  className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-gradient-to-r from-emerald-500 to-teal-500 px-3 py-1.5 text-xs font-semibold text-white transition-transform active:scale-95"
                 >
                   {copied ? <Check className="size-3.5" /> : <Copy className="size-3.5" />}
                   {copied ? 'Copied' : 'Copy'}
@@ -193,9 +193,9 @@ export function HomeScreenGuide({
                     left: step.highlight.left,
                     width: step.highlight.width,
                     height: step.highlight.height,
-                    border: '3px solid #f0abfc',
+                    border: '3px solid #34d399',
                     borderRadius: '8px',
-                    boxShadow: '0 0 0 4px rgba(240,171,252,0.3)',
+                    boxShadow: '0 0 0 4px rgba(52,211,153,0.35)',
                   }}
                 />
               </div>
@@ -223,7 +223,7 @@ export function HomeScreenGuide({
               type="button"
               onClick={finish}
               disabled={busy}
-              className="inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-pink-500 to-fuchsia-500 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-pink-900/30 transition-transform active:scale-[0.97] disabled:opacity-60"
+              className="inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-emerald-500 to-teal-500 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-emerald-900/30 transition-transform active:scale-[0.97] disabled:opacity-60"
             >
               {busy ? <Loader2 className="size-4 animate-spin" /> : null}
               I&apos;ve added it to my Home Screen
@@ -233,7 +233,7 @@ export function HomeScreenGuide({
               type="button"
               onClick={() => setIndex(i => Math.min(steps.length - 1, i + 1))}
               disabled={nextBlocked}
-              className="inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-pink-500 to-fuchsia-500 px-6 py-2.5 text-sm font-semibold text-white shadow-lg shadow-pink-900/30 transition-transform active:scale-[0.97] disabled:opacity-50"
+              className="inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-emerald-500 to-teal-500 px-6 py-2.5 text-sm font-semibold text-white shadow-lg shadow-emerald-900/30 transition-transform active:scale-[0.97] disabled:opacity-50"
             >
               Next
             </button>

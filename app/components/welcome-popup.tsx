@@ -69,7 +69,7 @@ export function WelcomePopup() {
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
 
       <div
-        className={`glass-panel relative w-full max-w-sm rounded-xl border-pink-400/30 p-6 text-center shadow-2xl shadow-pink-900/20 transition-transform duration-200 ${
+        className={`glass-panel relative w-full max-w-sm rounded-xl border-emerald-400/30 p-6 text-center shadow-2xl shadow-emerald-900/20 transition-transform duration-200 ${
           visible ? 'scale-100' : 'scale-90'
         }`}
       >
@@ -97,7 +97,7 @@ export function WelcomePopup() {
         <button
           type="button"
           onClick={dismiss}
-          className="mt-5 w-full rounded-2xl bg-gradient-to-r from-pink-500 to-fuchsia-500 py-3 text-sm font-semibold text-white shadow-lg shadow-pink-900/30 transition-transform active:scale-[0.98]"
+          className="mt-5 w-full rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 py-3 text-sm font-semibold text-white shadow-lg shadow-emerald-900/30 transition-transform active:scale-[0.98]"
         >
           Sounds good! 👊
         </button>
