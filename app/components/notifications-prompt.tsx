@@ -93,11 +93,10 @@ export function NotificationsPrompt() {
 
     // iOS in a browser (not installed as a PWA): web push isn't available here at
     // all — Notification/PushManager don't exist until the app is added to the
-    // Home Screen. So DON'T run the capability check (it would bail). Surface the
-    // prompt (which routes into the Home Screen guide) on every artists visit.
+    // Home Screen. Surface the prompt (which routes into the Home Screen guide)
+    // right away — the render gates it to the artists page.
     if (device.isIOS && !device.isPWA) {
-      if (!isArtistsPath(pathname)) return
-      const t = setTimeout(() => setVisible(true), 3500)
+      const t = setTimeout(() => setVisible(true), 0)
       return () => clearTimeout(t)
     }
 
@@ -107,9 +106,8 @@ export function NotificationsPrompt() {
       return
     }
 
-    // Already granted: self-heal on any page. If there's no active push
-    // subscription (e.g. after a reinstall or cleared data), silently
-    // re-subscribe and save — never show the banner in this case.
+    // Already granted: never show the banner; self-heal the subscription on any
+    // page if it's missing (e.g. after a reinstall or cleared data).
     if (Notification.permission === 'granted') {
       let cancelled = false
       navigator.serviceWorker.ready
@@ -124,11 +122,9 @@ export function NotificationsPrompt() {
       }
     }
 
-    // Not granted yet (default or denied): remind on every visit to the artists
-    // page, after the page (and onboarding) settle. Reflects the live state, so
-    // if notifications are turned off again later the prompt comes back.
-    if (!isArtistsPath(pathname)) return
-    const t = setTimeout(() => setVisible(true), 3500)
+    // Not granted yet (default or denied): show right away. Reflects the live
+    // state, so the prompt comes back if notifications get turned off later.
+    const t = setTimeout(() => setVisible(true), 0)
     return () => clearTimeout(t)
   }, [user, loading, pathname, resetTick])
 
@@ -185,7 +181,9 @@ export function NotificationsPrompt() {
     return <HomeScreenGuide variant={guide} onClose={closeGuide} onEnable={requestAndSubscribe} />
   }
 
-  if (!visible) return null
+  // Only ever render on the artists page (the component lives in the layout, so
+  // without this it would persist when navigating away after being shown).
+  if (!visible || !isArtistsPath(pathname)) return null
 
   return (
     <div className="fixed inset-x-0 bottom-[calc(5.5rem+env(safe-area-inset-bottom))] z-40 flex justify-center px-4">
