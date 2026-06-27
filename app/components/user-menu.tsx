@@ -88,6 +88,7 @@ export function UserMenu() {
   function resetOnboarding() {
     try {
       localStorage.removeItem('onboarding_done')
+      localStorage.removeItem('notifications_asked')
       if (user) localStorage.removeItem(`welcome_seen_${user.id}`)
     } catch {
       // Storage unavailable — nothing to clear.

@@ -47,14 +47,46 @@ export function NotificationsPrompt() {
   const [busy, setBusy] = useState(false)
   // When set, the iOS Home Screen guide is shown instead of the banner.
   const [guide, setGuide] = useState<null | 'safari' | 'other-browser'>(null)
+  // Bumped by the "Replay tour" reset so the trigger effect re-evaluates.
+  const [resetTick, setResetTick] = useState(0)
+
+  // The "Replay tour" menu item clears the asked-gate and fires this event;
+  // re-run the trigger logic so the prompt can show again without a reload.
+  useEffect(() => {
+    function onReplay() {
+      setVisible(false)
+      setGuide(null)
+      setResetTick(t => t + 1)
+    }
+    window.addEventListener('replay-tour', onReplay)
+    return () => window.removeEventListener('replay-tour', onReplay)
+  }, [])
 
   useEffect(() => {
     if (typeof window === 'undefined') return
     if (loading || !user) return
     if (isPublicPath(pathname)) return
 
-    // Capability checks.
+    const device = getDeviceInfo()
+    console.log('[notifications] device info:', device)
+
+    // iOS in a browser (not installed as a PWA): web push isn't available here at
+    // all — Notification/PushManager don't exist until the app is added to the
+    // Home Screen. So DON'T run the capability check (it would bail). Instead
+    // surface the prompt, which routes into the Home Screen guide, once.
+    if (device.isIOS && !device.isPWA) {
+      try {
+        if (localStorage.getItem(ASKED_KEY)) return
+      } catch {
+        // localStorage blocked — fall through; worst case we ask again later.
+      }
+      const t = setTimeout(() => setVisible(true), 3500)
+      return () => clearTimeout(t)
+    }
+
+    // Everything else (Android, desktop, installed iOS PWA) needs the real APIs.
     if (!('serviceWorker' in navigator) || !('PushManager' in window) || !('Notification' in window)) {
+      console.log('[notifications] push APIs unavailable — not prompting')
       return
     }
 
@@ -90,7 +122,7 @@ export function NotificationsPrompt() {
     }
     const t = setTimeout(() => setVisible(true), 3500)
     return () => clearTimeout(t)
-  }, [user, loading, pathname])
+  }, [user, loading, pathname, resetTick])
 
   function markAsked() {
     try {
@@ -124,6 +156,12 @@ export function NotificationsPrompt() {
   // Request permission and (if granted) subscribe. Used by the direct flow and
   // by the Home Screen guide's final button.
   async function requestAndSubscribe() {
+    // On an iOS browser tab the Notification API doesn't exist yet (only inside
+    // the installed PWA), so guard against it instead of throwing.
+    if (typeof Notification === 'undefined') {
+      console.log('[notifications] Notification API unavailable — open the app from your Home Screen')
+      return
+    }
     const permission = await Notification.requestPermission()
     if (permission === 'granted') {
       await subscribeAndSave()
