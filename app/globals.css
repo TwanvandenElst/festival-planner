@@ -438,7 +438,7 @@
   color: rgba(244, 114, 182, 0.95);
   white-space: nowrap;
 }
-/* Footer is one row: [← Prev]  [1 of 7]  [Next →]  [Skip] (see onPopoverRender). */
+/* Footer is one row: [← Prev]  [1 of 7]  [Next →]. Skip is pinned separately. */
 .driver-popover.festi-tour .driver-popover-footer {
   margin-top: 0.85rem;
   display: flex;
@@ -488,23 +488,35 @@
 .driver-popover.festi-tour .driver-popover-prev-btn.driver-popover-btn-disabled {
   opacity: 0.4;
 }
-/* "Skip" — subtle text button. Folded into the footer row, so undo driver's
-   default absolute corner positioning and fixed icon-sized box. */
-.driver-popover.festi-tour .driver-popover-close-btn {
-  position: static;
+/* "Skip" — pulled out of the popover and pinned to the top-right corner of the
+   screen (moved onto <body> in onPopoverRender). It sits outside .driver-popover,
+   so re-enable pointer events that driver-active disables on everything else. */
+.driver-popover-close-btn.festi-skip {
+  position: fixed;
+  top: max(1rem, env(safe-area-inset-top));
+  right: max(1rem, env(safe-area-inset-right));
+  z-index: 1000000001;
   width: auto;
   height: auto;
-  background: transparent;
-  border: none;
-  color: rgba(255, 255, 255, 0.55);
+  pointer-events: auto;
+  cursor: pointer;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 9999px;
+  padding: 0.4rem 0.9rem;
   font-size: 0.8rem;
-  font-weight: 500;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.85);
   text-shadow: none;
   white-space: nowrap;
-  transition: color 0.15s ease;
+  -webkit-backdrop-filter: blur(18px);
+  backdrop-filter: blur(18px);
+  box-shadow: 0 8px 30px -12px rgba(0, 0, 0, 0.55);
+  transition: background 0.15s ease, color 0.15s ease;
 }
-.driver-popover.festi-tour .driver-popover-close-btn:hover {
-  color: rgba(255, 255, 255, 0.9);
+.driver-popover-close-btn.festi-skip:hover {
+  background: rgba(255, 255, 255, 0.14);
+  color: #fff;
 }
 
 @media (prefers-reduced-motion: reduce) {

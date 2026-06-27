@@ -81,10 +81,11 @@ export function OnboardingTour() {
       nextBtnText: 'Next →',
       prevBtnText: '← Prev',
       doneBtnText: "Let's go! 👊",
-      // driver.js renders the close button as a tiny corner "X" (fixed 32px
-      // wide), so a text label like "Skip" wraps. Relabel it and fold it — plus
-      // prev/next/progress — into the footer so it reads as one row:
-      //   [← Prev]   [1 of 7]   [Next →]   [Skip]
+      // Lay the footer out as one row — [← Prev]  [1 of 7]  [Next →] — and pull
+      // the close button out of the popover entirely, pinning it to the
+      // top-right corner of the screen as a standalone "Skip". (It's pinned via
+      // the body because the popover's backdrop-filter would otherwise trap a
+      // position:fixed child inside the card.)
       onPopoverRender: popover => {
         popover.closeButton.innerText = 'Skip'
         const { footer, footerButtons, progress, previousButton, nextButton, closeButton } =
@@ -92,10 +93,18 @@ export function OnboardingTour() {
         footer.appendChild(previousButton)
         footer.appendChild(progress)
         footer.appendChild(nextButton)
-        footer.appendChild(closeButton)
         footerButtons.remove()
+
+        // Drop any previously pinned Skip, then pin this step's to the screen.
+        document
+          .querySelectorAll('.driver-popover-close-btn.festi-skip')
+          .forEach(el => el.remove())
+        closeButton.classList.add('festi-skip')
+        document.body.appendChild(closeButton)
       },
       onDestroyed: () => {
+        // The Skip button lives on the body, so driver won't clean it up.
+        document.querySelectorAll('.driver-popover-close-btn.festi-skip').forEach(el => el.remove())
         try {
           localStorage.setItem(DONE_KEY, 'true')
         } catch {
