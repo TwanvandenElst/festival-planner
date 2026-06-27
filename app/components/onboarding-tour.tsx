@@ -91,7 +91,7 @@ export function OnboardingTour() {
         popoverClass: 'festi-tour',
         showButtons: ['next', 'close'],
         nextBtnText: 'Next',
-        doneBtnText: 'Got it! 👊',
+        doneBtnText: "Let's go! 👊",
         // Driver.js has no closeBtnText option — relabel the close button to
         // read "Skip tour" each time a popover renders.
         onPopoverRender: popover => {
@@ -102,9 +102,8 @@ export function OnboardingTour() {
           {
             element: '[data-tour="add-artist"]',
             popover: {
-              title: 'Follow your favorite artists',
               description:
-                "Search and follow artists. We'll show you when and where they perform in the Netherlands.",
+                'Search for artists and follow them. Every day we scan festival lineups across the Netherlands. The moment they hit a lineup, you get a push notification straight to your phone.',
               // Move to the shows page before the festivals step.
               onNextClick: () => {
                 router.push('/shows')
@@ -117,33 +116,50 @@ export function OnboardingTour() {
           {
             element: '[data-tour="festivals"]',
             popover: {
-              title: 'Your festival lineup',
               description:
-                "Add festivals you're attending and keep track of your entire season in one place.",
+                "Add the festivals you're going to and keep your entire season in one place. From wishlist to tickets bought, always know what's coming up.",
             },
           },
           {
-            element: '[data-tour="share"]',
+            element: '[data-tour="share-festivals"]',
             popover: {
-              title: 'Share your lineup',
               description:
-                'Share your festival schedule with friends so they know where to find you.',
+                "Share your festival schedule with friends. They can join your festivals with one tap and you'll get a notification when they do.",
             },
           },
           {
             element: '[data-tour="friends"]',
             popover: {
-              title: 'Friendship book',
               description:
-                'Let new festival friends fill in a digital friendship book, your personal festival memory.',
+                "Meet the people you'll be dancing next to. Answer a few fun questions together and your friendship is officially locked in. You'll show up in each other's friend list.",
+              // Move to the vriendenboekje page before its share step.
+              onNextClick: () => {
+                router.push('/vriendenboekje')
+                void waitForElement('[data-tour="share-vriendenboekje"]').then(() => {
+                  driverRef.current?.moveNext()
+                })
+              },
+            },
+          },
+          {
+            element: '[data-tour="share-vriendenboekje"]',
+            popover: {
+              description:
+                'Send the link to a friend and they can fill in the book from their own phone. The funniest answers get their own highlight reel so you never lose the gold.',
+            },
+          },
+          {
+            element: '[data-tour="share-navbar"]',
+            popover: {
+              description:
+                'Festi is invite only. The only way in is through someone who is already here. Share your personal invite link and bring your people in.',
             },
           },
           {
             element: '[data-tour="account"]',
             popover: {
-              title: 'Your account',
               description:
-                'Invite friends to join the app and share feedback to help improve it.',
+                'Festi started as a hobby project. If you have ideas, found a bug, or just want to say something, drop it in the feedback. Every message gets read. Every idea counts.',
             },
           },
         ],

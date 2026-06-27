@@ -75,7 +75,7 @@ function ShareButton() {
       type="button"
       onClick={handleShare}
       aria-label="Share the app"
-      data-tour="share"
+      data-tour="share-navbar"
       className="flex flex-1 flex-col items-center gap-1 py-1 text-[0.7rem] font-medium text-muted-foreground transition-colors hover:text-foreground"
     >
       <span className="flex size-10 items-center justify-center rounded-2xl bg-transparent transition-colors">

@@ -35,7 +35,7 @@ export function ShareFestivals() {
     <Popover onOpenChange={open => open && setCopied(false)}>
       <PopoverTrigger
         render={
-          <Button variant="outline" size="sm">
+          <Button variant="outline" size="sm" data-tour="share-festivals">
             <Share2 />
             Share
           </Button>

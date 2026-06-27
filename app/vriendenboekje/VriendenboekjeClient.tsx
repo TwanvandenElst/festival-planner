@@ -352,6 +352,7 @@ function HostEmptyState({
       <button
         type="button"
         onClick={onShare}
+        data-tour="share-vriendenboekje"
         className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-pink-500 to-rose-500 px-6 py-3.5 text-sm font-semibold text-white shadow-lg shadow-pink-900/30 transition-transform active:scale-[0.97]"
       >
         {copied ? <Check className="size-4" /> : <Share2 className="size-4" />}
@@ -549,6 +550,7 @@ function Hero({
           <button
             type="button"
             onClick={onShare}
+            data-tour="share-vriendenboekje"
             className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-white/10 px-5 py-3 text-sm font-semibold text-pink-100 ring-1 ring-white/15 backdrop-blur-md transition-transform active:scale-[0.97]"
           >
             {copied ? <Check className="size-4" /> : <Share2 className="size-4" />}
