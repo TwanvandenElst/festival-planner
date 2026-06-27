@@ -2,7 +2,11 @@
   "crons": [
     {
       "path": "/api/cron/scrape",
-      "schedule": "0 9 * * 1"
+      "schedule": "0 9 * * *"
+    },
+    {
+      "path": "/api/cron/scrape-festileaks",
+      "schedule": "30 9 * * *"
     }
   ]
 }

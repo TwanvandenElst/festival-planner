@@ -4,7 +4,6 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { CalendarX2, Loader2, RefreshCw } from 'lucide-react'
 
-import { triggerScrape } from '@/scrape-test/actions'
 import { Button } from '@/components/ui/button'
 import { SourceBadges } from '@/components/source-badges'
 import {
@@ -59,21 +58,13 @@ export default function ShowsClient({ shows, artists }: Props) {
   const router = useRouter()
   const [selectedArtistId, setSelectedArtistId] = useState<string>('all')
   const [refreshing, setRefreshing] = useState(false)
-  const [refreshMsg, setRefreshMsg] = useState<string | null>(null)
 
-  // Triggers a full scrape via the server action, then re-fetches the table.
-  async function handleRefresh() {
-    setRefreshMsg(null)
+  // Re-fetches the latest shows from the database (scraping itself runs on the
+  // cron, not here — a full scrape can't fit in an interactive request).
+  function handleRefresh() {
     setRefreshing(true)
-    try {
-      const result = await triggerScrape()
-      setRefreshMsg(`Refreshed — ${result.inserted} new, ${result.merged} merged.`)
-      router.refresh()
-    } catch {
-      setRefreshMsg('Refresh failed.')
-    } finally {
-      setRefreshing(false)
-    }
+    router.refresh()
+    setTimeout(() => setRefreshing(false), 800)
   }
 
   const sortedArtists = [...artists].sort((a, b) => a.name.localeCompare(b.name))
@@ -123,10 +114,6 @@ export default function ShowsClient({ shows, artists }: Props) {
           {refreshing ? 'Refreshing…' : 'Refresh shows'}
         </Button>
       </div>
-
-      {refreshMsg && (
-        <p className="text-sm text-muted-foreground">{refreshMsg}</p>
-      )}
 
       {filtered.length === 0 ? (
         <div className="rounded-xl border border-dashed border-border py-16 text-center">

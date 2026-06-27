@@ -165,13 +165,19 @@ async function notifyFollowersOfShows(
  * run in full; only this artist's shows are matched and stored.
  */
 export async function runScrapers(
-  options?: { artistName?: string },
+  options?: { artistName?: string; only?: string[]; exclude?: string[] },
 ): Promise<OrchestratorResult> {
+  // Optionally narrow which scrapers run (by name). Used to split slow sites
+  // (festileaks) into their own cron so each invocation fits the 60s limit.
+  let active = scrapers
+  if (options?.only) active = active.filter(s => options.only!.includes(s.name))
+  if (options?.exclude) active = active.filter(s => !options.exclude!.includes(s.name))
+
   // 1. Collect all scraped shows. Run scrapers in PARALLEL so wall-time is the
   //    slowest single scraper (not the sum), and isolate each one: a site that
   //    blocks/errors yields [] instead of aborting the whole run.
   const scraped = await Promise.all(
-    scrapers.map(async scraper => {
+    active.map(async scraper => {
       try {
         return await scraper.scrape()
       } catch (err) {

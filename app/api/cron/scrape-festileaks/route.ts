@@ -1,23 +1,22 @@
 import { NextResponse } from 'next/server'
 import { runScrapers } from '@/lib/scrapers'
 
-// Vercel Hobby caps serverless execution at 60s; the weekly scrape can be slow.
+// festileaks is deliberately slow (a polite delay between every request), so it
+// gets its own cron to stay within Vercel's 60s execution cap.
 export const maxDuration = 60
 
-// Never cache: this must run the scrapers fresh on every invocation.
+// Never cache: run the scraper fresh on every invocation.
 export const dynamic = 'force-dynamic'
 
 /**
- * Weekly cron entrypoint (configured in vercel.json). Vercel invokes this with
- * a GET and an `Authorization: Bearer <CRON_SECRET>` header when CRON_SECRET is
- * set in the project env. We verify that token before running anything.
+ * Daily cron entrypoint for the festileaks scraper only (configured in
+ * vercel.json). Same CRON_SECRET auth as /api/cron/scrape.
  */
 export async function GET(request: Request) {
   const expected = process.env.CRON_SECRET
 
-  // Fail closed: without a configured secret we cannot safely authorize.
   if (!expected) {
-    console.error('[cron/scrape] CRON_SECRET is not set on the server.')
+    console.error('[cron/scrape-festileaks] CRON_SECRET is not set on the server.')
     return NextResponse.json({ ok: false, error: 'Server misconfigured' }, { status: 500 })
   }
 
@@ -28,9 +27,7 @@ export async function GET(request: Request) {
 
   const startedAt = Date.now()
   try {
-    // festileaks runs in its own cron (/api/cron/scrape-festileaks) — it's slow
-    // (deliberate per-request delay) and would push this run past the 60s cap.
-    const result = await runScrapers({ exclude: ['festileaks'] })
+    const result = await runScrapers({ only: ['festileaks'] })
     return NextResponse.json({
       ok: true,
       ranAt: new Date().toISOString(),
@@ -44,7 +41,7 @@ export async function GET(request: Request) {
       },
     })
   } catch (err) {
-    console.error('[cron/scrape] Scrape run failed:', err)
+    console.error('[cron/scrape-festileaks] Scrape run failed:', err)
     return NextResponse.json(
       { ok: false, error: err instanceof Error ? err.message : 'Unknown error' },
       { status: 500 },
