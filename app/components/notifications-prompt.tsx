@@ -6,6 +6,8 @@ import { Bell, Loader2, X } from 'lucide-react'
 
 import { useUser } from '@/lib/use-user'
 import { savePushSubscription } from '@/lib/push-subscribe'
+import { getDeviceInfo } from '@/lib/device'
+import { HomeScreenGuide } from './home-screen-guide'
 
 // Asked-once flag (global per device, as specified).
 const ASKED_KEY = 'notifications_asked'
@@ -43,6 +45,8 @@ export function NotificationsPrompt() {
   const { user, loading } = useUser()
   const [visible, setVisible] = useState(false)
   const [busy, setBusy] = useState(false)
+  // When set, the iOS Home Screen guide is shown instead of the banner.
+  const [guide, setGuide] = useState<null | 'safari' | 'other-browser'>(null)
 
   useEffect(() => {
     if (typeof window === 'undefined') return
@@ -117,22 +121,46 @@ export function NotificationsPrompt() {
     await savePushSubscription(subscription.toJSON())
   }
 
-  async function enable() {
-    setBusy(true)
-    try {
-      const permission = await Notification.requestPermission()
-      if (permission !== 'granted') {
-        dismiss()
-        return
-      }
+  // Request permission and (if granted) subscribe. Used by the direct flow and
+  // by the Home Screen guide's final button.
+  async function requestAndSubscribe() {
+    const permission = await Notification.requestPermission()
+    if (permission === 'granted') {
       await subscribeAndSave()
-      dismiss()
-    } catch (err) {
-      console.error('[push] enable failed:', err)
-      dismiss()
-    } finally {
-      setBusy(false)
     }
+  }
+
+  async function enable() {
+    const device = getDeviceInfo()
+
+    // Android, desktop, or an installed iOS PWA can request permission directly.
+    if (!device.isIOS || device.isPWA) {
+      setBusy(true)
+      try {
+        await requestAndSubscribe()
+      } catch (err) {
+        console.error('[push] enable failed:', err)
+      } finally {
+        setBusy(false)
+        dismiss()
+      }
+      return
+    }
+
+    // iOS in a browser (no push until added to the Home Screen as a PWA). Show
+    // the guide — with an extra "open in Safari" step for Chrome/Firefox.
+    setVisible(false)
+    setGuide(device.isIOSOtherBrowser ? 'other-browser' : 'safari')
+  }
+
+  function closeGuide() {
+    markAsked()
+    setGuide(null)
+    setVisible(false)
+  }
+
+  if (guide) {
+    return <HomeScreenGuide variant={guide} onClose={closeGuide} onEnable={requestAndSubscribe} />
   }
 
   if (!visible) return null
