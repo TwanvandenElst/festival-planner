@@ -81,10 +81,23 @@ export async function getJoinsByFestival(): Promise<Record<string, { id: string;
   } = await supabase.auth.getUser()
   if (!user) return {}
 
+  // Scope joins by the owner's own festival ids. RLS already restricts
+  // `festivals` to auth.uid(), so selecting them here is owner-scoped without an
+  // explicit filter. We deliberately avoid embedding `festivals!inner(user_id)`
+  // on festival_joins: that cross-table RLS embed silently drops every row for
+  // any role that can't read `festivals` (e.g. anon after migration 0015).
+  const { data: fests, error: festErr } = await supabase.from('festivals').select('id')
+  if (festErr) {
+    console.error('[festival-joins] getJoinsByFestival festivals lookup failed:', festErr.message)
+    return {}
+  }
+  const festivalIds = (fests ?? []).map(f => f.id as string)
+  if (festivalIds.length === 0) return {}
+
   const { data, error } = await supabase
     .from('festival_joins')
-    .select('id, festival_id, name, created_at, festivals!inner(user_id)')
-    .eq('festivals.user_id', user.id)
+    .select('id, festival_id, name, created_at')
+    .in('festival_id', festivalIds)
     .order('created_at', { ascending: true })
 
   if (error) {

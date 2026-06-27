@@ -91,6 +91,56 @@ function formatDate(date: string) {
   })
 }
 
+// Initials-avatar palette, mirrored from the public share page (JoinFestival).
+const AVATAR_GRADIENTS = [
+  'from-violet-400 to-fuchsia-500',
+  'from-fuchsia-400 to-pink-500',
+  'from-sky-400 to-blue-500',
+  'from-amber-400 to-orange-500',
+  'from-emerald-400 to-teal-500',
+  'from-rose-400 to-red-500',
+]
+const gradientAt = (i: number) => AVATAR_GRADIENTS[i % AVATAR_GRADIENTS.length]
+const initialOf = (name: string) => name.trim().charAt(0).toUpperCase() || '?'
+
+/**
+ * Non-interactive overlapping initials stack shown on the (collapsed) festival
+ * row. Names + removal live in the expandable detail row, so this is purely a
+ * visual indicator — it must not be a button (it renders inside the row's
+ * expand button).
+ */
+function JoinAvatarStack({ names }: { names: string[] }) {
+  const MAX = 4 // total circles before collapsing into a "+N" chip
+  const overflow = names.length > MAX ? names.length - (MAX - 1) : 0
+  const shown = overflow > 0 ? names.slice(0, MAX - 1) : names
+
+  return (
+    <span
+      className="inline-flex shrink-0 items-center"
+      aria-label={`${names.length} joined`}
+    >
+      {shown.map((name, i) => (
+        <span
+          key={i}
+          style={{ zIndex: shown.length - i }}
+          className={cn(
+            'grid size-5 place-items-center rounded-full bg-gradient-to-br text-[10px] font-bold text-white ring-2 ring-background',
+            gradientAt(i),
+            i > 0 && '-ml-1',
+          )}
+        >
+          {initialOf(name)}
+        </span>
+      ))}
+      {overflow > 0 && (
+        <span className="-ml-1 grid size-5 place-items-center rounded-full bg-muted text-[10px] font-semibold text-muted-foreground ring-2 ring-background">
+          +{overflow}
+        </span>
+      )}
+    </span>
+  )
+}
+
 // A festival queued for adding, with editable dates before confirming.
 type Pending = {
   base: FestivalSearchResult
@@ -459,9 +509,7 @@ export default function FestivalsSection({
                             </Badge>
                           )}
                           {hasJoins && (
-                            <Badge variant="secondary" className="shrink-0 font-normal">
-                              👥 {festivalJoins.length} joined
-                            </Badge>
+                            <JoinAvatarStack names={festivalJoins.map(j => j.name)} />
                           )}
                         </button>
                       ) : (
