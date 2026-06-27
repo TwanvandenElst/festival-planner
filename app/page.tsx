@@ -53,7 +53,9 @@ export default function HomePage() {
       // Scraping is decoupled from adding: it runs once for everyone on the
       // schedule (cron), not per add. A full multi-site scrape can't fit in an
       // interactive request and wouldn't scale to many users adding artists.
-      setAddedMsg(`Added ${result.artist.name}. New shows are fetched automatically — check back soon.`)
+      setAddedMsg(
+        `You're now following ${result.artist.name}. We scan for upcoming shows once a day — if they perform in the Netherlands, you'll get a notification tomorrow.`,
+      )
     }
   }
 
