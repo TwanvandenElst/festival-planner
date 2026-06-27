@@ -24,12 +24,24 @@ export async function GET() {
   }
 
   console.log('[push] /api/push/test invoked for userId', user.id)
-  await sendPushNotification(
-    user.id,
-    '🔔 Test push',
-    'Manual test from /api/push/test',
-    '/shows',
-  )
+
+  // Surface the real error so it shows up in the toast (and logs). Normally
+  // sendPushNotification is best-effort, but configureWebPush() can throw
+  // synchronously on malformed VAPID env values — that's what we want to see.
+  try {
+    await sendPushNotification(
+      user.id,
+      '🔔 Test push',
+      'Manual test from /api/push/test',
+      '/shows',
+    )
+  } catch (err) {
+    console.error('[push] test error:', err)
+    return NextResponse.json(
+      { ok: false, error: err instanceof Error ? err.message : String(err) },
+      { status: 500 },
+    )
+  }
 
   return NextResponse.json({ ok: true, userId: user.id })
 }
