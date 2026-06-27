@@ -12,6 +12,8 @@ export const dynamic = 'force-dynamic'
  * delivery result shows in the [push] server logs. Remove once push is verified.
  */
 export async function GET() {
+  console.log('[push] test endpoint hit')
+
   const supabase = await createClient()
   const {
     data: { user },
