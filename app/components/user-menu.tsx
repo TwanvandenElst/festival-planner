@@ -56,6 +56,17 @@ export function UserMenu() {
   const email = user.email ?? ''
   const initial = (email[0] ?? '?').toUpperCase()
 
+  // TEMP (dev/test): wipe onboarding state so the welcome popup + tour run again.
+  function resetOnboarding() {
+    try {
+      localStorage.removeItem('onboarding_done')
+      if (user) localStorage.removeItem(`welcome_seen_${user.id}`)
+    } catch {
+      // Storage unavailable — nothing to clear.
+    }
+    window.location.reload()
+  }
+
   async function signOut() {
     setSigningOut(true)
     const supabase = createClient()
@@ -117,6 +128,16 @@ export function UserMenu() {
           >
             <LogOut className="size-4" />
             {signingOut ? 'Signing out…' : 'Sign out'}
+          </button>
+
+          {/* TEMP dev/test option — remove when onboarding testing is done. */}
+          <button
+            type="button"
+            onClick={resetOnboarding}
+            className="mt-2 flex w-full items-center justify-center gap-1.5 rounded-lg py-1.5 text-xs font-medium text-muted-foreground/70 transition-colors hover:text-foreground"
+          >
+            <span aria-hidden>↺</span>
+            Replay tour
           </button>
         </div>
       )}
