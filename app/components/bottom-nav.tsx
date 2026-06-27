@@ -1,13 +1,11 @@
 'use client'
 
-import { Fragment, useState } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { BookHeart, CalendarDays, Check, Share2, Users } from 'lucide-react'
+import { BookHeart, CalendarDays, Share2, Users } from 'lucide-react'
 import gsap from 'gsap'
 
 import { cn } from '@/lib/utils'
-import { useUser } from '@/lib/use-user'
 import { ThemeToggle } from './theme-toggle'
 import { UserMenu } from './user-menu'
 
@@ -19,6 +17,7 @@ const NAV = [
     match: (p: string) => p === '/' || p.startsWith('/artists'),
     activeText: 'text-orange-600 dark:text-orange-300',
     activeBg: 'bg-orange-500/15',
+    tour: undefined,
   },
   {
     href: '/shows',
@@ -27,6 +26,16 @@ const NAV = [
     match: (p: string) => p.startsWith('/shows'),
     activeText: 'text-cyan-600 dark:text-cyan-300',
     activeBg: 'bg-cyan-500/15',
+    tour: 'nav-shows',
+  },
+  {
+    href: '/share',
+    label: 'Share',
+    icon: Share2,
+    match: (p: string) => p.startsWith('/share'),
+    activeText: 'text-blue-600 dark:text-blue-300',
+    activeBg: 'bg-blue-500/15',
+    tour: 'nav-share',
   },
   {
     href: '/vriendenboekje',
@@ -35,56 +44,9 @@ const NAV = [
     match: (p: string) => p.startsWith('/vriendenboekje'),
     activeText: 'text-pink-600 dark:text-pink-300',
     activeBg: 'bg-pink-500/15',
+    tour: 'nav-friends',
   },
 ]
-
-/**
- * Share/invite button styled to match the nav tabs. Uses the native share sheet
- * when available, otherwise copies the personalized invite link to the clipboard
- * and briefly confirms. Invite URL: ${origin}/invite/${userId}.
- */
-function ShareButton() {
-  const { user } = useUser()
-  const [copied, setCopied] = useState(false)
-
-  async function handleShare() {
-    if (!user) return
-    const url = `${window.location.origin}/invite/${user.id}`
-    const data = {
-      title: 'Festival Planner',
-      text: 'Discover Festival Planner. Follow artists and share your festival agenda.',
-      url,
-    }
-    try {
-      if (navigator.share) {
-        await navigator.share(data)
-      } else {
-        await navigator.clipboard.writeText(url)
-        setCopied(true)
-        setTimeout(() => setCopied(false), 2000)
-      }
-    } catch {
-      // User cancelled the share sheet, or copy was blocked — nothing to do.
-    }
-  }
-
-  if (!user) return null
-
-  return (
-    <button
-      type="button"
-      onClick={handleShare}
-      aria-label="Share the app"
-      data-tour="nav-share"
-      className="flex flex-1 flex-col items-center gap-1 py-1 text-[0.7rem] font-medium text-muted-foreground transition-colors hover:text-foreground"
-    >
-      <span className="flex size-10 items-center justify-center rounded-2xl bg-transparent transition-colors">
-        {copied ? <Check className="size-5 text-emerald-300" /> : <Share2 className="size-5" />}
-      </span>
-      {copied ? 'Copied' : 'Share'}
-    </button>
-  )
-}
 
 export function BottomNav() {
   const pathname = usePathname()
@@ -136,36 +98,27 @@ export function BottomNav() {
             const active = item.match(pathname)
             const Icon = item.icon
             return (
-              <Fragment key={item.href}>
-                <Link
-                  href={item.href}
-                  onClick={e => handleNav(e, item.href)}
-                  aria-current={active ? 'page' : undefined}
-                  data-tour={
-                    item.href === '/shows'
-                      ? 'nav-shows'
-                      : item.href === '/vriendenboekje'
-                        ? 'nav-friends'
-                        : undefined
-                  }
+              <Link
+                key={item.href}
+                href={item.href}
+                onClick={e => handleNav(e, item.href)}
+                aria-current={active ? 'page' : undefined}
+                data-tour={item.tour}
+                className={cn(
+                  'flex flex-1 flex-col items-center gap-1 py-1 text-[0.7rem] font-medium transition-colors',
+                  active ? item.activeText : 'text-muted-foreground hover:text-foreground',
+                )}
+              >
+                <span
                   className={cn(
-                    'flex flex-1 flex-col items-center gap-1 py-1 text-[0.7rem] font-medium transition-colors',
-                    active ? item.activeText : 'text-muted-foreground hover:text-foreground',
+                    'flex size-10 items-center justify-center rounded-2xl transition-colors',
+                    active ? item.activeBg : 'bg-transparent',
                   )}
                 >
-                  <span
-                    className={cn(
-                      'flex size-10 items-center justify-center rounded-2xl transition-colors',
-                      active ? item.activeBg : 'bg-transparent',
-                    )}
-                  >
-                    <Icon className="size-5" />
-                  </span>
-                  {item.label}
-                </Link>
-                {/* Share sits between Shows and Vrienden. */}
-                {item.href === '/shows' && <ShareButton />}
-              </Fragment>
+                  <Icon className="size-5" />
+                </span>
+                {item.label}
+              </Link>
             )
           })}
         </div>
