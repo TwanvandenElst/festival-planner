@@ -9,9 +9,6 @@ import { savePushSubscription } from '@/lib/push-subscribe'
 import { getDeviceInfo } from '@/lib/device'
 import { HomeScreenGuide } from './home-screen-guide'
 
-// Asked-once flag (global per device, as specified).
-const ASKED_KEY = 'notifications_asked'
-
 // Standalone/public pages have no app chrome — never prompt there.
 function isPublicPath(path: string) {
   return (
@@ -19,6 +16,13 @@ function isPublicPath(path: string) {
     path.startsWith('/invite') ||
     path.startsWith('/festivals/share')
   )
+}
+
+// The banner only shows on the artists home — and there on every visit while
+// notifications are off (no "asked once" gate), so the reminder keeps coming
+// back until the user actually enables them.
+function isArtistsPath(path: string) {
+  return path === '/' || path.startsWith('/artists')
 }
 
 // VAPID public key (base64url) → Uint8Array for pushManager.subscribe().
@@ -50,8 +54,25 @@ export function NotificationsPrompt() {
   // Bumped by the "Replay tour" reset so the trigger effect re-evaluates.
   const [resetTick, setResetTick] = useState(0)
 
-  // The "Replay tour" menu item clears the asked-gate and fires this event;
-  // re-run the trigger logic so the prompt can show again without a reload.
+  // Subscribe to push and persist it. pushManager.subscribe() returns the
+  // existing subscription when one already matches the key, so it's idempotent.
+  // Declared before the effects that call it (lint: no use-before-declare).
+  async function subscribeAndSave() {
+    const key = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY
+    if (!key) {
+      console.error('[push] NEXT_PUBLIC_VAPID_PUBLIC_KEY is not set — cannot subscribe.')
+      return
+    }
+    const registration = await navigator.serviceWorker.ready
+    const subscription = await registration.pushManager.subscribe({
+      userVisibleOnly: true,
+      applicationServerKey: urlBase64ToUint8Array(key),
+    })
+    await savePushSubscription(subscription.toJSON())
+  }
+
+  // The "Replay tour" menu item fires this event; re-run the trigger logic so
+  // the prompt re-evaluates immediately (no reload needed).
   useEffect(() => {
     function onReplay() {
       setVisible(false)
@@ -72,14 +93,10 @@ export function NotificationsPrompt() {
 
     // iOS in a browser (not installed as a PWA): web push isn't available here at
     // all — Notification/PushManager don't exist until the app is added to the
-    // Home Screen. So DON'T run the capability check (it would bail). Instead
-    // surface the prompt, which routes into the Home Screen guide, once.
+    // Home Screen. So DON'T run the capability check (it would bail). Surface the
+    // prompt (which routes into the Home Screen guide) on every artists visit.
     if (device.isIOS && !device.isPWA) {
-      try {
-        if (localStorage.getItem(ASKED_KEY)) return
-      } catch {
-        // localStorage blocked — fall through; worst case we ask again later.
-      }
+      if (!isArtistsPath(pathname)) return
       const t = setTimeout(() => setVisible(true), 3500)
       return () => clearTimeout(t)
     }
@@ -90,11 +107,10 @@ export function NotificationsPrompt() {
       return
     }
 
-    // Already granted: self-heal. If there's no active push subscription (e.g.
-    // after a reinstall or cleared data), silently re-subscribe and save — never
-    // show the banner in this case.
+    // Already granted: self-heal on any page. If there's no active push
+    // subscription (e.g. after a reinstall or cleared data), silently
+    // re-subscribe and save — never show the banner in this case.
     if (Notification.permission === 'granted') {
-      markAsked()
       let cancelled = false
       navigator.serviceWorker.ready
         .then(reg => reg.pushManager.getSubscription())
@@ -108,49 +124,18 @@ export function NotificationsPrompt() {
       }
     }
 
-    // Hard-denied → don't nag.
-    if (Notification.permission === 'denied') {
-      markAsked()
-      return
-    }
-
-    // permission === 'default': ask once, after the page (and onboarding) settle.
-    try {
-      if (localStorage.getItem(ASKED_KEY)) return
-    } catch {
-      // localStorage blocked — fall through; worst case we ask again later.
-    }
+    // Not granted yet (default or denied): remind on every visit to the artists
+    // page, after the page (and onboarding) settle. Reflects the live state, so
+    // if notifications are turned off again later the prompt comes back.
+    if (!isArtistsPath(pathname)) return
     const t = setTimeout(() => setVisible(true), 3500)
     return () => clearTimeout(t)
   }, [user, loading, pathname, resetTick])
 
-  function markAsked() {
-    try {
-      localStorage.setItem(ASKED_KEY, 'true')
-    } catch {
-      /* ignore */
-    }
-  }
-
   function dismiss() {
-    markAsked()
+    // Hide for this visit only — it shows again next time they open the artists
+    // page while notifications are still off.
     setVisible(false)
-  }
-
-  // Subscribe to push and persist it. pushManager.subscribe() returns the
-  // existing subscription when one already matches the key, so it's idempotent.
-  async function subscribeAndSave() {
-    const key = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY
-    if (!key) {
-      console.error('[push] NEXT_PUBLIC_VAPID_PUBLIC_KEY is not set — cannot subscribe.')
-      return
-    }
-    const registration = await navigator.serviceWorker.ready
-    const subscription = await registration.pushManager.subscribe({
-      userVisibleOnly: true,
-      applicationServerKey: urlBase64ToUint8Array(key),
-    })
-    await savePushSubscription(subscription.toJSON())
   }
 
   // Request permission and (if granted) subscribe. Used by the direct flow and
@@ -192,7 +177,6 @@ export function NotificationsPrompt() {
   }
 
   function closeGuide() {
-    markAsked()
     setGuide(null)
     setVisible(false)
   }
