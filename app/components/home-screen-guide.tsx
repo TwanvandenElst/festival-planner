@@ -18,8 +18,11 @@ import { Check, Compass, Copy, Loader2, X } from 'lucide-react'
 type HighlightBox = { top: string; left: string; width: string; height: string }
 
 // % positions of the highlight box over each screenshot. Adjust to match the art.
-const SHARE_HIGHLIGHT: HighlightBox = { top: '85%', left: '40%', width: '20%', height: '9%' }
-const ADD_HOME_HIGHLIGHT: HighlightBox = { top: '43%', left: '5%', width: '90%', height: '9%' }
+// Measured against the actual screenshots in /public/onboarding:
+//  - safari-share.png: "Share" is the first row of the bottom menu card.
+//  - safari-add-home.png: "Add to Home Screen" is the last row of the second card.
+const SHARE_HIGHLIGHT: HighlightBox = { top: '55.5%', left: '31%', width: '32%', height: '5.5%' }
+const ADD_HOME_HIGHLIGHT: HighlightBox = { top: '61%', left: '7%', width: '56%', height: '5%' }
 
 type GuideStep =
   | { kind: 'safari-hint' }
