@@ -67,6 +67,31 @@ export function OnboardingTour() {
     // Replay: tear down any previous instance before starting a fresh one.
     driverRef.current?.destroy()
 
+    // Warm the pages the tour navigates to, so the cross-page steps feel snappy.
+    router.prefetch('/shows')
+    router.prefetch('/vriendenboekje')
+
+    // Cross-page steps navigate, then wait for the target to mount before
+    // advancing. That wait isn't instant, so show a spinner on Next and block
+    // repeat clicks — otherwise it looks frozen and people double-tap.
+    let navigating = false
+    function advanceToPage(href: string, waitSelector: string) {
+      if (navigating) return
+      navigating = true
+      const nextBtn = document.querySelector<HTMLButtonElement>(
+        '.driver-popover.festi-tour .driver-popover-next-btn',
+      )
+      if (nextBtn) {
+        nextBtn.disabled = true
+        nextBtn.innerHTML = '<span class="festi-spin"></span>Loading'
+      }
+      router.push(href)
+      void waitForElement(waitSelector).then(() => {
+        navigating = false
+        driverRef.current?.moveNext()
+      })
+    }
+
     const d = driver({
       showProgress: true,
       progressText: '{{current}} of {{total}}',
@@ -118,12 +143,7 @@ export function OnboardingTour() {
             description:
               'Search for artists and follow them. Every day we scan festival lineups across the Netherlands. The moment they hit a lineup, you get a push notification straight to your phone.',
             // Move to the shows page before the festivals steps.
-            onNextClick: () => {
-              router.push('/shows')
-              void waitForElement('[data-tour="share-festivals"]').then(() => {
-                driverRef.current?.moveNext()
-              })
-            },
+            onNextClick: () => advanceToPage('/shows', '[data-tour="share-festivals"]'),
           },
         },
         {
@@ -146,12 +166,7 @@ export function OnboardingTour() {
             description:
               "Meet the people you'll be dancing next to. Answer a few fun questions together and your friendship is officially locked in. You'll show up in each other's friend list.",
             // Move to the vriendenboekje page before its share step.
-            onNextClick: () => {
-              router.push('/vriendenboekje')
-              void waitForElement('[data-tour="share-vriendenboekje"]').then(() => {
-                driverRef.current?.moveNext()
-              })
-            },
+            onNextClick: () => advanceToPage('/vriendenboekje', '[data-tour="share-vriendenboekje"]'),
           },
         },
         {

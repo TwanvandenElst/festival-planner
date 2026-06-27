@@ -465,6 +465,28 @@
   background: linear-gradient(to right, #ec4899, #d946ef);
   transform: translateY(-1px);
 }
+/* Loading state while a cross-page step navigates (set in onNextClick). */
+.driver-popover.festi-tour .driver-popover-next-btn:disabled {
+  opacity: 0.8;
+  cursor: progress;
+  transform: none;
+}
+@keyframes festi-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.driver-popover.festi-tour .driver-popover-next-btn .festi-spin {
+  display: inline-block;
+  width: 0.85em;
+  height: 0.85em;
+  margin-right: 0.4em;
+  vertical-align: -2px;
+  border: 2px solid rgba(255, 255, 255, 0.4);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: festi-spin 0.6s linear infinite;
+}
 /* "← Prev" — same pill shape as Next, but a light grey/glass look. */
 .driver-popover.festi-tour .driver-popover-prev-btn {
   background: rgba(255, 255, 255, 0.08);
