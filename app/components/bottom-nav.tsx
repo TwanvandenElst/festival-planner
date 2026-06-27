@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { BookHeart, CalendarDays, Share2, Users } from 'lucide-react'
+import { BookHeart, CalendarDays, Heart, Users } from 'lucide-react'
 import gsap from 'gsap'
 
 import { cn } from '@/lib/utils'
@@ -31,7 +31,7 @@ const NAV = [
   {
     href: '/share',
     label: 'Share',
-    icon: Share2,
+    icon: Heart,
     match: (p: string) => p.startsWith('/share'),
     activeText: 'text-violet-600 dark:text-violet-300',
     activeBg: 'bg-violet-500/15',
