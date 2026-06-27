@@ -57,6 +57,20 @@ export function normalize(raw: string | null | undefined): string {
   return ''
 }
 
+/**
+ * Normalizes an artist name for matching: lowercase, strip punctuation/accents
+ * noise, and collapse whitespace. Tolerates casing and punctuation differences
+ * between a followed artist's stored name and how lineups spell it
+ * (e.g. "Anyma!" vs "anyma", "Tale Of Us" vs "tale of us").
+ */
+function normalizeArtist(s: string): string {
+  return s
+    .toLowerCase()
+    .replace(/[^a-z0-9\s]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+}
+
 /** Formats one newly inserted show as a Telegram HTML message block. */
 function formatShowNotification(show: ScrapedShow): string {
   const date = new Date(show.date).toLocaleDateString('en-GB', {
@@ -167,18 +181,18 @@ export async function runScrapers(
 
   if (artistsError) throw new Error(`Failed to fetch artists: ${artistsError.message}`)
 
-  const filterName = options?.artistName?.toLowerCase().trim()
+  const filterName = options?.artistName ? normalizeArtist(options.artistName) : undefined
   const followed = filterName
-    ? (artists ?? []).filter(a => a.name.toLowerCase().trim() === filterName)
+    ? (artists ?? []).filter(a => normalizeArtist(a.name) === filterName)
     : (artists ?? [])
 
   if (followed.length === 0) {
     return { totalScraped: allShows.length, matched: 0, inserted: 0, merged: 0, skipped: 0, shows: [] }
   }
 
-  // 3. Match scraped shows against followed artists (case-insensitive)
-  const artistMap = new Map(followed.map(a => [a.name.toLowerCase().trim(), a.id as string]))
-  const matched = allShows.filter(s => artistMap.has(s.artistName.toLowerCase().trim()))
+  // 3. Match scraped shows against followed artists (normalized name match)
+  const artistMap = new Map(followed.map(a => [normalizeArtist(a.name), a.id as string]))
+  const matched = allShows.filter(s => artistMap.has(normalizeArtist(s.artistName)))
 
   if (matched.length === 0) {
     return { totalScraped: allShows.length, matched: 0, inserted: 0, merged: 0, skipped: 0, shows: [] }
@@ -187,7 +201,7 @@ export async function runScrapers(
   // 4. Fetch existing shows for matched artists, keyed by fuzzy event identity
   //    (artist_id + date + first significant word of the venue/title).
   const matchedArtistIds = [
-    ...new Set(matched.map(s => artistMap.get(s.artistName.toLowerCase().trim())!)),
+    ...new Set(matched.map(s => artistMap.get(normalizeArtist(s.artistName))!)),
   ]
   const { data: existingShows } = await supabase
     .from('shows')
@@ -220,7 +234,7 @@ export async function runScrapers(
   const insertedWithArtist: { show: ScrapedShow; artistId: string }[] = []
 
   for (const show of matched) {
-    const artistId = artistMap.get(show.artistName.toLowerCase().trim())!
+    const artistId = artistMap.get(normalizeArtist(show.artistName))!
     const key = `${artistId}|${show.date}|${normalize(show.venue)}`
     const found = existing.get(key)
 

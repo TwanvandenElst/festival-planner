@@ -49,26 +49,41 @@ export function NotificationsPrompt() {
     if (loading || !user) return
     if (isPublicPath(pathname)) return
 
-    // Capability + state checks.
+    // Capability checks.
     if (!('serviceWorker' in navigator) || !('PushManager' in window) || !('Notification' in window)) {
       return
     }
+
+    // Already granted: self-heal. If there's no active push subscription (e.g.
+    // after a reinstall or cleared data), silently re-subscribe and save — never
+    // show the banner in this case.
+    if (Notification.permission === 'granted') {
+      markAsked()
+      let cancelled = false
+      navigator.serviceWorker.ready
+        .then(reg => reg.pushManager.getSubscription())
+        .then(sub => {
+          if (cancelled || sub) return // already subscribed — nothing to do
+          return subscribeAndSave() // null → re-subscribe and save
+        })
+        .catch(err => console.error('[push] auto-resubscribe failed:', err))
+      return () => {
+        cancelled = true
+      }
+    }
+
+    // Hard-denied → don't nag.
+    if (Notification.permission === 'denied') {
+      markAsked()
+      return
+    }
+
+    // permission === 'default': ask once, after the page (and onboarding) settle.
     try {
       if (localStorage.getItem(ASKED_KEY)) return
     } catch {
       // localStorage blocked — fall through; worst case we ask again later.
     }
-    // Already granted or hard-denied → don't nag.
-    if (Notification.permission !== 'default') {
-      try {
-        localStorage.setItem(ASKED_KEY, 'true')
-      } catch {
-        /* ignore */
-      }
-      return
-    }
-
-    // Let the page (and onboarding) settle before sliding the banner in.
     const t = setTimeout(() => setVisible(true), 3500)
     return () => clearTimeout(t)
   }, [user, loading, pathname])
@@ -86,6 +101,22 @@ export function NotificationsPrompt() {
     setVisible(false)
   }
 
+  // Subscribe to push and persist it. pushManager.subscribe() returns the
+  // existing subscription when one already matches the key, so it's idempotent.
+  async function subscribeAndSave() {
+    const key = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY
+    if (!key) {
+      console.error('[push] NEXT_PUBLIC_VAPID_PUBLIC_KEY is not set — cannot subscribe.')
+      return
+    }
+    const registration = await navigator.serviceWorker.ready
+    const subscription = await registration.pushManager.subscribe({
+      userVisibleOnly: true,
+      applicationServerKey: urlBase64ToUint8Array(key),
+    })
+    await savePushSubscription(subscription.toJSON())
+  }
+
   async function enable() {
     setBusy(true)
     try {
@@ -94,21 +125,7 @@ export function NotificationsPrompt() {
         dismiss()
         return
       }
-
-      const key = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY
-      if (!key) {
-        console.error('[push] NEXT_PUBLIC_VAPID_PUBLIC_KEY is not set — cannot subscribe.')
-        dismiss()
-        return
-      }
-
-      const registration = await navigator.serviceWorker.ready
-      const subscription = await registration.pushManager.subscribe({
-        userVisibleOnly: true,
-        applicationServerKey: urlBase64ToUint8Array(key),
-      })
-
-      await savePushSubscription(subscription.toJSON())
+      await subscribeAndSave()
       dismiss()
     } catch (err) {
       console.error('[push] enable failed:', err)
