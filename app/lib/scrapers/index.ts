@@ -269,6 +269,8 @@ export async function runScrapers(
 
   // 6. Notify (best-effort): Telegram digest to the owner + a web push to each
   //    user who follows a freshly added artist.
+  console.log('[scraper] insertedShows count:', insertedShows.length)
+  console.log('[scraper] insertedWithArtist count:', insertedWithArtist.length)
   await notifyNewShows(insertedShows)
   await notifyFollowersOfShows(insertedWithArtist)
 
