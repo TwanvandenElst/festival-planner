@@ -72,12 +72,12 @@ export function UserMenu() {
       const res = await fetch('/api/push/test')
       const data = (await res.json().catch(() => ({}))) as { ok?: boolean; error?: string }
       if (res.ok && data.ok) {
-        showToast('✅ Test push sent — check your notifications')
+        showToast('✅ Test push sent. Check your notifications')
       } else {
         showToast(`⚠️ Failed (${res.status})${data.error ? `: ${data.error}` : ''}`)
       }
     } catch {
-      showToast('⚠️ Request failed — are you online?')
+      showToast('⚠️ Request failed. Are you online?')
     } finally {
       setTestingPush(false)
     }

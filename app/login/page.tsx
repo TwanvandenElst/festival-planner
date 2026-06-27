@@ -23,7 +23,7 @@ export default function LoginPage() {
           />
           <h1 className="text-2xl font-semibold tracking-tight">Welcome back</h1>
           <p className="mx-auto mt-1.5 max-w-xs text-sm text-muted-foreground">
-            Sign in with your email — we&apos;ll send you a magic link.
+            Sign in with your email and we&apos;ll send you a magic link.
           </p>
         </header>
 

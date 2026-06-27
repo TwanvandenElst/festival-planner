@@ -54,7 +54,7 @@ export default function HomePage() {
       // schedule (cron), not per add. A full multi-site scrape can't fit in an
       // interactive request and wouldn't scale to many users adding artists.
       setAddedMsg(
-        `You're now following ${result.artist.name}. We scan for upcoming shows once a day — if they perform in the Netherlands, you'll get a notification tomorrow.`,
+        `You're now following ${result.artist.name}. We scan for upcoming shows once a day. If they perform in the Netherlands, you'll get a notification tomorrow.`,
       )
     }
   }

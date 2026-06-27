@@ -104,7 +104,7 @@ export function OnboardingTour() {
             popover: {
               title: 'Follow your favorite artists',
               description:
-                "Search and follow artists — we'll show you when and where they perform in the Netherlands.",
+                "Search and follow artists. We'll show you when and where they perform in the Netherlands.",
               // Move to the shows page before the festivals step.
               onNextClick: () => {
                 router.push('/shows')
@@ -135,7 +135,7 @@ export function OnboardingTour() {
             popover: {
               title: 'Friendship book',
               description:
-                'Let new festival friends fill in a digital friendship book — your personal festival memory.',
+                'Let new festival friends fill in a digital friendship book, your personal festival memory.',
             },
           },
           {

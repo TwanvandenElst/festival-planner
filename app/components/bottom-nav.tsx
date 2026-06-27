@@ -52,7 +52,7 @@ function ShareButton() {
     const url = `${window.location.origin}/invite/${user.id}`
     const data = {
       title: 'Festival Planner',
-      text: 'Discover Festival Planner — follow artists and share your festival agenda.',
+      text: 'Discover Festival Planner. Follow artists and share your festival agenda.',
       url,
     }
     try {

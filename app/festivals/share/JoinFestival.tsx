@@ -47,7 +47,7 @@ function JoinedAvatars({ names }: { names: string[] }) {
         render={
           <button
             type="button"
-            aria-label={`${names.length} joined — show names`}
+            aria-label={`${names.length} joined, show names`}
             className="flex items-center transition-transform active:scale-95"
           >
             {shown.map((name, i) => (

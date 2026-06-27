@@ -184,7 +184,7 @@ export function LoginForm() {
           </button>
 
           <p className="mt-4 px-1 text-center text-xs text-muted-foreground/80">
-            No password needed — you&apos;ll get a sign-in link by email.
+            No password needed. You&apos;ll get a sign-in link by email.
           </p>
         </form>
       )}

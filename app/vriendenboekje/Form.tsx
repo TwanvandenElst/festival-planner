@@ -687,7 +687,7 @@ function Question({
         )}
       </h2>
       {optional && (
-        <p className="mt-1 text-xs text-muted-foreground">Optional — you can skip this</p>
+        <p className="mt-1 text-xs text-muted-foreground">Optional, you can skip this</p>
       )}
     </div>
   )

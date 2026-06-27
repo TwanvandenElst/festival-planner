@@ -76,7 +76,7 @@ export function FeedbackModal({
               💡 Your idea matters
             </h2>
             <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-              I&apos;m building this app for you — so if something&apos;s missing, something&apos;s
+              I&apos;m building this app for you. So if something&apos;s missing, something&apos;s
               annoying, or you have a brilliant idea: let me know. Every message is read by me
               personally.
             </p>
