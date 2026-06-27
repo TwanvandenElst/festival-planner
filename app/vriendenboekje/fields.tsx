@@ -32,7 +32,7 @@ function MicButton({
       }}
       className={cn(
         'relative grid size-9 shrink-0 place-items-center rounded-full transition-transform active:scale-90',
-        listening ? 'bg-pink-500/25 text-pink-200' : 'bg-white/10 text-muted-foreground active:text-foreground',
+        listening ? 'bg-pink-500/25 text-pink-700 dark:text-pink-200' : 'bg-black/[0.06] dark:bg-white/10 text-muted-foreground active:text-foreground',
       )}
     >
       {/* Radiating soundwave rings while listening. */}
@@ -115,7 +115,7 @@ export function TextField({
           onClick={onSubmit}
           disabled={disabled}
           aria-label={submitIcon === 'check' ? 'Send' : 'Next'}
-          className="grid size-9 shrink-0 place-items-center rounded-full bg-pink-500/30 text-pink-100 shadow-lg shadow-pink-900/20 transition-transform active:scale-90 disabled:opacity-60"
+          className="grid size-9 shrink-0 place-items-center rounded-full bg-pink-500/30 text-pink-700 dark:text-pink-100 shadow-lg shadow-pink-900/20 transition-transform active:scale-90 disabled:opacity-60"
         >
           {submitIcon === 'check' ? <Check className="size-4" /> : <ArrowRight className="size-4" />}
         </button>

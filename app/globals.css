@@ -251,6 +251,31 @@
     radial-gradient(40% 46% at 32% 38%, rgba(157, 23, 77, 0.30), transparent 70%);
 }
 
+/* Light mode: the same accent blobs but much softer, so they read as a gentle
+   pastel wash on white instead of harsh saturated patches. */
+:root:not(.dark) {
+  --gradient-shows:
+    radial-gradient(42% 52% at 12% 6%, rgba(37, 99, 235, 0.20), transparent 72%),
+    radial-gradient(46% 56% at 88% 2%, rgba(6, 182, 212, 0.16), transparent 70%),
+    radial-gradient(58% 62% at 56% 26%, rgba(59, 130, 246, 0.15), transparent 72%),
+    radial-gradient(40% 46% at 32% 38%, rgba(2, 132, 199, 0.12), transparent 70%);
+  --gradient-artists:
+    radial-gradient(42% 52% at 12% 6%, rgba(234, 88, 12, 0.20), transparent 72%),
+    radial-gradient(46% 56% at 88% 2%, rgba(220, 38, 38, 0.16), transparent 70%),
+    radial-gradient(58% 62% at 56% 26%, rgba(249, 115, 22, 0.15), transparent 72%),
+    radial-gradient(40% 46% at 32% 38%, rgba(190, 18, 60, 0.12), transparent 70%);
+  --gradient-share:
+    radial-gradient(42% 52% at 12% 6%, rgba(124, 58, 237, 0.20), transparent 72%),
+    radial-gradient(46% 56% at 88% 2%, rgba(217, 70, 239, 0.16), transparent 70%),
+    radial-gradient(58% 62% at 56% 26%, rgba(139, 92, 246, 0.15), transparent 72%),
+    radial-gradient(40% 46% at 32% 38%, rgba(192, 38, 211, 0.12), transparent 70%);
+  --gradient-friends:
+    radial-gradient(42% 52% at 12% 6%, rgba(236, 72, 153, 0.20), transparent 72%),
+    radial-gradient(46% 56% at 88% 2%, rgba(244, 63, 94, 0.16), transparent 70%),
+    radial-gradient(58% 62% at 56% 26%, rgba(219, 39, 119, 0.15), transparent 72%),
+    radial-gradient(40% 46% at 32% 38%, rgba(157, 23, 77, 0.12), transparent 70%);
+}
+
 /* Reusable glassmorphism surface — tuned for the dark default, with a
    light-mode fallback. Unlayered so it overrides Tailwind bg/border utilities. */
 .glass-panel {

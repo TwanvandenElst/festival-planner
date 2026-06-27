@@ -17,7 +17,7 @@ const NAV = [
     label: 'Artists',
     icon: Users,
     match: (p: string) => p === '/' || p.startsWith('/artists'),
-    activeText: 'text-orange-300',
+    activeText: 'text-orange-600 dark:text-orange-300',
     activeBg: 'bg-orange-500/15',
   },
   {
@@ -25,7 +25,7 @@ const NAV = [
     label: 'Shows',
     icon: CalendarDays,
     match: (p: string) => p.startsWith('/shows'),
-    activeText: 'text-cyan-300',
+    activeText: 'text-cyan-600 dark:text-cyan-300',
     activeBg: 'bg-cyan-500/15',
   },
   {
@@ -33,7 +33,7 @@ const NAV = [
     label: 'Friends',
     icon: BookHeart,
     match: (p: string) => p.startsWith('/vriendenboekje'),
-    activeText: 'text-pink-300',
+    activeText: 'text-pink-600 dark:text-pink-300',
     activeBg: 'bg-pink-500/15',
   },
 ]
@@ -130,7 +130,7 @@ export function BottomNav() {
       </div>
 
       {/* Bottom tab bar — glass surface with a top-only border */}
-      <nav className="fixed inset-x-0 bottom-0 z-50 border-t border-white/10 bg-white/[0.06] shadow-[0_-10px_30px_-12px_rgba(0,0,0,0.5)] backdrop-blur-[18px] [-webkit-backdrop-filter:blur(18px)]">
+      <nav className="fixed inset-x-0 bottom-0 z-50 border-t border-black/[0.08] dark:border-white/10 bg-black/[0.04] dark:bg-white/[0.06] shadow-[0_-10px_30px_-12px_rgba(0,0,0,0.5)] backdrop-blur-[18px] [-webkit-backdrop-filter:blur(18px)]">
         <div className="mx-auto flex max-w-md justify-around gap-2 px-6 pt-2 pb-[max(0.5rem,env(safe-area-inset-bottom))]">
           {NAV.map(item => {
             const active = item.match(pathname)

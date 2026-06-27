@@ -241,7 +241,7 @@ export function NotificationsPrompt() {
           type="button"
           onClick={dismiss}
           aria-label="Dismiss"
-          className="-mr-1 -mt-1 grid size-7 shrink-0 place-items-center rounded-full text-muted-foreground transition-colors hover:bg-white/10 hover:text-foreground"
+          className="-mr-1 -mt-1 grid size-7 shrink-0 place-items-center rounded-full text-muted-foreground transition-colors hover:bg-black/[0.06] dark:hover:bg-white/10 hover:text-foreground"
         >
           <X className="size-4" />
         </button>

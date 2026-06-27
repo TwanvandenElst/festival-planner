@@ -131,7 +131,7 @@ export function HomeScreenGuide({
                   className={
                     i === index
                       ? 'size-1.5 rounded-full bg-pink-400'
-                      : 'size-1.5 rounded-full bg-white/25'
+                      : 'size-1.5 rounded-full bg-black/[0.12] dark:bg-white/25'
                   }
                 />
               ))}
@@ -141,7 +141,7 @@ export function HomeScreenGuide({
             type="button"
             onClick={onClose}
             aria-label="Close"
-            className="grid size-8 place-items-center rounded-full text-muted-foreground transition-colors hover:bg-white/10 hover:text-foreground"
+            className="grid size-8 place-items-center rounded-full text-muted-foreground transition-colors hover:bg-black/[0.06] dark:hover:bg-white/10 hover:text-foreground"
           >
             <X className="size-4" />
           </button>
@@ -158,7 +158,7 @@ export function HomeScreenGuide({
                 Push notifications on iPhone only work in Safari. Copy the link below and open it in
                 Safari.
               </p>
-              <div className="flex w-full max-w-xs items-center gap-2 rounded-full border border-white/10 bg-white/[0.05] py-1.5 pl-4 pr-1.5">
+              <div className="flex w-full max-w-xs items-center gap-2 rounded-full border border-black/[0.08] dark:border-white/10 bg-black/[0.04] dark:bg-white/[0.05] py-1.5 pl-4 pr-1.5">
                 <span className="min-w-0 flex-1 truncate text-left text-xs text-muted-foreground">
                   {typeof window !== 'undefined' ? window.location.href : ''}
                 </span>
@@ -210,7 +210,7 @@ export function HomeScreenGuide({
             <button
               type="button"
               onClick={() => setIndex(i => Math.max(0, i - 1))}
-              className="rounded-full border border-white/15 bg-white/[0.06] px-4 py-2.5 text-sm font-semibold text-foreground/85 backdrop-blur-md transition-colors hover:bg-white/10"
+              className="rounded-full border border-black/10 dark:border-white/15 bg-black/[0.04] dark:bg-white/[0.06] px-4 py-2.5 text-sm font-semibold text-foreground/85 backdrop-blur-md transition-colors hover:bg-black/[0.06] dark:hover:bg-white/10"
             >
               Back
             </button>

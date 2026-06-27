@@ -102,7 +102,7 @@ export function LoginForm() {
             setStatus('idle')
             setEmail('')
           }}
-          className="mt-5 text-sm font-medium text-cyan-300 transition-colors hover:text-cyan-200"
+          className="mt-5 text-sm font-medium text-cyan-600 transition-colors hover:text-cyan-500 dark:text-cyan-300 dark:hover:text-cyan-200"
         >
           Use a different email
         </button>
@@ -128,7 +128,7 @@ export function LoginForm() {
       </button>
 
       {status === 'error' && (
-        <p className="mt-3 px-1 text-center text-sm text-rose-300">
+        <p className="mt-3 px-1 text-center text-sm text-rose-600 dark:text-rose-300">
           Something went wrong: {errorMsg || 'please try again.'}
         </p>
       )}
@@ -143,7 +143,7 @@ export function LoginForm() {
           Or sign in with email
         </button>
       ) : (
-        <form onSubmit={handleSubmit} className="mt-5 border-t border-white/10 pt-5">
+        <form onSubmit={handleSubmit} className="mt-5 border-t border-black/[0.08] dark:border-white/10 pt-5">
           <label
             htmlFor="email"
             className="mb-2 block px-1 text-sm font-medium text-muted-foreground"
@@ -151,7 +151,7 @@ export function LoginForm() {
             Email address
           </label>
 
-          <div className="flex items-center gap-2.5 rounded-2xl border border-white/10 bg-white/[0.04] px-3.5 transition-colors focus-within:border-cyan-400/50">
+          <div className="flex items-center gap-2.5 rounded-2xl border border-black/[0.08] dark:border-white/10 bg-black/[0.03] dark:bg-white/[0.04] px-3.5 transition-colors focus-within:border-cyan-400/50">
             <Mail className="size-4 shrink-0 text-muted-foreground" />
             <input
               id="email"

@@ -117,7 +117,7 @@ export function UserMenu() {
               setOpen(false)
               setFeedbackOpen(true)
             }}
-            className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-white/10 py-2.5 text-sm font-semibold transition-colors hover:bg-white/15"
+            className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-black/[0.06] dark:bg-white/10 py-2.5 text-sm font-semibold transition-colors hover:bg-black/[0.08] dark:hover:bg-white/15"
           >
             <MessageSquare className="size-4" />
             Share feedback
@@ -127,7 +127,7 @@ export function UserMenu() {
             type="button"
             onClick={signOut}
             disabled={signingOut}
-            className="mt-2 flex w-full items-center justify-center gap-2 rounded-xl bg-white/10 py-2.5 text-sm font-semibold transition-colors hover:bg-white/15 disabled:opacity-50"
+            className="mt-2 flex w-full items-center justify-center gap-2 rounded-xl bg-black/[0.06] dark:bg-white/10 py-2.5 text-sm font-semibold transition-colors hover:bg-black/[0.08] dark:hover:bg-white/15 disabled:opacity-50"
           >
             <LogOut className="size-4" />
             {signingOut ? 'Signing out…' : 'Sign out'}

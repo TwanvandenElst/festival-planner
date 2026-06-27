@@ -58,7 +58,7 @@ export function FeedbackModal({
           type="button"
           onClick={onClose}
           aria-label="Close"
-          className="absolute right-3 top-3 grid size-8 place-items-center rounded-full text-muted-foreground transition-colors hover:bg-white/10 hover:text-foreground"
+          className="absolute right-3 top-3 grid size-8 place-items-center rounded-full text-muted-foreground transition-colors hover:bg-black/[0.06] dark:hover:bg-white/10 hover:text-foreground"
         >
           <X className="size-4" />
         </button>
@@ -88,10 +88,10 @@ export function FeedbackModal({
               placeholder="Your idea, feedback or bug..."
               rows={4}
               autoFocus
-              className="mt-4 min-h-[6rem] w-full resize-none rounded-xl border border-white/10 bg-white/[0.04] px-3.5 py-2.5 text-sm outline-none transition-colors focus:border-pink-400/50 placeholder:text-muted-foreground/70"
+              className="mt-4 min-h-[6rem] w-full resize-none rounded-xl border border-black/[0.08] dark:border-white/10 bg-black/[0.03] dark:bg-white/[0.04] px-3.5 py-2.5 text-sm outline-none transition-colors focus:border-pink-400/50 placeholder:text-muted-foreground/70"
             />
 
-            {error && <p className="mt-2 text-sm text-rose-300">{error}</p>}
+            {error && <p className="mt-2 text-sm text-rose-600 dark:text-rose-300">{error}</p>}
 
             <button
               type="button"

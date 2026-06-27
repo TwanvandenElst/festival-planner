@@ -90,7 +90,7 @@ export function StickFigures({
   return (
     <div className="mx-auto w-full max-w-xs select-none">
       <div className="relative h-16">
-        <div className="absolute inset-x-1 bottom-1.5 h-px bg-white/10" />
+        <div className="absolute inset-x-1 bottom-1.5 h-px bg-black/[0.06] dark:bg-white/10" />
         <FigureSlot left={leftLeft} flip={false} step={step} fused={fused} />
         <FigureSlot left={rightLeft} flip step={step} fused={fused} />
       </div>

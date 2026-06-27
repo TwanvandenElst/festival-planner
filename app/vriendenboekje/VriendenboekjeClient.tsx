@@ -293,7 +293,7 @@ function VisitorWelcome({ onBegin }: { onBegin: () => void }) {
       </div>
       <div>
         <h1 className="text-2xl font-bold tracking-tight">Fill in this vriendenboekje</h1>
-        <p className="mx-auto mt-2 max-w-xs text-sm text-pink-100/80">
+        <p className="mx-auto mt-2 max-w-xs text-sm text-pink-700/80 dark:text-pink-100/80">
           Answer a few playful questions and become an official festival friend.
         </p>
       </div>
@@ -329,7 +329,7 @@ function HostEmptyState({
       </div>
       <div>
         <h1 className="text-2xl font-bold tracking-tight">Your vriendenboekje is still empty</h1>
-        <p className="mx-auto mt-2 max-w-xs text-sm text-pink-100/80">
+        <p className="mx-auto mt-2 max-w-xs text-sm text-pink-700/80 dark:text-pink-100/80">
           Share your link so people can fill in your vriendenboekje.
         </p>
       </div>
@@ -507,7 +507,7 @@ function Hero({
               }}
               onClick={() => onSelect(entry)}
               style={{ left: `${slot.left}%`, top: `${slot.top}%`, width: slot.size, height: slot.size }}
-              className="absolute block overflow-hidden rounded-full shadow-[0_10px_30px_-8px_rgba(0,0,0,0.6)] ring-2 ring-white/20 will-change-transform active:scale-95"
+              className="absolute block overflow-hidden rounded-full shadow-[0_10px_30px_-8px_rgba(0,0,0,0.6)] ring-2 ring-black/15 dark:ring-white/20 will-change-transform active:scale-95"
             >
               <Avatar entry={entry} textClass={slot.size >= 80 ? 'text-2xl' : 'text-base'} />
             </button>
@@ -534,7 +534,7 @@ function Hero({
         <h1 data-reveal-title className="text-3xl font-bold tracking-tight">
           My festival friends 🎉
         </h1>
-        <p className="mx-auto mt-2 max-w-xs text-sm text-pink-100/80">
+        <p className="mx-auto mt-2 max-w-xs text-sm text-pink-700/80 dark:text-pink-100/80">
           Seal our friendship with this vriendenboekje
         </p>
 
@@ -551,7 +551,7 @@ function Hero({
             type="button"
             onClick={onShare}
             data-tour="share-vriendenboekje"
-            className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-white/10 px-5 py-3 text-sm font-semibold text-pink-100 ring-1 ring-white/15 backdrop-blur-md transition-transform active:scale-[0.97]"
+            className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-black/[0.06] dark:bg-white/10 px-5 py-3 text-sm font-semibold text-pink-700 dark:text-pink-100 ring-1 ring-black/10 dark:ring-white/15 backdrop-blur-md transition-transform active:scale-[0.97]"
           >
             {copied ? <Check className="size-4" /> : <Share2 className="size-4" />}
             {copied ? 'Copied!' : 'Share your vriendenboekje'}
@@ -589,7 +589,7 @@ function Feed({
 
   if (entries.length === 0) {
     return (
-      <div className="mt-10 rounded-2xl border border-dashed border-white/15 py-14 text-center">
+      <div className="mt-10 rounded-2xl border border-dashed border-black/10 dark:border-white/15 py-14 text-center">
         <BookHeart className="mx-auto mb-3 size-8 text-muted-foreground/60" />
         <p className="text-sm font-medium">No festival friends yet</p>
         <p className="mt-1 text-sm text-muted-foreground">Be the first to fill one in.</p>
@@ -625,14 +625,14 @@ function Feed({
           >
             <h2
               data-reveal-title
-              className="text-sm font-semibold uppercase tracking-wide text-pink-100/80"
+              className="text-sm font-semibold uppercase tracking-wide text-pink-700/80 dark:text-pink-100/80"
             >
               Funniest reactions
             </h2>
             {laughsOpen ? (
-              <ChevronUp className="size-4 text-pink-100/80" />
+              <ChevronUp className="size-4 text-pink-700/80 dark:text-pink-100/80" />
             ) : (
-              <ChevronDown className="size-4 text-pink-100/80" />
+              <ChevronDown className="size-4 text-pink-700/80 dark:text-pink-100/80" />
             )}
           </button>
 
@@ -657,7 +657,7 @@ function Feed({
                     className="glass-panel block w-full rounded-2xl p-4 text-left shadow-[0_0_22px_-6px_rgba(244,114,182,0.55)] ring-1 ring-pink-400/40 transition-transform active:scale-[0.99]"
                   >
                     <div className="flex items-center gap-3">
-                      <div className="size-9 shrink-0 overflow-hidden rounded-full ring-2 ring-white/15">
+                      <div className="size-9 shrink-0 overflow-hidden rounded-full ring-2 ring-black/10 dark:ring-white/15">
                         <Avatar entry={entry} textClass="text-xs" />
                       </div>
                       <p className="min-w-0 flex-1 truncate text-sm font-semibold">{entry.naam}</p>
@@ -678,7 +678,7 @@ function Feed({
       )}
 
       <section className="mt-10 space-y-3">
-        <h2 data-reveal-title className="px-1 text-sm font-semibold uppercase tracking-wide text-pink-100/80">
+        <h2 data-reveal-title className="px-1 text-sm font-semibold uppercase tracking-wide text-pink-700/80 dark:text-pink-100/80">
           All festival friends
         </h2>
 
@@ -691,7 +691,7 @@ function Feed({
           className="glass-panel block w-full rounded-2xl p-4 text-left transition-transform active:scale-[0.99]"
         >
           <div className="flex items-start gap-3.5">
-            <div className="size-14 shrink-0 overflow-hidden rounded-full ring-2 ring-white/15">
+            <div className="size-14 shrink-0 overflow-hidden rounded-full ring-2 ring-black/10 dark:ring-white/15">
               <Avatar entry={entry} textClass="text-lg" />
             </div>
 
@@ -802,7 +802,7 @@ function Detail({
         <button
           type="button"
           onClick={onClose}
-          className="mb-5 inline-flex items-center gap-1.5 rounded-full bg-white/10 px-4 py-2 text-sm font-medium backdrop-blur-md transition-transform active:scale-95"
+          className="mb-5 inline-flex items-center gap-1.5 rounded-full bg-black/[0.06] dark:bg-white/10 px-4 py-2 text-sm font-medium backdrop-blur-md transition-transform active:scale-95"
         >
           <ArrowLeft className="size-4" />
           Back
@@ -826,7 +826,7 @@ function Detail({
         </div>
 
         <div className="mt-6 text-center">
-          {entry.dj_naam && <p className="text-base text-pink-200">🎧 {entry.dj_naam}</p>}
+          {entry.dj_naam && <p className="text-base text-pink-700 dark:text-pink-200">🎧 {entry.dj_naam}</p>}
           <p className="mt-1 text-xs text-muted-foreground">Filled in on {formatDate(entry.created_at)}</p>
         </div>
 
@@ -846,7 +846,7 @@ function Detail({
                   <p
                     className={cn(
                       'text-base font-semibold',
-                      stellingVal ? 'text-pink-100' : 'text-foreground/70',
+                      stellingVal ? 'text-pink-700 dark:text-pink-100' : 'text-foreground/70',
                     )}
                   >
                     {stellingVal ? 'Agree' : 'Disagree'}
@@ -1024,7 +1024,7 @@ function ReactionButton({
       // can't clobber the transform and slide the chip diagonally.
       className={cn(
         'absolute -bottom-3 -right-2 inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold text-white shadow-[0_4px_12px_-4px_rgba(0,0,0,0.7)] ring-1',
-        reacted ? 'bg-pink-500 ring-pink-400' : 'bg-zinc-700 ring-white/15',
+        reacted ? 'bg-pink-500 ring-pink-400' : 'bg-zinc-700 ring-black/10 dark:ring-white/15',
       )}
     >
       <span className="text-sm leading-none">😂</span>

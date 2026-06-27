@@ -345,7 +345,7 @@ export function Form({
         <button
           type="button"
           onClick={onDone}
-          className="glass-panel rounded-full bg-pink-500/20 px-6 py-3 text-sm font-semibold text-pink-100 transition-transform active:scale-95"
+          className="glass-panel rounded-full bg-pink-500/20 px-6 py-3 text-sm font-semibold text-pink-700 dark:text-pink-100 transition-transform active:scale-95"
         >
           {doneLabel}
         </button>
@@ -383,7 +383,7 @@ export function Form({
           onClick={back}
           disabled={step === 0 || busy}
           aria-label="Previous"
-          className="grid size-11 place-items-center rounded-full bg-white/10 text-foreground transition-transform active:scale-90 disabled:opacity-30"
+          className="grid size-11 place-items-center rounded-full bg-black/[0.06] dark:bg-white/10 text-foreground transition-transform active:scale-90 disabled:opacity-30"
         >
           <ArrowLeft className="size-5" />
         </button>
@@ -396,7 +396,7 @@ export function Form({
             onClick={next}
             disabled={busy || !photoFile}
             aria-label="Next"
-            className="grid size-11 place-items-center rounded-full bg-pink-500/25 text-pink-100 shadow-lg shadow-pink-900/20 transition-transform active:scale-90 disabled:opacity-60"
+            className="grid size-11 place-items-center rounded-full bg-pink-500/25 text-pink-700 dark:text-pink-100 shadow-lg shadow-pink-900/20 transition-transform active:scale-90 disabled:opacity-60"
           >
             {busy ? <Loader2 className="size-5 animate-spin" /> : <ArrowRight className="size-5" />}
           </button>
@@ -926,7 +926,7 @@ function FullScreenReaction({
           />
         )}
         {text && (
-          <p className="max-w-md text-center text-3xl font-bold leading-tight text-white">{text}</p>
+          <p className="max-w-md text-center text-3xl font-bold leading-tight text-foreground">{text}</p>
         )}
       </div>
     </div>,

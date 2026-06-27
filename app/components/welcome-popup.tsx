@@ -78,7 +78,7 @@ export function WelcomePopup() {
           alt="Twan"
           width={128}
           height={128}
-          className="mx-auto size-32 rounded-full border border-white/20 object-cover shadow-lg"
+          className="mx-auto size-32 rounded-full border border-black/15 dark:border-white/20 object-cover shadow-lg"
         />
 
         <h2 id="welcome-title" className="mt-4 text-lg font-bold tracking-tight">
