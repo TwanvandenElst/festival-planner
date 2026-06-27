@@ -83,7 +83,8 @@ export function UserMenu() {
     }
   }
 
-  // TEMP (dev/test): wipe onboarding state so the welcome popup + tour run again.
+  // TEMP (dev/test): wipe onboarding state and replay the tour immediately,
+  // without a page reload (OnboardingTour listens for the 'replay-tour' event).
   function resetOnboarding() {
     try {
       localStorage.removeItem('onboarding_done')
@@ -91,7 +92,8 @@ export function UserMenu() {
     } catch {
       // Storage unavailable — nothing to clear.
     }
-    window.location.reload()
+    setOpen(false)
+    window.dispatchEvent(new Event('replay-tour'))
   }
 
   async function signOut() {

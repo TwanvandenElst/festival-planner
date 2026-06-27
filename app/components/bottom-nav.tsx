@@ -75,7 +75,7 @@ function ShareButton() {
       type="button"
       onClick={handleShare}
       aria-label="Share the app"
-      data-tour="share-navbar"
+      data-tour="nav-share"
       className="flex flex-1 flex-col items-center gap-1 py-1 text-[0.7rem] font-medium text-muted-foreground transition-colors hover:text-foreground"
     >
       <span className="flex size-10 items-center justify-center rounded-2xl bg-transparent transition-colors">
@@ -141,7 +141,13 @@ export function BottomNav() {
                   href={item.href}
                   onClick={e => handleNav(e, item.href)}
                   aria-current={active ? 'page' : undefined}
-                  data-tour={item.href === '/vriendenboekje' ? 'friends' : undefined}
+                  data-tour={
+                    item.href === '/shows'
+                      ? 'nav-shows'
+                      : item.href === '/vriendenboekje'
+                        ? 'nav-friends'
+                        : undefined
+                  }
                   className={cn(
                     'flex flex-1 flex-col items-center gap-1 py-1 text-[0.7rem] font-medium transition-colors',
                     active ? item.activeText : 'text-muted-foreground hover:text-foreground',

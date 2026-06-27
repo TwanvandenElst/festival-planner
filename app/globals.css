@@ -436,12 +436,18 @@
   font-size: 0.75rem;
   font-weight: 600;
   color: rgba(244, 114, 182, 0.95);
+  white-space: nowrap;
 }
+/* Footer is one row: [← Prev]  [1 of 7]  [Next →]  [Skip] (see onPopoverRender). */
 .driver-popover.festi-tour .driver-popover-footer {
   margin-top: 0.85rem;
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  justify-content: space-between;
   gap: 0.5rem;
 }
-/* "Next" / "Got it!" — pink→fuchsia gradient pill. */
+/* "Next" / "Let's go!" — pink→fuchsia gradient pill. */
 .driver-popover.festi-tour .driver-popover-next-btn {
   background: linear-gradient(to right, #ec4899, #d946ef);
   border: none;
@@ -451,6 +457,7 @@
   font-weight: 600;
   color: #fff;
   text-shadow: none;
+  white-space: nowrap;
   box-shadow: 0 8px 20px -8px rgba(236, 72, 153, 0.7);
   transition: transform 0.15s ease;
 }
@@ -458,14 +465,39 @@
   background: linear-gradient(to right, #ec4899, #d946ef);
   transform: translateY(-1px);
 }
-/* "Skip tour" — subtle text button. */
+/* "← Prev" — same pill shape as Next, but ghost/secondary. */
+.driver-popover.festi-tour .driver-popover-prev-btn {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 9999px;
+  padding: 0.45rem 1rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.85);
+  text-shadow: none;
+  white-space: nowrap;
+  transition: background 0.15s ease, transform 0.15s ease;
+}
+.driver-popover.festi-tour .driver-popover-prev-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  transform: translateY(-1px);
+}
+.driver-popover.festi-tour .driver-popover-prev-btn.driver-popover-btn-disabled {
+  opacity: 0.4;
+}
+/* "Skip" — subtle text button. Folded into the footer row, so undo driver's
+   default absolute corner positioning and fixed icon-sized box. */
 .driver-popover.festi-tour .driver-popover-close-btn {
+  position: static;
+  width: auto;
+  height: auto;
   background: transparent;
   border: none;
   color: rgba(255, 255, 255, 0.55);
   font-size: 0.8rem;
   font-weight: 500;
   text-shadow: none;
+  white-space: nowrap;
   transition: color 0.15s ease;
 }
 .driver-popover.festi-tour .driver-popover-close-btn:hover {
