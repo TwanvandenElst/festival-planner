@@ -8,7 +8,7 @@ import gsap from 'gsap'
 // Each route's mesh-gradient identity (CSS vars defined in globals.css).
 function gradientFor(pathname: string): string {
   if (pathname.startsWith('/festivals/share')) return 'var(--gradient-share)'
-  if (pathname.startsWith('/share')) return 'var(--gradient-shows)'
+  if (pathname.startsWith('/share')) return 'var(--gradient-share)'
   if (pathname.startsWith('/login')) return 'var(--gradient-shows)'
   if (pathname.startsWith('/invite')) return 'var(--gradient-shows)'
   if (pathname.startsWith('/shows')) return 'var(--gradient-shows)'

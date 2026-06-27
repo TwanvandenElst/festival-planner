@@ -105,7 +105,34 @@ export default function SharePage() {
         </div>
       </header>
 
-      {/* 2. Personal invite link */}
+      {/* 2. Share button */}
+      <button
+        type="button"
+        onClick={shareLink}
+        className="mt-8 flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-violet-500 to-fuchsia-500 py-3.5 text-sm font-semibold text-white shadow-lg shadow-violet-900/30 transition-transform active:scale-[0.98]"
+      >
+        <Share2 className="size-4" />
+        Share your invite link 🎪
+      </button>
+
+      {/* 3. QR code */}
+      <section data-reveal-card className="mt-8 flex flex-col items-center">
+        <div className="rounded-xl bg-[#0b0b12] p-4 shadow-lg shadow-black/30">
+          {inviteUrl && (
+            <QRCodeSVG
+              value={inviteUrl}
+              size={200}
+              bgColor="#0b0b12"
+              fgColor="#ffffff"
+              level="M"
+              marginSize={1}
+            />
+          )}
+        </div>
+        <p className="mt-3 text-xs text-muted-foreground">Or scan to share</p>
+      </section>
+
+      {/* 4. Personal invite link (copy) */}
       <section data-reveal-card className="mt-8">
         <p className="mb-2 px-1 text-sm font-medium">Your personal invite link</p>
         <div className="glass-panel flex items-center gap-2 rounded-2xl py-1.5 pl-4 pr-1.5">
@@ -127,33 +154,6 @@ export default function SharePage() {
           </button>
         </div>
       </section>
-
-      {/* 3. QR code */}
-      <section data-reveal-card className="mt-8 flex flex-col items-center">
-        <div className="rounded-xl bg-[#0b0b12] p-4 shadow-lg shadow-black/30">
-          {inviteUrl && (
-            <QRCodeSVG
-              value={inviteUrl}
-              size={200}
-              bgColor="#0b0b12"
-              fgColor="#ffffff"
-              level="M"
-              marginSize={1}
-            />
-          )}
-        </div>
-        <p className="mt-3 text-xs text-muted-foreground">Or scan to share</p>
-      </section>
-
-      {/* 4. Share button */}
-      <button
-        type="button"
-        onClick={shareLink}
-        className="mt-8 flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-pink-500 to-fuchsia-500 py-3.5 text-sm font-semibold text-white shadow-lg shadow-pink-900/30 transition-transform active:scale-[0.98]"
-      >
-        <Share2 className="size-4" />
-        Share your invite link 🎪
-      </button>
 
       {/* 5. Community feel */}
       <p className="mt-8 text-center text-xs text-muted-foreground/80">

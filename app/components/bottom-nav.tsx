@@ -33,8 +33,8 @@ const NAV = [
     label: 'Share',
     icon: Share2,
     match: (p: string) => p.startsWith('/share'),
-    activeText: 'text-blue-600 dark:text-blue-300',
-    activeBg: 'bg-blue-500/15',
+    activeText: 'text-violet-600 dark:text-violet-300',
+    activeBg: 'bg-violet-500/15',
     tour: 'nav-share',
   },
   {
