@@ -465,10 +465,10 @@
   background: linear-gradient(to right, #ec4899, #d946ef);
   transform: translateY(-1px);
 }
-/* "← Prev" — same pill shape as Next, but ghost/secondary. */
+/* "← Prev" — same pill shape as Next, but a light grey/glass look. */
 .driver-popover.festi-tour .driver-popover-prev-btn {
-  background: transparent;
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.14);
   border-radius: 9999px;
   padding: 0.45rem 1rem;
   font-size: 0.8rem;
@@ -476,10 +476,13 @@
   color: rgba(255, 255, 255, 0.85);
   text-shadow: none;
   white-space: nowrap;
+  -webkit-backdrop-filter: blur(18px);
+  backdrop-filter: blur(18px);
+  box-shadow: 0 8px 30px -12px rgba(0, 0, 0, 0.55);
   transition: background 0.15s ease, transform 0.15s ease;
 }
 .driver-popover.festi-tour .driver-popover-prev-btn:hover {
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.14);
   transform: translateY(-1px);
 }
 .driver-popover.festi-tour .driver-popover-prev-btn.driver-popover-btn-disabled {
