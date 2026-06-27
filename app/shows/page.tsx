@@ -53,7 +53,7 @@ export default async function ShowsPage() {
   }))
 
   return (
-    <div className="mx-auto w-full max-w-5xl space-y-14 px-4 py-10">
+    <div className="mx-auto w-full max-w-5xl space-y-14 px-4 pt-[60px] pb-10">
       <section>
         <header className="mb-6">
           <h1 data-reveal-title data-tour="festivals" className="text-2xl font-semibold tracking-tight">
