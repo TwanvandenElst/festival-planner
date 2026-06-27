@@ -186,7 +186,7 @@ export function NotificationsPrompt() {
   if (!visible || !isArtistsPath(pathname)) return null
 
   return (
-    <div className="fixed inset-x-0 bottom-[calc(5.5rem+env(safe-area-inset-bottom))] z-40 flex justify-center px-4">
+    <div className="fixed inset-x-0 bottom-[calc(5.5rem+env(safe-area-inset-bottom)+20px)] z-40 flex justify-center px-4">
       <div className="glass-panel flex w-full max-w-md items-start gap-3 rounded-2xl border-emerald-400/30 p-4 shadow-xl shadow-emerald-900/20 duration-300 animate-in fade-in slide-in-from-bottom-4">
         <span className="mt-0.5 grid size-9 shrink-0 place-items-center rounded-full bg-emerald-500/20 text-emerald-600 dark:text-emerald-300">
           <Bell className="size-4" />
