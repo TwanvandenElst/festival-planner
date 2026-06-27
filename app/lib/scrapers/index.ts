@@ -167,12 +167,20 @@ async function notifyFollowersOfShows(
 export async function runScrapers(
   options?: { artistName?: string },
 ): Promise<OrchestratorResult> {
-  // 1. Collect all scraped shows
-  const allShows: ScrapedShow[] = []
-  for (const scraper of scrapers) {
-    const shows = await scraper.scrape()
-    allShows.push(...shows)
-  }
+  // 1. Collect all scraped shows. Run scrapers in PARALLEL so wall-time is the
+  //    slowest single scraper (not the sum), and isolate each one: a site that
+  //    blocks/errors yields [] instead of aborting the whole run.
+  const scraped = await Promise.all(
+    scrapers.map(async scraper => {
+      try {
+        return await scraper.scrape()
+      } catch (err) {
+        console.error(`[scrapers] ${scraper.name} failed:`, err instanceof Error ? err.message : err)
+        return [] as ScrapedShow[]
+      }
+    }),
+  )
+  const allShows: ScrapedShow[] = scraped.flat()
 
   // 2. Fetch followed artists (optionally narrowed to a single one)
   const { data: artists, error: artistsError } = await supabase
