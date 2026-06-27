@@ -428,14 +428,14 @@
   border-radius: 2px;
   animation: confetti-fly 750ms cubic-bezier(0.2, 0.7, 0.3, 1) forwards;
 }
-/* ── Driver.js onboarding tour — glassmorphism popover, pink accents ──────── */
+/* ── Driver.js onboarding tour — glassmorphism popover, emerald/teal accents ── */
 .driver-popover.festi-tour {
-  background: rgba(24, 18, 28, 0.72);
+  background: rgba(16, 26, 24, 0.74);
   backdrop-filter: blur(18px);
   -webkit-backdrop-filter: blur(18px);
-  border: 1px solid rgba(244, 114, 182, 0.3);
+  border: 1px solid rgba(52, 211, 153, 0.32);
   border-radius: 1rem;
-  box-shadow: 0 20px 60px -12px rgba(0, 0, 0, 0.7), 0 0 24px -8px rgba(236, 72, 153, 0.5);
+  box-shadow: 0 20px 60px -12px rgba(0, 0, 0, 0.7), 0 0 24px -8px rgba(16, 185, 129, 0.5);
   color: #fff;
   max-width: 22rem;
 }
@@ -452,15 +452,15 @@
   color: rgba(255, 255, 255, 0.72);
 }
 /* The little arrow that points at the highlighted element. */
-.driver-popover.festi-tour .driver-popover-arrow-side-left.driver-popover-arrow { border-left-color: rgba(24, 18, 28, 0.72); }
-.driver-popover.festi-tour .driver-popover-arrow-side-right.driver-popover-arrow { border-right-color: rgba(24, 18, 28, 0.72); }
-.driver-popover.festi-tour .driver-popover-arrow-side-top.driver-popover-arrow { border-top-color: rgba(24, 18, 28, 0.72); }
-.driver-popover.festi-tour .driver-popover-arrow-side-bottom.driver-popover-arrow { border-bottom-color: rgba(24, 18, 28, 0.72); }
+.driver-popover.festi-tour .driver-popover-arrow-side-left.driver-popover-arrow { border-left-color: rgba(16, 26, 24, 0.74); }
+.driver-popover.festi-tour .driver-popover-arrow-side-right.driver-popover-arrow { border-right-color: rgba(16, 26, 24, 0.74); }
+.driver-popover.festi-tour .driver-popover-arrow-side-top.driver-popover-arrow { border-top-color: rgba(16, 26, 24, 0.74); }
+.driver-popover.festi-tour .driver-popover-arrow-side-bottom.driver-popover-arrow { border-bottom-color: rgba(16, 26, 24, 0.74); }
 
 .driver-popover.festi-tour .driver-popover-progress-text {
   font-size: 0.75rem;
   font-weight: 600;
-  color: rgba(244, 114, 182, 0.95);
+  color: rgba(52, 211, 153, 0.95);
   white-space: nowrap;
 }
 /* Footer is one row: [← Prev]  [1 of 7]  [Next →]. Skip is pinned separately. */
@@ -472,9 +472,9 @@
   justify-content: space-between;
   gap: 0.5rem;
 }
-/* "Next" / "Let's go!" — pink→fuchsia gradient pill. */
+/* "Next" / "Let's go!" — emerald→teal gradient pill. */
 .driver-popover.festi-tour .driver-popover-next-btn {
-  background: linear-gradient(to right, #ec4899, #d946ef);
+  background: linear-gradient(to right, #10b981, #14b8a6);
   border: none;
   border-radius: 9999px;
   padding: 0.45rem 1rem;
@@ -483,11 +483,11 @@
   color: #fff;
   text-shadow: none;
   white-space: nowrap;
-  box-shadow: 0 8px 20px -8px rgba(236, 72, 153, 0.7);
+  box-shadow: 0 8px 20px -8px rgba(16, 185, 129, 0.7);
   transition: transform 0.15s ease;
 }
 .driver-popover.festi-tour .driver-popover-next-btn:hover {
-  background: linear-gradient(to right, #ec4899, #d946ef);
+  background: linear-gradient(to right, #10b981, #14b8a6);
   transform: translateY(-1px);
 }
 /* Loading state while a cross-page step navigates (set in onNextClick). */
