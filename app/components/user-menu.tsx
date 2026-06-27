@@ -137,7 +137,7 @@ export function UserMenu() {
           <button
             type="button"
             onClick={resetOnboarding}
-            className="mt-1 flex w-full items-center justify-center gap-1.5 rounded-lg py-1.5 text-xs font-medium text-muted-foreground/70 transition-colors hover:text-foreground"
+            className="mt-2 flex w-full items-center justify-center gap-2 rounded-xl bg-white/10 py-2.5 text-sm font-semibold transition-colors hover:bg-white/15"
           >
             <span aria-hidden>↺</span>
             Replay tour
