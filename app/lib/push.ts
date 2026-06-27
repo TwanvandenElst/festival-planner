@@ -53,6 +53,10 @@ export async function sendPushNotification(
     console.error('[push] failed to load subscriptions:', error.message)
     return
   }
+
+  // Diagnostic: confirm the function ran and how many devices it found.
+  console.log(`[push] sending to userId ${userId} — found ${subs?.length ?? 0} subscriptions`)
+
   if (!subs || subs.length === 0) return
 
   const payload = JSON.stringify({ title, body, url })
@@ -60,17 +64,22 @@ export async function sendPushNotification(
   await Promise.all(
     subs.map(async row => {
       try {
-        await webpush.sendNotification(
+        const res = await webpush.sendNotification(
           row.subscription as webpush.PushSubscription,
           payload,
         )
+        console.log(`[push] sub ${row.id} OK — statusCode ${res.statusCode}`)
       } catch (err) {
         const status = (err as { statusCode?: number }).statusCode
+        const body = (err as { body?: string }).body
         // 404 Not Found / 410 Gone → the subscription is dead; remove it.
         if (status === 404 || status === 410) {
+          console.warn(`[push] sub ${row.id} gone (${status}) — removing`)
           await admin.from('push_subscriptions').delete().eq('id', row.id)
         } else {
-          console.error('[push] send failed:', status, (err as Error).message)
+          console.error(
+            `[push] sub ${row.id} send failed — statusCode ${status} — body: ${body} — message: ${(err as Error).message}`,
+          )
         }
       }
     }),
