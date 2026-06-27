@@ -81,7 +81,7 @@ export default function SharePage() {
   }
 
   return (
-    <div className="mx-auto w-full max-w-md px-4 py-10 sm:py-14">
+    <div className="mx-auto w-full max-w-md px-4 pt-[60px] pb-10 sm:pb-14">
       {/* 1. Hero */}
       <header>
         <h1 data-reveal-title className="text-3xl font-bold tracking-tight">

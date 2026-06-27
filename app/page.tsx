@@ -60,7 +60,7 @@ export default function HomePage() {
   }
 
   return (
-    <div className="mx-auto w-full max-w-2xl px-4 py-10">
+    <div className="mx-auto w-full max-w-2xl px-4 pt-[60px] pb-10">
       <header className="mb-8">
         <h1 data-reveal-title className="text-2xl font-semibold tracking-tight">
           Followed artists

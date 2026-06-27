@@ -47,7 +47,7 @@ export default async function ArtistPage({ params }: { params: Promise<{ id: str
   )
 
   return (
-    <div className="mx-auto w-full max-w-3xl px-4 py-10">
+    <div className="mx-auto w-full max-w-3xl px-4 pt-[60px] pb-10">
       <Link
         href="/"
         className="mb-6 inline-flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
