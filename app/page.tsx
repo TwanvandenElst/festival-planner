@@ -5,7 +5,6 @@ import Link from 'next/link'
 import { ChevronRight, Loader2, Music2, X } from 'lucide-react'
 
 import { followArtist, getFollowedArtists, unfollowArtist, type Artist } from '@/lib/artists'
-import { triggerScrape } from '@/scrape-test/actions'
 import { useGsapReveal } from '@/lib/use-gsap-reveal'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -16,8 +15,7 @@ export default function HomePage() {
   const [loading, setLoading] = useState(true)
   const [adding, setAdding] = useState(false)
   const [removingId, setRemovingId] = useState<string | null>(null)
-  const [scrapingArtist, setScrapingArtist] = useState<string | null>(null)
-  const [scrapeMsg, setScrapeMsg] = useState<string | null>(null)
+  const [addedMsg, setAddedMsg] = useState<string | null>(null)
   const listRef = useRef<HTMLUListElement>(null)
 
   // The list is fetched client-side, so reveal its cards once they arrive.
@@ -40,24 +38,6 @@ export default function HomePage() {
     setRemovingId(null)
   }
 
-  // After adding an artist, scrape immediately for just that artist so their
-  // shows appear without waiting for the weekly cron.
-  async function scrapeArtist(name: string) {
-    setScrapeMsg(null)
-    setScrapingArtist(name)
-    try {
-      const result = await triggerScrape(name)
-      setScrapeMsg(
-        `${name}: ${result.inserted} new show${result.inserted === 1 ? '' : 's'} found` +
-        (result.merged > 0 ? `, ${result.merged} merged` : '') + '.',
-      )
-    } catch {
-      setScrapeMsg(`Scrape failed for ${name}.`)
-    } finally {
-      setScrapingArtist(null)
-    }
-  }
-
   async function handleAdd() {
     const name = input.trim()
     if (!name) return
@@ -70,7 +50,10 @@ export default function HomePage() {
         prev.some(a => a.id === result.artist.id) ? prev : [result.artist, ...prev],
       )
       setInput('')
-      await scrapeArtist(name)
+      // Scraping is decoupled from adding: it runs once for everyone on the
+      // schedule (cron), not per add. A full multi-site scrape can't fit in an
+      // interactive request and wouldn't scale to many users adding artists.
+      setAddedMsg(`Added ${result.artist.name}. New shows are fetched automatically — check back soon.`)
     }
   }
 
@@ -100,13 +83,8 @@ export default function HomePage() {
         </Button>
       </div>
 
-      {scrapingArtist ? (
-        <div className="mb-6 flex items-center gap-2 text-sm text-muted-foreground">
-          <Loader2 className="size-4 animate-spin" />
-          Scraping shows for {scrapingArtist}…
-        </div>
-      ) : scrapeMsg ? (
-        <div className="mb-6 text-sm text-muted-foreground">{scrapeMsg}</div>
+      {addedMsg ? (
+        <div className="mb-6 text-sm text-muted-foreground">{addedMsg}</div>
       ) : null}
 
       {loading ? (

@@ -4,7 +4,6 @@ const GRAPHQL_URL = 'https://ra.co/graphql'
 const NL_AREA_ID  = 176   // "All" Netherlands — verified 2026-06-09
 const PAGE_SIZE   = 50
 const MAX_PAGES   = 10    // safety cap: 500 events max per run
-const PAGE_DELAY_MS = 500 // be polite between pages
 
 // ── RA-specific response types ────────────────────────────────────────────────
 
@@ -135,10 +134,6 @@ function cityForVenue(venue: RVenue): string {
   return isAllOrEmpty(fallback) ? '' : fallback
 }
 
-function sleep(ms: number) {
-  return new Promise<void>(resolve => setTimeout(resolve, ms))
-}
-
 export const raScraper: Scraper = {
   name: 'ra.co',
 
@@ -146,13 +141,9 @@ export const raScraper: Scraper = {
     const now = new Date()
     const inFiveWeeks = new Date(now.getTime() + 35 * 24 * 60 * 60 * 1000)
 
-    const shows: ScrapedShow[] = []
-    let page = 1
-    let totalPages = 1
-
-    while (page <= totalPages && page <= MAX_PAGES) {
-      if (page > 1) await sleep(PAGE_DELAY_MS)
-
+    // Fetch a single page of listings. Returns its listings plus the reported
+    // total. Any error yields an empty page so one bad page can't sink the run.
+    async function fetchPage(page: number): Promise<{ listings: RListing[]; totalResults: number }> {
       const variables = {
         filters: {
           areas: { eq: NL_AREA_ID },
@@ -165,67 +156,66 @@ export const raScraper: Scraper = {
         page,
       }
 
-      let res: Response
       try {
-        res = await fetch(GRAPHQL_URL, {
+        const res = await fetch(GRAPHQL_URL, {
           method: 'POST',
           headers: HEADERS,
           body: JSON.stringify({ query: QUERY, variables }),
         })
+        if (!res.ok) {
+          console.error(`[ra.co] HTTP ${res.status} ${res.statusText} on page ${page}`)
+          return { listings: [], totalResults: 0 }
+        }
+        const json = (await res.json()) as RAResponse
+        if (json.errors?.length) {
+          console.error(`[ra.co] GraphQL errors on page ${page}:`, json.errors.map(e => e.message))
+          return { listings: [], totalResults: 0 }
+        }
+        if (!json.data) {
+          console.error(`[ra.co] Unexpected response shape on page ${page}`)
+          return { listings: [], totalResults: 0 }
+        }
+        const { totalResults, data } = json.data.eventListings
+        return { listings: data, totalResults }
       } catch (err) {
         console.error(`[ra.co] Network error on page ${page}:`, err)
-        break
+        return { listings: [], totalResults: 0 }
       }
+    }
 
-      if (!res.ok) {
-        console.error(`[ra.co] HTTP ${res.status} ${res.statusText} on page ${page}`)
-        break
+    // Page 1 first to learn the total, then fetch the remaining pages in
+    // PARALLEL (was sequential with a delay — the run's main bottleneck).
+    const first = await fetchPage(1)
+    const totalPages = Math.min(Math.ceil(first.totalResults / PAGE_SIZE) || 1, MAX_PAGES)
+    console.log(`[ra.co] ${first.totalResults} events found — fetching ${totalPages} page(s)`)
+
+    const restPages = await Promise.all(
+      Array.from({ length: Math.max(totalPages - 1, 0) }, (_, i) => fetchPage(i + 2)),
+    )
+
+    const allListings = [first.listings, ...restPages.map(p => p.listings)].flat()
+
+    const shows: ScrapedShow[] = []
+    for (const item of allListings) {
+      const event = item.event
+      if (!event.artists || event.artists.length === 0) continue
+
+      const sourceUrl = `https://ra.co${event.contentUrl}`
+      // The event/festival name is what matters, not the physical location.
+      const venue     = event.title
+      const city      = cityForVenue(event.venue)
+      const date      = event.date.slice(0, 10) // "YYYY-MM-DD"
+
+      for (const artist of event.artists) {
+        shows.push({
+          artistName: artist.name,
+          date,
+          venue,
+          city,
+          sourceUrl,
+          sourceSite: 'ra.co',
+        })
       }
-
-      const json = (await res.json()) as RAResponse
-
-      if (json.errors?.length) {
-        console.error(`[ra.co] GraphQL errors on page ${page}:`, json.errors.map(e => e.message))
-        break
-      }
-
-      if (!json.data) {
-        console.error(`[ra.co] Unexpected response shape on page ${page}`)
-        break
-      }
-
-      const { totalResults, data: listings } = json.data.eventListings
-
-      if (page === 1) {
-        totalPages = Math.ceil(totalResults / PAGE_SIZE)
-        console.log(
-          `[ra.co] ${totalResults} events found — fetching ${Math.min(totalPages, MAX_PAGES)} page(s)`
-        )
-      }
-
-      for (const item of listings) {
-        const event = item.event
-        if (!event.artists || event.artists.length === 0) continue
-
-        const sourceUrl = `https://ra.co${event.contentUrl}`
-        // The event/festival name is what matters, not the physical location.
-        const venue     = event.title
-        const city      = cityForVenue(event.venue)
-        const date      = event.date.slice(0, 10) // "YYYY-MM-DD"
-
-        for (const artist of event.artists) {
-          shows.push({
-            artistName: artist.name,
-            date,
-            venue,
-            city,
-            sourceUrl,
-            sourceSite: 'ra.co',
-          })
-        }
-      }
-
-      page++
     }
 
     console.log(`[ra.co] Collected ${shows.length} artist-show entries`)
