@@ -140,7 +140,7 @@ function RatingWatermark({
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger
-        className="absolute bottom-0 right-3 z-0 select-none text-8xl font-bold leading-none text-white/10 outline-none transition-transform active:scale-95"
+        className="absolute -bottom-[10px] right-[2px] z-0 select-none text-8xl font-bold leading-none text-white/10 outline-none transition-transform active:scale-95"
         aria-label={
           rating ? `Rating ${rating} of 10. Tap to change.` : 'No rating yet. Tap to set.'
         }
