@@ -1,17 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
-import {
-  CalendarX2,
-  Check,
-  Loader2,
-  MoreHorizontal,
-  Pencil,
-  Plus,
-  Search,
-  Trash2,
-  X,
-} from 'lucide-react'
+import { CalendarX2, Loader2, Plus, Search, Trash2, X } from 'lucide-react'
 
 import {
   searchFestivals,
@@ -19,7 +9,6 @@ import {
   removeFestival,
   updateFestivalStatus,
   updateFestivalRating,
-  updateFestivalName,
 } from '@/lib/festivals'
 import { removeFestivalJoin } from '@/lib/festival-joins'
 import type { Festival, FestivalSearchResult, FestivalStatus } from '@/lib/festivals-types'
@@ -196,7 +185,6 @@ function FestivalCard({
   joins,
   onCycleStatus,
   onRate,
-  onRename,
   onDelete,
   onRemoveJoin,
   removing,
@@ -208,31 +196,18 @@ function FestivalCard({
   joins: Join[]
   onCycleStatus: () => void
   onRate: (n: number | null) => void
-  onRename: (name: string) => Promise<boolean>
   onDelete: () => void
   onRemoveJoin: (joinId: string) => void
   removing: boolean
   removingJoinId: string | null
 }) {
   const [pulse, setPulse] = useState(false)
-  const [editing, setEditing] = useState(false)
-  const [editValue, setEditValue] = useState(f.name)
-  const [savingName, setSavingName] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
-  const [confirmDelete, setConfirmDelete] = useState(false)
 
   function handleCycle() {
     setPulse(true)
     onCycleStatus()
     window.setTimeout(() => setPulse(false), 320)
-  }
-
-  async function saveName() {
-    if (editValue.trim().length < 2) return
-    setSavingName(true)
-    const ok = await onRename(editValue)
-    setSavingName(false)
-    if (ok) setEditing(false)
   }
 
   return (
@@ -243,66 +218,45 @@ function FestivalCard({
         isPast && 'opacity-50',
       )}
     >
-      {/* Row 1 — name + date */}
+      {/* Row 1 — date + name and the delete button */}
       <div className="flex items-start justify-between gap-3">
-        {editing ? (
-          <div className="flex flex-1 items-center gap-2">
-            <Input
-              autoFocus
-              value={editValue}
-              onChange={e => setEditValue(e.target.value)}
-              onKeyDown={e => {
-                if (e.key === 'Enter') saveName()
-                if (e.key === 'Escape') {
-                  setEditing(false)
-                  setEditValue(f.name)
-                }
-              }}
-              className="h-8 flex-1"
-            />
-            <Button
-              size="icon-sm"
-              onClick={saveName}
-              disabled={savingName || editValue.trim().length < 2}
-              aria-label="Save name"
-            >
-              {savingName ? <Loader2 className="animate-spin" /> : <Check />}
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon-sm"
-              onClick={() => {
-                setEditing(false)
-                setEditValue(f.name)
-              }}
-              aria-label="Cancel rename"
-            >
-              <X />
-            </Button>
-          </div>
-        ) : (
-          <>
-            <div className="min-w-0 flex-1">
-              <span className="block text-sm text-muted-foreground">
-                {formatCardDate(f.start_date, f.end_date)}
-              </span>
-              <h3 className="break-words text-lg font-bold leading-tight text-foreground">
-                {f.name}
-              </h3>
+        <div className="min-w-0 flex-1">
+          <span className="block text-sm text-muted-foreground">
+            {formatCardDate(f.start_date, f.end_date)}
+          </span>
+          <h3 className="break-words text-lg font-bold leading-tight text-foreground">
+            {f.name}
+          </h3>
+        </div>
+
+        <Popover open={menuOpen} onOpenChange={setMenuOpen}>
+          <PopoverTrigger
+            className="relative z-10 grid size-8 shrink-0 place-items-center rounded-full text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
+            aria-label="Delete festival"
+          >
+            <Trash2 className="size-5" />
+          </PopoverTrigger>
+          <PopoverContent align="end" className="w-auto min-w-[190px] p-3">
+            <p className="mb-2 text-sm font-medium">Delete this festival?</p>
+            <div className="flex gap-2">
+              <Button
+                size="sm"
+                variant="destructive"
+                onClick={() => {
+                  onDelete()
+                  setMenuOpen(false)
+                }}
+                disabled={removing}
+              >
+                {removing ? <Loader2 className="animate-spin" /> : <Trash2 />}
+                Delete
+              </Button>
+              <Button size="sm" variant="ghost" onClick={() => setMenuOpen(false)}>
+                Cancel
+              </Button>
             </div>
-            <button
-              type="button"
-              onClick={() => {
-                setEditValue(f.name)
-                setEditing(true)
-              }}
-              className="relative z-10 grid size-8 shrink-0 place-items-center rounded-full text-muted-foreground transition-colors hover:bg-white/10 hover:text-foreground"
-              aria-label="Edit name"
-            >
-              <Pencil className="size-4" />
-            </button>
-          </>
-        )}
+          </PopoverContent>
+        </Popover>
       </div>
 
       {/* Row 2 — status pill */}
@@ -322,9 +276,9 @@ function FestivalCard({
         </button>
       </div>
 
-      {/* Row 3 — joined avatars (+ artist-match chip) and the three-dot menu */}
+      {/* Row 3 — joined avatars (+ artist-match chip) */}
       <div className="mt-3 flex items-center justify-between gap-3">
-        <div className="flex min-h-[24px] items-center gap-2">
+        <div className="flex min-h-[24px] flex-wrap items-center gap-2">
           {joins.length > 0 && (
             <Popover>
               <PopoverTrigger
@@ -377,56 +331,6 @@ function FestivalCard({
             </Popover>
           )}
         </div>
-
-        <Popover
-          open={menuOpen}
-          onOpenChange={o => {
-            setMenuOpen(o)
-            if (!o) setConfirmDelete(false)
-          }}
-        >
-          <PopoverTrigger
-            className="relative z-10 grid size-8 place-items-center rounded-full text-muted-foreground transition-colors hover:bg-white/10 hover:text-foreground"
-            aria-label="Festival options"
-          >
-            <MoreHorizontal className="size-5" />
-          </PopoverTrigger>
-          <PopoverContent align="end" className="w-auto min-w-[190px] p-1.5">
-            {confirmDelete ? (
-              <div className="flex flex-col gap-2 p-1.5">
-                <p className="text-sm font-medium">Delete this festival?</p>
-                <div className="flex gap-2">
-                  <Button
-                    size="sm"
-                    variant="destructive"
-                    onClick={() => {
-                      onDelete()
-                      setMenuOpen(false)
-                      setConfirmDelete(false)
-                    }}
-                    disabled={removing}
-                  >
-                    {removing ? <Loader2 className="animate-spin" /> : <Trash2 />}
-                    Delete
-                  </Button>
-                  <Button size="sm" variant="ghost" onClick={() => setConfirmDelete(false)}>
-                    Cancel
-                  </Button>
-                </div>
-              </div>
-            ) : (
-              <div className="flex flex-col">
-                <button
-                  type="button"
-                  onClick={() => setConfirmDelete(true)}
-                  className="flex items-center gap-2 rounded-md px-2.5 py-2 text-left text-sm text-destructive hover:bg-destructive/10"
-                >
-                  <Trash2 className="size-4" /> Delete festival
-                </button>
-              </div>
-            )}
-          </PopoverContent>
-        </Popover>
       </div>
 
       <RatingWatermark rating={f.rating} onRate={onRate} />
@@ -573,24 +477,6 @@ export default function FestivalsSection({
       setMyFestivals(prev)
       setActionError(res.error ?? 'Could not update rating.')
     }
-  }
-
-  async function handleRename(id: string, name: string): Promise<boolean> {
-    const trimmed = name.trim()
-    if (trimmed.length < 2) {
-      setActionError('Festival name is too short.')
-      return false
-    }
-    setActionError(null)
-    const prev = myFestivals
-    setMyFestivals(list => list.map(f => (f.id === id ? { ...f, name: trimmed } : f)))
-    const res = await updateFestivalName(id, trimmed)
-    if (!res.ok) {
-      setMyFestivals(prev)
-      setActionError(res.error ?? 'Could not rename festival.')
-      return false
-    }
-    return true
   }
 
   async function handleRemoveJoin(festivalId: string, joinId: string) {
@@ -790,7 +676,6 @@ export default function FestivalsSection({
               joins={joinsState[f.id] ?? []}
               onCycleStatus={() => handleStatusChange(f.id, STATUS_CYCLE[f.status])}
               onRate={rating => handleRatingChange(f.id, rating)}
-              onRename={name => handleRename(f.id, name)}
               onDelete={() => handleRemove(f.id)}
               onRemoveJoin={joinId => handleRemoveJoin(f.id, joinId)}
               removing={removingId === f.id}
