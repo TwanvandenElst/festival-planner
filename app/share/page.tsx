@@ -91,17 +91,14 @@ export default function SharePage() {
           data-reveal-card
           className="mt-4 space-y-3 text-sm leading-relaxed text-muted-foreground"
         >
+          <p>No ads. No payments. Just people who actually live for festivals.</p>
           <p>
-            Not everyone gets in. Festi is a closed community for people who live for festivals. No
-            ads, no algorithm, no randoms. Just people who know what it means to be in the crowd at
-            2am when the drop hits.
+            <span className="font-semibold text-foreground">{count ?? '…'}</span> members. Every
+            single one hand-picked by someone already inside.
           </p>
-          <p>
-            Right now we are{' '}
-            <span className="font-semibold text-foreground">{count ?? '…'}</span> people. Every
-            person in here was invited by someone who trusted them with this.
+          <p className="font-medium text-foreground">
+            You got in because someone vouched for you. Now it&apos;s your turn.
           </p>
-          <p className="font-medium text-foreground">Know someone who belongs here? Bring them in.</p>
         </div>
       </header>
 
