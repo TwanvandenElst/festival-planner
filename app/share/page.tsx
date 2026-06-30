@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { QRCodeSVG } from 'qrcode.react'
-import { Check, Copy, Loader2, Share2 } from 'lucide-react'
+import { Loader2, Share2 } from 'lucide-react'
 
 import { useUser } from '@/lib/use-user'
 import { createClient } from '@/lib/supabase/client'
@@ -10,13 +10,12 @@ import { createClient } from '@/lib/supabase/client'
 /**
  * Invite page. Festi is invite-only, so this is where a member gets their
  * personal invite link (/invite/[userId]) to bring people in: a marketing hero,
- * a copyable link, a QR code, and a native-share button.
+ * a QR code, and a native-share button.
  */
 export default function SharePage() {
   const { user, loading } = useUser()
   const [count, setCount] = useState<number | null>(null)
   const [inviteUrl, setInviteUrl] = useState('')
-  const [copied, setCopied] = useState(false)
 
   // Live community size (same RPC the login page uses).
   useEffect(() => {
@@ -39,10 +38,8 @@ export default function SharePage() {
     if (!inviteUrl) return
     try {
       await navigator.clipboard.writeText(inviteUrl)
-      setCopied(true)
-      setTimeout(() => setCopied(false), 2000)
     } catch {
-      // Clipboard blocked (insecure context) — the link is shown for manual copy.
+      // Clipboard blocked (insecure context) — nothing to do.
     }
   }
 
@@ -129,30 +126,7 @@ export default function SharePage() {
         <p className="mt-3 text-xs text-muted-foreground">Or scan to share</p>
       </section>
 
-      {/* 4. Personal invite link (copy) */}
-      <section data-reveal-card className="mt-8">
-        <p className="mb-2 px-1 text-sm font-medium">Your personal invite link</p>
-        <div className="glass-panel flex items-center gap-2 rounded-2xl py-1.5 pl-4 pr-1.5">
-          <span className="min-w-0 flex-1 truncate text-sm text-muted-foreground" title={inviteUrl}>
-            {inviteUrl}
-          </span>
-          <button
-            type="button"
-            onClick={copyLink}
-            aria-label="Copy invite link"
-            className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-black/[0.06] px-3 py-2 text-xs font-semibold transition-colors hover:bg-black/[0.1] dark:bg-white/10 dark:hover:bg-white/15"
-          >
-            {copied ? (
-              <Check className="size-4 text-emerald-600 dark:text-emerald-300" />
-            ) : (
-              <Copy className="size-4" />
-            )}
-            {copied ? 'Copied' : 'Copy'}
-          </button>
-        </div>
-      </section>
-
-      {/* 5. Community feel */}
+      {/* 4. Community feel */}
       <p className="mt-8 text-center text-xs text-muted-foreground/80">
         Every great community starts with one invite.
       </p>
