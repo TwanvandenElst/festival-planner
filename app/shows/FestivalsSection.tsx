@@ -151,7 +151,7 @@ function RatingWatermark({
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger
-        className="absolute bottom-0 right-3 z-0 select-none text-8xl font-bold leading-none text-white/10 outline-none transition-transform active:scale-95"
+        className="absolute right-3 top-1/2 z-0 -translate-y-1/2 select-none text-8xl font-bold leading-none text-white/10 outline-none transition-transform active:scale-95"
         aria-label={
           rating ? `Rating ${rating} of 10. Tap to change.` : 'No rating yet. Tap to set.'
         }
@@ -192,7 +192,7 @@ type Join = { id: string; name: string }
 function FestivalCard({
   festival: f,
   isPast,
-  artistCount,
+  artistNames,
   joins,
   onCycleStatus,
   onRate,
@@ -204,7 +204,7 @@ function FestivalCard({
 }: {
   festival: Festival
   isPast: boolean
-  artistCount: number
+  artistNames: string[]
   joins: Join[]
   onCycleStatus: () => void
   onRate: (n: number | null) => void
@@ -282,12 +282,25 @@ function FestivalCard({
           </div>
         ) : (
           <>
-            <h3 className="min-w-0 flex-1 break-words text-lg font-bold leading-tight text-foreground">
-              {f.name}
-            </h3>
-            <span className="shrink-0 whitespace-nowrap pt-0.5 text-sm text-muted-foreground">
-              {formatCardDate(f.start_date, f.end_date)}
-            </span>
+            <div className="min-w-0 flex-1">
+              <span className="block text-sm text-muted-foreground">
+                {formatCardDate(f.start_date, f.end_date)}
+              </span>
+              <h3 className="break-words text-lg font-bold leading-tight text-foreground">
+                {f.name}
+              </h3>
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                setEditValue(f.name)
+                setEditing(true)
+              }}
+              className="relative z-10 grid size-8 shrink-0 place-items-center rounded-full text-muted-foreground transition-colors hover:bg-white/10 hover:text-foreground"
+              aria-label="Edit name"
+            >
+              <Pencil className="size-4" />
+            </button>
           </>
         )}
       </div>
@@ -343,10 +356,25 @@ function FestivalCard({
             </Popover>
           )}
 
-          {artistCount > 0 && (
-            <span className="inline-flex items-center gap-1 rounded-full bg-white/10 px-2 py-0.5 text-[11px] font-medium text-muted-foreground">
-              🎵 {artistCount}
-            </span>
+          {artistNames.length > 0 && (
+            <Popover>
+              <PopoverTrigger
+                className="relative z-10 inline-flex h-6 items-center gap-1 rounded-full bg-white/10 px-2 text-[11px] font-medium text-muted-foreground outline-none transition-colors hover:bg-white/20 focus-visible:ring-2 focus-visible:ring-ring"
+                aria-label={`${artistNames.length} of your artists playing`}
+              >
+                🎵 {artistNames.length}
+              </PopoverTrigger>
+              <PopoverContent align="start" className="w-auto min-w-[180px] p-3">
+                <p className="mb-1.5 text-xs font-semibold text-muted-foreground">Your artists</p>
+                <ul className="flex flex-col gap-1">
+                  {artistNames.map(name => (
+                    <li key={name} className="truncate text-sm">
+                      {name}
+                    </li>
+                  ))}
+                </ul>
+              </PopoverContent>
+            </Popover>
           )}
         </div>
 
@@ -388,17 +416,6 @@ function FestivalCard({
               </div>
             ) : (
               <div className="flex flex-col">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setEditValue(f.name)
-                    setEditing(true)
-                    setMenuOpen(false)
-                  }}
-                  className="flex items-center gap-2 rounded-md px-2.5 py-2 text-left text-sm hover:bg-white/10"
-                >
-                  <Pencil className="size-4 text-muted-foreground" /> Edit name
-                </button>
                 <button
                   type="button"
                   onClick={() => setConfirmDelete(true)}
@@ -769,7 +786,7 @@ export default function FestivalsSection({
               key={f.id}
               festival={f}
               isPast={(f.end_date ?? f.start_date) < today}
-              artistCount={(matchesByFestival.get(f.id) ?? []).length}
+              artistNames={matchesByFestival.get(f.id) ?? []}
               joins={joinsState[f.id] ?? []}
               onCycleStatus={() => handleStatusChange(f.id, STATUS_CYCLE[f.status])}
               onRate={rating => handleRatingChange(f.id, rating)}
