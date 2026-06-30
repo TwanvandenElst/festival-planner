@@ -38,7 +38,7 @@ function GoogleIcon({ className }: { className?: string }) {
 const BENEFITS = [
   { emoji: '🎵', text: 'Follow your favorite artists and see when they perform' },
   { emoji: '🎪', text: 'Manage your festival agenda and share it with friends' },
-  { emoji: '📖', text: 'Fill in a digital vriendenboekje for new festival friends' },
+  { emoji: '📖', text: 'Fill in a digital Friend Journal for new festival friends' },
 ]
 
 export default async function InvitePage({

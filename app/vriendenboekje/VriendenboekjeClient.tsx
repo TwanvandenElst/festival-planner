@@ -204,7 +204,7 @@ export function VriendenboekjeClient({
     const url = shareUrl || `${window.location.origin}/vriendenboekje?host=${hostId}`
     const data = {
       title: 'My festival friends',
-      text: 'Seal our friendship with this vriendenboekje.',
+      text: 'Seal our friendship with this Friend Journal.',
       url,
     }
     if (typeof navigator.share === 'function') {
@@ -292,7 +292,7 @@ function VisitorWelcome({ onBegin }: { onBegin: () => void }) {
         <BookHeart className="size-8 text-pink-300" />
       </div>
       <div>
-        <h1 className="text-2xl font-bold tracking-tight">Fill in this vriendenboekje</h1>
+        <h1 className="text-2xl font-bold tracking-tight">Fill in this Friend Journal</h1>
         <p className="mx-auto mt-2 max-w-xs text-sm text-pink-700/80 dark:text-pink-100/80">
           Answer a few playful questions and become an official festival friend.
         </p>
@@ -328,9 +328,9 @@ function HostEmptyState({
         <BookHeart className="size-8 text-pink-300" />
       </div>
       <div>
-        <h1 className="text-2xl font-bold tracking-tight">Your vriendenboekje is still empty</h1>
+        <h1 className="text-2xl font-bold tracking-tight">Your Friend Journal is still empty</h1>
         <p className="mx-auto mt-2 max-w-xs text-sm text-pink-700/80 dark:text-pink-100/80">
-          Share your link so people can fill in your vriendenboekje.
+          Share your link so people can fill in your Friend Journal.
         </p>
       </div>
 
@@ -356,7 +356,7 @@ function HostEmptyState({
         className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-pink-500 to-rose-500 px-6 py-3.5 text-sm font-semibold text-white shadow-lg shadow-pink-900/30 transition-transform active:scale-[0.97]"
       >
         {copied ? <Check className="size-4" /> : <Share2 className="size-4" />}
-        {copied ? 'Copied!' : 'Share your vriendenboekje'}
+        {copied ? 'Copied!' : 'Share your Friend Journal'}
       </button>
 
       {shareUrl && (
@@ -535,7 +535,7 @@ function Hero({
           My festival friends 🎉
         </h1>
         <p className="mx-auto mt-2 max-w-xs text-sm text-pink-700/80 dark:text-pink-100/80">
-          Seal our friendship with this vriendenboekje
+          Seal our friendship with this Friend Journal
         </p>
 
         <div className="mt-5 space-y-2.5">
@@ -554,7 +554,7 @@ function Hero({
             className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-black/[0.06] dark:bg-white/10 px-5 py-3 text-sm font-semibold text-pink-700 dark:text-pink-100 ring-1 ring-black/10 dark:ring-white/15 backdrop-blur-md transition-transform active:scale-[0.97]"
           >
             {copied ? <Check className="size-4" /> : <Share2 className="size-4" />}
-            {copied ? 'Copied!' : 'Share your vriendenboekje'}
+            {copied ? 'Copied!' : 'Share your Friend Journal'}
           </button>
         </div>
       </div>

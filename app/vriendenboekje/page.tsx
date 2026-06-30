@@ -9,8 +9,8 @@ import { VriendenboekjeClient } from './VriendenboekjeClient'
 export const dynamic = 'force-dynamic'
 
 export const metadata: Metadata = {
-  title: 'Vriendenboekje',
-  description: 'Fill in your vriendenboekje and become official friends.',
+  title: 'Friend Journal',
+  description: 'Fill in your Friend Journal and become official friends.',
 }
 
 export default async function VriendenboekjePage({
