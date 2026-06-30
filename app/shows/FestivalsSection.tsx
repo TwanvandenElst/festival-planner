@@ -9,7 +9,6 @@ import {
   Pencil,
   Plus,
   Search,
-  Star,
   Trash2,
   X,
 } from 'lucide-react'
@@ -138,35 +137,51 @@ function AvatarStack({ names }: { names: string[] }) {
   )
 }
 
-/** Inline 1–5 star rating. Tapping a star saves immediately; tapping the
- * current rating again clears it. Legacy >5 ratings show as a full 5 stars. */
-function StarRating({
+/** Large faded watermark rating (1–10) in the card's bottom-right corner.
+ * Tapping it opens a popover of 1–10 pills; tapping a number saves immediately
+ * and closes the picker. Shows "?" when no rating is set yet. */
+function RatingWatermark({
   rating,
   onRate,
 }: {
   rating: number | null
   onRate: (n: number | null) => void
 }) {
-  const filled = Math.min(rating ?? 0, 5)
+  const [open, setOpen] = useState(false)
   return (
-    <div className="flex items-center" role="group" aria-label="Rating">
-      {[1, 2, 3, 4, 5].map(n => (
-        <button
-          key={n}
-          type="button"
-          onClick={() => onRate(rating === n ? null : n)}
-          className="p-0.5 transition-transform active:scale-90"
-          aria-label={`Rate ${n} star${n > 1 ? 's' : ''}`}
-        >
-          <Star
-            className={cn(
-              'size-4',
-              n <= filled ? 'fill-amber-400 text-amber-400' : 'text-muted-foreground/40',
-            )}
-          />
-        </button>
-      ))}
-    </div>
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger
+        className="absolute bottom-0 right-3 z-0 select-none text-8xl font-bold leading-none text-white/10 outline-none transition-transform active:scale-95"
+        aria-label={
+          rating ? `Rating ${rating} of 10. Tap to change.` : 'No rating yet. Tap to set.'
+        }
+      >
+        {rating ?? '?'}
+      </PopoverTrigger>
+      <PopoverContent side="top" align="end" className="w-auto p-2">
+        <div className="grid grid-cols-5 gap-1.5" role="group" aria-label="Rating">
+          {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(n => (
+            <button
+              key={n}
+              type="button"
+              onClick={() => {
+                onRate(n)
+                setOpen(false)
+              }}
+              className={cn(
+                'grid size-9 place-items-center rounded-full text-sm font-semibold transition-colors',
+                rating === n
+                  ? 'bg-fuchsia-500 text-white'
+                  : 'bg-white/10 text-foreground hover:bg-white/20',
+              )}
+              aria-label={`Rate ${n}`}
+            >
+              {n}
+            </button>
+          ))}
+        </div>
+      </PopoverContent>
+    </Popover>
   )
 }
 
@@ -223,7 +238,10 @@ function FestivalCard({
   return (
     <div
       data-reveal-card
-      className={cn('glass-panel rounded-2xl p-4 transition-opacity', isPast && 'opacity-50')}
+      className={cn(
+        'glass-panel relative overflow-hidden rounded-2xl p-4 transition-opacity',
+        isPast && 'opacity-50',
+      )}
     >
       {/* Row 1 — name + date */}
       <div className="flex items-start justify-between gap-3">
@@ -274,8 +292,8 @@ function FestivalCard({
         )}
       </div>
 
-      {/* Row 2 — status pill + star rating */}
-      <div className="mt-3 flex items-center justify-between gap-3">
+      {/* Row 2 — status pill */}
+      <div className="mt-3 flex items-center gap-3">
         <button
           type="button"
           onClick={handleCycle}
@@ -289,8 +307,6 @@ function FestivalCard({
           <span className={cn('size-1.5 rounded-full', STATUS_DOT[f.status])} />
           {STATUS_LABEL[f.status]}
         </button>
-
-        <StarRating rating={f.rating} onRate={onRate} />
       </div>
 
       {/* Row 3 — joined avatars (+ artist-match chip) and the three-dot menu */}
@@ -342,7 +358,7 @@ function FestivalCard({
           }}
         >
           <PopoverTrigger
-            className="grid size-8 place-items-center rounded-full text-muted-foreground transition-colors hover:bg-white/10 hover:text-foreground"
+            className="relative z-10 grid size-8 place-items-center rounded-full text-muted-foreground transition-colors hover:bg-white/10 hover:text-foreground"
             aria-label="Festival options"
           >
             <MoreHorizontal className="size-5" />
@@ -395,6 +411,8 @@ function FestivalCard({
           </PopoverContent>
         </Popover>
       </div>
+
+      <RatingWatermark rating={f.rating} onRate={onRate} />
     </div>
   )
 }
